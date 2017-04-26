@@ -1,0 +1,8 @@
+{
+  "name": "aws-manager",
+  "version": "1.0.0",
+  "description": "Manage AWS EC2 instance and spot request state across regions",
+  "main": "lib/main.js",
+  "author": "John Ford <john@johnford.org>",
+  "license": "MPL-2.0"
+}
