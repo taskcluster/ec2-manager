@@ -1,8 +1,17 @@
 {
-  "name": "aws-manager",
+  "name": "ec2-manager",
   "version": "1.0.0",
   "description": "Manage AWS EC2 instance and spot request state across regions",
-  "main": "lib/main.js",
+  "main": "lib/index.js",
   "author": "John Ford <john@johnford.org>",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "dependencies": {
+    "aws-sdk": "^2.45.0",
+    "babel-compile": "^2.0.0",
+    "babel-preset-taskcluster": "^3.0.0",
+    "bluebird": "^3.5.0",
+    "redis": "^2.7.1",
+    "source-map-support": "^0.4.14",
+    "sqs-simple": "^1.0.1"
+  }
 }
