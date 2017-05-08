@@ -42,5 +42,13 @@ This component will be a JS object which the Rest API and Queue Listener can cal
   * `getInstanceState(instanceId)`
   * `setSpotRequestState(spotInstanceRequestId, state)`
 
+The database will be stored in Postgres and will have the following tables:
+
+#### Instances Table
+This table will store information about instances.  It will have the following fields:
+
+#### Spot Requests Table
+This table will store information about spot requests
+
 ### State Bootstrapper
 We need to be able to take existing state and put it into the state database.  Both as a way to handle Queue Listener bugs, but also as a maintainance tool and to check the consistency of our state
