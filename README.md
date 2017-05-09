@@ -42,7 +42,7 @@ This component will be a JS object which the Rest API and Queue Listener can cal
   * `getInstanceState(instanceId)`
   * `setSpotRequestState(spotInstanceRequestId, state)`
 
-The database will be stored in Postgres and will have the following tables:
+The database will be stored in Postgres and has tables described in this repository at `sql/create-db.sql`
 
 #### Instances Table
 This table will store information about instances.  It will have the following fields:

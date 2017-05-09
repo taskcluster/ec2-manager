@@ -10,8 +10,13 @@
     "babel-compile": "^2.0.0",
     "babel-preset-taskcluster": "^3.0.0",
     "bluebird": "^3.5.0",
+    "lodash": "^4.17.4",
+    "pg": "^6.1.5",
     "redis": "^2.7.1",
     "source-map-support": "^0.4.14",
     "sqs-simple": "^1.0.1"
+  },
+  "optionalDependencies": {
+    "pg-native": "^1.10.1"
   }
 }
