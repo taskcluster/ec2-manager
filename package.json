@@ -5,13 +5,16 @@
   "main": "lib/index.js",
   "author": "John Ford <john@johnford.org>",
   "license": "MPL-2.0",
+  "scripts": {
+    "test": "mocha"
+  },
   "dependencies": {
     "aws-sdk": "^2.45.0",
     "babel-compile": "^2.0.0",
     "babel-preset-taskcluster": "^3.0.0",
     "bluebird": "^3.5.0",
     "lodash": "^4.17.4",
-    "mocha": "^3.3.0",
+    "mocha": "^3.4.1",
     "pg": "^6.1.5",
     "redis": "^2.7.1",
     "source-map-support": "^0.4.14",
@@ -23,5 +26,9 @@
   },
   "optionalDependencies": {
     "pg-native": "^1.10.1"
+  },
+  "devDependencies": {
+    "assume": "^1.5.1",
+    "which": "^1.2.14"
   }
 }
