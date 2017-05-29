@@ -1,0 +1,14 @@
+language: node_js
+dist: trusty
+sudo: required
+node_js:
+  - '7.10'
+services:
+  - postgresql
+addons:
+  postgresql: "9.6"
+before_script:
+  - psql -c "create database testing;" -U postgres
+env:
+  global:
+    - DATABASE_URL="postgres://postgres@localhost:5432/testing"
