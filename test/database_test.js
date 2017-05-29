@@ -1,4 +1,5 @@
-const Database = require('../lib/database');
+'use strict';
+const main = require('../lib/main');
 const assume = require('assume');
 
 describe('Database', () => {
@@ -8,7 +9,7 @@ describe('Database', () => {
   let instanceType = 'm1.medium';
 
   before(async () => {
-    db = await Database.openDB({dburl: process.env.DATABASE_URL}); 
+    db = await main('database', {profile: 'test', process: 'test'});
     await db._runScript('drop-db.sql');
     await db._runScript('create-db.sql');
   });
