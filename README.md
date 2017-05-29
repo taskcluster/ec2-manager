@@ -3,8 +3,6 @@ This is an experiment to try to write a better EC2 manager for the Taskcluster p
 to the describeSpotInstanceRequest and describeInstances EC2 api endpoints, rather using the CloudWatch Events stream to monitor for state changes of running
 instances.
 
-'''NOTE''': Sometimes shortcuts are taken in this app.  It should have a thorough review before going into production.  This is a POC designed to be easy to hack on, not a full Taskcluster service... yet!
-
 ## Architecture
 This application is comprised of the following major components:
 
@@ -12,7 +10,7 @@ This application is comprised of the following major components:
 1. script which sets up all the CloudWatch Events rules and targets and the backing SQS queues
 1. SQS Queue Listener which will listen for the CloudWatch events and put them into a state database
 1. A state database which stores mininal information about state
-1. A way to bootstrap state from existing state into the state database
+1. A way to bootstrap state from existing state into the state database (maybe)
 
 Worker types association will be managed in this component
 
@@ -36,12 +34,6 @@ This program will listen for state transitions and call into the state database 
 When a new instance is found which does not exist in the state database, we should look up its information and check if the spot request is fulfilled, and if not mark it as such
 
 ### State Database
-This component will be a JS object which the Rest API and Queue Listener can call into.  It will provide the following methods
-
-  * `setInstanceState(instanceId, state)`
-  * `getInstanceState(instanceId)`
-  * `setSpotRequestState(spotInstanceRequestId, state)`
-
 The database will be stored in Postgres and has tables described in this repository at `sql/create-db.sql`
 
 #### Instances Table
