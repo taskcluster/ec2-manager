@@ -67,7 +67,11 @@ describe('Database', () => {
     await db.insertSpotRequest({workerType, region, instanceType, id, state: firstState});
     let spotRequests = await db.listAllSpotRequests(); 
     assume(spotRequests).has.length(1);
-    console.dir(spotRequests);
+    assume(spotRequests[0]).has.property('state', firstState);
+    await db.updateSpotRequestState({region, id, state: secondState});
+    spotRequests = await db.listAllSpotRequests(); 
+    assume(spotRequests).has.length(1);
+    assume(spotRequests[0]).has.property('state', secondState);
   });
  
 });
