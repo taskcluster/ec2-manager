@@ -161,6 +161,21 @@ describe('State', () => {
     assume(result.running).has.lengthOf(2);
   });
 
+  it('should list the pending spot requests', async () => {
+    await db.insertSpotRequest({id: 'r-1', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-2', workerType, region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-3', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-4', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-5', workerType, region: 'us-west-1', instanceType: 'c4.xlarge', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-6', workerType, region: 'us-west-1', instanceType: 'c4.medium', state: 'closed', status});
+    await db.insertSpotRequest({id: 'r-7', workerType, region: 'us-west-1', instanceType: 'c4.2xlarge', state: 'failed', status});   
+    await db.insertSpotRequest({id: 'r-8', workerType, region: 'us-west-1', instanceType: 'c4.medium', state: 'closed', status});
+    await db.insertSpotRequest({id: 'r-9', workerType, region: 'us-west-1', instanceType: 'c4.2xlarge', state: 'failed', status});   
+    let result = await db.spotRequestsToPoll({region: 'us-east-1'});
+    result.sort();
+    assume(result).deeply.equals(['r-1', 'r-2', 'r-3', 'r-4']);
+  });
+
   it('should be able to remove a spot request', async () => {
     let id = 'i-123456789';
     let state = 'pending';
