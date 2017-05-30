@@ -7,6 +7,7 @@ describe('State', () => {
   let workerType = 'example-workertype';
   let region = 'us-west-1';
   let instanceType = 'm1.medium';
+  let status = 'pending-fulfillment';
 
   before(async () => {
     db = await main('state', {profile: 'test', process: 'test'});
@@ -50,7 +51,7 @@ describe('State', () => {
     let id = 'r-123456789';
     let state = 'open';
 
-    let result = await db.insertSpotRequest({workerType, region, instanceType, id, state});
+    let result = await db.insertSpotRequest({workerType, region, instanceType, id, state, status});
     result = await db.listSpotRequests();
     assume(result).has.length(1);
     assume(result[0]).has.property('id', id);
@@ -60,7 +61,7 @@ describe('State', () => {
     let id = 'r-123456789';
     let state = 'open';
 
-    let result = await db.insertSpotRequest({workerType, region, instanceType, id, state});
+    let result = await db.insertSpotRequest({workerType, region, instanceType, id, state, status});
     result = await db.listSpotRequests({region: 'us-east-1', state: 'open'});
     assume(result).has.length(0);
     result = await db.listSpotRequests({region: 'us-west-1', state: 'open'});
@@ -82,7 +83,7 @@ describe('State', () => {
     let state = 'pending';
     let srid = 'r-123456789';
 
-    await db.insertSpotRequest({workerType, region, instanceType, id: srid, state: 'open'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: srid, state: 'open', status});
     assume(await db.listSpotRequests()).has.length(1);
     assume(await db.listInstances()).has.length(0);
 
@@ -96,7 +97,7 @@ describe('State', () => {
     let state = 'pending';
     let srid = 'r-123456789';
 
-    await db.insertSpotRequest({workerType, region, instanceType, id: srid, state: 'open'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: srid, state: 'open', status});
     assume(await db.listSpotRequests()).has.length(1);
     assume(await db.listInstances()).has.length(0);
 
@@ -111,11 +112,11 @@ describe('State', () => {
     let id = 'r-123456789';
     let firstState = 'open';
     let secondState = 'closed';
-    await db.insertSpotRequest({workerType, region, instanceType, id, state: firstState});
+    await db.insertSpotRequest({workerType, region, instanceType, id, state: firstState, status});
     let spotRequests = await db.listSpotRequests(); 
     assume(spotRequests).has.length(1);
     assume(spotRequests[0]).has.property('state', firstState);
-    await db.updateSpotRequestState({region, id, state: secondState});
+    await db.updateSpotRequestState({region, id, state: secondState, status});
     spotRequests = await db.listSpotRequests(); 
     assume(spotRequests).has.length(1);
     assume(spotRequests[0]).has.property('state', secondState);
@@ -125,11 +126,11 @@ describe('State', () => {
     let id = 'r-123456789';
     let firstState = 'open';
     let secondState = 'closed';
-    await db.upsertSpotRequest({workerType, region, instanceType, id, state: firstState});
+    await db.upsertSpotRequest({workerType, region, instanceType, id, state: firstState, status});
     let spotRequests = await db.listSpotRequests(); 
     assume(spotRequests).has.length(1);
     assume(spotRequests[0]).has.property('state', firstState);
-    await db.upsertSpotRequest({workerType, region, instanceType, id, state: secondState});
+    await db.upsertSpotRequest({workerType, region, instanceType, id, state: secondState, status});
     spotRequests = await db.listSpotRequests(); 
     assume(spotRequests).has.length(1);
     assume(spotRequests[0]).has.property('state', secondState);
@@ -146,18 +147,42 @@ describe('State', () => {
     // Let's ensure an instance in a state which we don't care about is in there
     await db.insertInstance({id: 'i-7', workerType, region: 'us-east-1', instanceType: 'm3.2xlarge', state: 'terminated'});
     // Insert some spot requests
-    await db.insertSpotRequest({id: 'r-1', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open'});
-    await db.insertSpotRequest({id: 'r-2', workerType, region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open'});
-    await db.insertSpotRequest({id: 'r-3', workerType, region: 'us-west-1', instanceType: 'c4.medium', state: 'open'});
-    await db.insertSpotRequest({id: 'r-4', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open'});
-    await db.insertSpotRequest({id: 'r-5', workerType, region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open'});
-    await db.insertSpotRequest({id: 'r-6', workerType, region: 'us-west-1', instanceType: 'c4.medium', state: 'open'});
-    await db.insertSpotRequest({id: 'r-7', workerType, region: 'us-west-1', instanceType: 'c4.2xlarge', state: 'failed'});
+    await db.insertSpotRequest({id: 'r-1', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-2', workerType, region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-3', workerType, region: 'us-west-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-4', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-5', workerType, region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-6', workerType, region: 'us-west-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-7', workerType, region: 'us-west-1', instanceType: 'c4.2xlarge', state: 'failed', status});
     let result = await db.instanceCounts({workerType});
     assume(result).has.property('pending');
     assume(result).has.property('running');
     assume(result.pending).has.lengthOf(4);
     assume(result.running).has.lengthOf(2);
   });
- 
+
+  it('should be able to remove a spot request', async () => {
+    let id = 'i-123456789';
+    let state = 'pending';
+    let srid = 'r-123456789';
+
+    await db.insertSpotRequest({workerType, region, instanceType, id: srid, state: 'open', status});
+    assume(await db.listSpotRequests()).has.length(1);
+    await db.removeSpotRequest({region, id: srid});
+    assume(await db.listSpotRequests()).has.length(0);
+
+  });
+
+  it('should be able to remove an instance', async () => {
+    let id = 'i-123456789';
+    let state = 'pending';
+    let srid = 'r-123456789';
+
+    await db.insertInstance({workerType, region, instanceType, id, state, srid});
+    assume(await db.listInstances()).has.length(1);
+    await db.removeInstance({region, id});
+    assume(await db.listInstances()).has.length(0);
+  });
+
+
 });

@@ -27,11 +27,12 @@ $$ language 'plpgsql';
 -- spotrequests table contains minimal information on
 -- any spot requests owned by this ec2 manager
 CREATE TABLE IF NOT EXISTS spotrequests (
-  id VARCHAR(128) NOT NULL,
-  workerType VARCHAR(128) NOT NULL,
-  region VARCHAR(128) NOT NULL,
-  instanceType VARCHAR(128) NOT NULL,
-  state VARCHAR(128) NOT NULL,
+  id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
+  workerType VARCHAR(128) NOT NULL, -- taskcluster worker type
+  region VARCHAR(128) NOT NULL, -- ec2 region
+  instanceType VARCHAR(128) NOT NULL, -- ec2 instance type
+  state VARCHAR(128) NOT NULL, -- e.g. open, closed, failed
+  status VARCHAR(128) NOT NULL, -- e.g. pending-fulfillment
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
@@ -41,12 +42,12 @@ CREATE TABLE IF NOT EXISTS spotrequests (
 -- the spotrequest table because the application logic will be
 -- required to delete any spotrequests which are outstanding
 CREATE TABLE IF NOT EXISTS instances (
-  id VARCHAR(128) NOT NULL,
-  workerType VARCHAR(128) NOT NULL,
-  region VARCHAR(128) NOT NULL,
-  instanceType VARCHAR(128) NOT NULL,
-  state VARCHAR(128) NOT NULL,
-  srid VARCHAR(128),
+  id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
+  workerType VARCHAR(128) NOT NULL, -- taskcluster worker type
+  region VARCHAR(128) NOT NULL, -- ec2 region
+  instanceType VARCHAR(128) NOT NULL, -- ec2 instance type
+  state VARCHAR(128) NOT NULL, -- e.g. running, pending, terminated
+  srid VARCHAR(128), -- spot request id if applicable
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
@@ -68,8 +69,8 @@ FOR EACH ROW EXECUTE PROCEDURE update_touched();
 
 -- Here's a couple of inserts which will work with
 -- these queries:
---INSERT INTO spotrequests (id, workerType, region, instanceType, state)
---VALUES ('r-1234', 'test-workertype', 'us-east-1', 'm3.xlarge', 'open');
+--INSERT INTO spotrequests (id, workerType, region, instanceType, state, status)
+--VALUES ('r-1234', 'test-workertype', 'us-east-1', 'm3.xlarge', 'open', 'pending-fulfillment');
 
 --INSERT INTO instances (id, workerType, region, instanceType, state, srid)
 --VALUES ('i-1235', 'test-workertype', 'us-east-1', 'm3.xlarge', 'running', 'r-1234');
