@@ -1,6 +1,7 @@
 defaults:
   app:
-    keyPreifx: 'ec2-manager:'
+    keyPrefix: 'ec2-manager:'
+    instancePubKey: 'lalalalla'
     spotPollFreq: 200
     regions:
       - us-east-1
@@ -10,6 +11,7 @@ defaults:
       - eu-central-1
     queueName: 'ec2-events'
     ruleName: 'ec2-instance-state-transitions'
+    publishMetadata: false
   ec2:
     apiVersion: 2014-01-01
   sqs:
@@ -39,4 +41,11 @@ defaults:
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
 development:
 production:
+  server:
+    port: !env:number PORT
+    env: production
+    forceSSL: true
+    trustProxy: true
+  app:
+    publishMetadata: true
 test:
