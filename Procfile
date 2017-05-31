@@ -1,1 +1,1 @@
-state: node lib/index
+web: node lib/main start
