@@ -26,7 +26,7 @@ This is not implemented yet, but it will provide a couple of basic endpoints.
 When `requestSpotInstance` is called, the response will be stored in the State Database to store the static values.  We'll have to store the spot request id in a list of ids to continuously poll the describeSpotInstanceRequests api, but because it'll only be until either the request is fulfilled or rejected, we'll be able to poll it way less.
 
 ### Setup script
-This script will ensure that there's a properly confirgured rule named `ec2-event-state-transitions` which has a target `ec2-event-queue` which is an SQS Queue in each of the regions.
+This script will ensure that there's a properly configured rule named `ec2-event-state-transitions` which has a target `ec2-event-queue` which is an SQS Queue in each of the regions.
 
 ### SQS Queue Listener
 This program will listen for state transitions and call into the state database to update instance state.  This program will also poll the EC2 describeSpotInstanceRequests API to check on yet-to-be-completed spot instance requests.  When an instance is found for the first time, we'll need to 

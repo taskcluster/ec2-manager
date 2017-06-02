@@ -2,7 +2,7 @@ defaults:
   app:
     keyPrefix: 'ec2-manager:'
     instancePubKey: 'lalalalla'
-    spotPollFreq: 200
+    spotPollDelay: 200
     regions:
       - us-east-1
       - us-east-2
@@ -27,6 +27,7 @@ defaults:
   server:
     port: 5555
     publicUrl: localhost:5555
+    baseUrl: 'http://localhost:5555/v1'
     env: development
     forceSSL: false
     trustProxy: false
@@ -46,6 +47,7 @@ production:
     env: production
     forceSSL: true
     trustProxy: true
+    baseUrl: 'https://ec2-manager.herokuapp.com/v1'
   app:
     publishMetadata: true
 test:

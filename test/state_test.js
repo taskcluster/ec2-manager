@@ -32,7 +32,7 @@ describe('State', () => {
 
     it('one flat condition', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE a = $1;',
+        text: 'SELECT * FROM junk WHERE junk.a = $1;',
         values: ['aye']
       };
       let actual = db._generateTableListQuery(table, {a: 'aye'});
@@ -41,7 +41,7 @@ describe('State', () => {
 
     it('two flat conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE a = $1 AND b = $2;',
+        text: 'SELECT * FROM junk WHERE junk.a = $1 AND junk.b = $2;',
         values: ['aye', 'bee']
       };
       let actual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
@@ -50,7 +50,7 @@ describe('State', () => {
 
     it('one list condition', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE a = $1 OR a = $2 OR a = $3;',
+        text: 'SELECT * FROM junk WHERE junk.a = $1 OR junk.a = $2 OR junk.a = $3;',
         values: ['a', 'b', 'c']
       };
       let actual = db._generateTableListQuery(table, {a: ['a','b','c']});
@@ -59,7 +59,7 @@ describe('State', () => {
 
     it('two list conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE (a = $1 OR a = $2) AND (b = $3 OR b = $4);',
+        text: 'SELECT * FROM junk WHERE (junk.a = $1 OR junk.a = $2) AND (junk.b = $3 OR junk.b = $4);',
         values: ['a', 'b', 'c', 'd']
       };
       let actual = db._generateTableListQuery(table, {a: ['a', 'b'], b: ['c', 'd']});
@@ -68,7 +68,7 @@ describe('State', () => {
 
     it('mixed type flat-list-flat conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE a = $1 AND (b = $2 OR b = $3) AND c = $4;',
+        text: 'SELECT * FROM junk WHERE junk.a = $1 AND (junk.b = $2 OR junk.b = $3) AND junk.c = $4;',
         values: ['a', 'b', 'c', 'd']
       };
       let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'});
@@ -234,6 +234,23 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(1);
     await db.removeInstance({region, id});
     assume(await db.listInstances()).has.length(0);
+  });
+
+  it('should be able to list spot requests to poll', async () => {
+    // These first spot requests should *not* show up in the list of ids
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-1', state: 'closed', status: 'irrelevant'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-2', state: 'open', status: 'price-too-low'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-3', state: 'cancelled', status: 'canceled-before-fulfillment'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-4', state: 'active', status: 'irrelevant'});
+    // These spot requests should show up
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-5', state: 'open', status: 'pending-fulfillment'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-6', state: 'open', status: 'pending-evaluation'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-7', state: 'open', status: 'pending-fulfillment'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-8', state: 'open', status: 'pending-evaluation'});
+    
+    let expected = ['r-5', 'r-6', 'r-7', 'r-8'];
+    let actual = await db.spotRequestsToPoll({region});
+    assume(expected).deeply.equals(actual);
   });
 
 
