@@ -21,23 +21,60 @@ describe('State', () => {
     await db._runScript('clear-db.sql');
   });
 
-  it('should generate valid listing queries', () => {
+  describe('query generation', () => {
     let table = 'junk';
-    let listAllExpected = {text: 'SELECT * FROM junk;', values: []};
-    let listAllActual = db._generateTableListQuery(table);
-    assume(listAllActual).deeply.equals(listAllExpected);
-    let oneConditionExpected = {
-      text: 'SELECT * FROM junk WHERE a = $1;',
-      values: ['aye']
-    };
-    let oneConditionActual = db._generateTableListQuery(table, {a: 'aye'});
-    assume(oneConditionActual).deeply.equals(oneConditionExpected);
-    let twoCondititwoxpected = {
-      text: 'SELECT * FROM junk WHERE a = $1 AND b = $2;',
-      values: ['aye', 'bee']
-    };
-    let twoConditionActual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
-    assume(twoConditionActual).deeply.equals(twoCondititwoxpected);
+
+    it('no conditions', () => {
+      let expected = {text: 'SELECT * FROM junk;', values: []};
+      let actual = db._generateTableListQuery(table);
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('one flat condition', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE a = $1;',
+        values: ['aye']
+      };
+      let actual = db._generateTableListQuery(table, {a: 'aye'});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('two flat conditions', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE a = $1 AND b = $2;',
+        values: ['aye', 'bee']
+      };
+      let actual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('one list condition', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE a = $1 OR a = $2 OR a = $3;',
+        values: ['a', 'b', 'c']
+      };
+      let actual = db._generateTableListQuery(table, {a: ['a','b','c']});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('two list conditions', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE (a = $1 OR a = $2) AND (b = $3 OR b = $4);',
+        values: ['a', 'b', 'c', 'd']
+      };
+      let actual = db._generateTableListQuery(table, {a: ['a', 'b'], b: ['c', 'd']});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('mixed type flat-list-flat conditions', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE a = $1 AND (b = $2 OR b = $3) AND c = $4;',
+        values: ['a', 'b', 'c', 'd']
+      };
+      let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'});
+      assume(expected).deeply.equals(actual);
+    });
+
   });
 
   it('should be empty at start of tests', async () => {
