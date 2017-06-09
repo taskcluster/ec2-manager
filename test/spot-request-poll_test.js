@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const main = require('../lib/main');
 const assume = require('assume');
 
-describe.only('Spot Request Polling', () => {
+describe('Spot Request Polling', () => {
   let state;
   let sandbox = sinon.sandbox.create();
   let region = 'us-west-2';

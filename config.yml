@@ -51,3 +51,7 @@ production:
   app:
     publishMetadata: true
 test:
+  app:
+    keyPrefix: 'ec2-manager-test:'
+    instancePubKey: 'lalalalla'
+    spotPollDelay: 200
