@@ -52,6 +52,9 @@ production:
     publishMetadata: true
   postgres:
     maxClients: 110
+  monitor:
+    project: ec2-manager
+    mock: false
 test:
   app:
     keyPrefix: 'ec2-manager-test:'

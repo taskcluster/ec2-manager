@@ -173,7 +173,7 @@ describe('State', () => {
     assume(spotRequests[0]).has.property('state', secondState);
   });
 
-  it('should have valid instance counts', async () => {
+  it.only('should have valid instance counts', async () => {
     // Insert some instances
     await db.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType: 'm3.medium', state: 'running'});
     await db.insertInstance({id: 'i-2', workerType, region: 'us-east-1', instanceType: 'm3.xlarge', state: 'running'});
