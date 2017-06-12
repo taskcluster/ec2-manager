@@ -2,7 +2,7 @@ defaults:
   app:
     keyPrefix: 'ec2-manager:'
     instancePubKey: 'lalalalla'
-    spotPollDelay: 200
+    spotPollDelay: 10
     regions:
       - us-east-1
       - us-east-2
@@ -50,6 +50,8 @@ production:
     baseUrl: 'https://ec2-manager.herokuapp.com/v1'
   app:
     publishMetadata: true
+  postgres:
+    maxClients: 110
 test:
   app:
     keyPrefix: 'ec2-manager-test:'
