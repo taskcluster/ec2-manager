@@ -173,7 +173,22 @@ describe('State', () => {
     assume(spotRequests[0]).has.property('state', secondState);
   });
 
-  it.only('should have valid instance counts', async () => {
+  it('should have list worker types', async () => {
+    // Insert some instances
+    await db.insertInstance({id: 'i-1', workerType: 'a', region: 'us-east-1', instanceType, state: 'running'});
+    await db.insertInstance({id: 'i-2', workerType: 'a', region: 'us-east-1', instanceType, state: 'running'});
+    await db.insertInstance({id: 'i-3', workerType: 'b', region: 'us-west-1', instanceType, state: 'running'});
+    await db.insertInstance({id: 'i-4', workerType: 'c', region: 'us-west-1', instanceType, state: 'running'});
+    // Insert some spot requests
+    await db.insertSpotRequest({id: 'r-1', workerType: 'b', region: 'us-east-1', instanceType, state: 'open', status});
+    await db.insertSpotRequest({id: 'r-2', workerType: 'd', region: 'us-east-1', instanceType, state: 'open', status});
+
+    let actual = await db.listWorkerTypes();
+    assume(actual).deeply.equals(['a', 'b', 'c', 'd']);
+
+  });
+
+  it('should have valid instance counts', async () => {
     // Insert some instances
     await db.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType: 'm3.medium', state: 'running'});
     await db.insertInstance({id: 'i-2', workerType, region: 'us-east-1', instanceType: 'm3.xlarge', state: 'running'});
