@@ -268,5 +268,30 @@ describe('State', () => {
     assume(expected).deeply.equals(actual);
   });
 
+  it('should be able to list all instance ids and spot requests of a worker type', async () => {
+    // Insert some instances
+    await db.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType: 'm3.medium', state: 'running'});
+    await db.insertInstance({id: 'i-2', workerType, region: 'us-west-1', instanceType: 'm3.xlarge', state: 'running'});
+    await db.insertInstance({id: 'i-3', workerType, region: 'us-west-2', instanceType: 'm3.medium', state: 'pending', srid: 'r-3'});
+    // Insert some spot requests
+    await db.insertSpotRequest({id: 'r-1', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-2', workerType, region: 'us-west-1', instanceType: 'c4.xlarge', state: 'open', status});
+    
+    let expected = {
+      instanceIds: [
+        {region: 'us-east-1', id: 'i-1'},
+        {region: 'us-west-1', id: 'i-2'},
+        {region: 'us-west-2', id: 'i-3'},
+      ],
+      requestIds: [
+        {region: 'us-east-1', id: 'r-1'},
+        {region: 'us-west-1', id: 'r-2'},
+        {region: 'us-west-2', id: 'r-3'},
+      ],
+    }
+    let actual = await db.listIdsOfWorkerType({workerType});
+    console.dir(actual);
+    assume(expected).deeply.equals(actual);
+  });
 
 });
