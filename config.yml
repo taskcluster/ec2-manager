@@ -58,5 +58,5 @@ production:
 test:
   app:
     keyPrefix: 'ec2-manager-test:'
-    instancePubKey: 'lalalalla'
+    instancePubKey: 'ssh-rsa pubkeydata'
     spotPollDelay: 200

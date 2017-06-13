@@ -14,10 +14,13 @@ describe('Api', () => {
   let server;
   let sandbox = sinon.sandbox.create();
   let runaws;
+  let regions;
 
   before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
+    let cfg = await main('cfg', {profile: 'test', process: 'test'});
+    regions = cfg.app.regions;
 
     testing.fakeauth.start({
       hasauth: ['ec2-manager:import-spot-request']
@@ -51,7 +54,7 @@ describe('Api', () => {
     assume(result).has.property('alive', true);
   });
 
-  describe.only('managing resources', () => {
+  describe('managing resources', () => {
     beforeEach(async () => {
       let status = 'pending-fulfillment';
       await state.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType, state: 'running'});
@@ -91,7 +94,54 @@ describe('Api', () => {
         }
       }
     });
+  });
 
+  describe.only('managing key pairs', () => {
+    it('should create and delete keypairs idempotently', async () => {
+      // We want the following cases covered:
+      // 1. nothing exists in internal cache or ec2 --> create
+      // 2. it exists in internal cache --> short circuit return
+      // 3. it exists in ec2, not internal --> only describe call
+      // 4. it deletes properly if key exists in ec2
+      // 5. it deletes properly if key does not exist in ec2
+
+      // Case 1
+      runaws.returns({
+        KeyPairs: []
+      });
+      await client.ensureKeyPair(workerType);
+      assume(runaws.callCount).equals(regions.length * 2);
+      runaws.reset();
+
+      // Case 2
+      await client.ensureKeyPair(workerType);
+      assume(runaws.callCount).equals(0);
+      runaws.reset();
+
+      // Case 4
+      runaws.returns({
+        KeyPairs: ['placeholder']
+      });
+      await client.removeKeyPair(workerType);
+      assume(runaws.callCount).equals(regions.length * 2);
+      runaws.reset();
+
+      // Case 5
+      runaws.returns({
+        KeyPairs: []
+      });
+      await client.removeKeyPair(workerType);
+      assume(runaws.callCount).equals(regions.length);
+      runaws.reset();
+
+      // Case 3 (we do this here so it was deleted from internal cache in
+      // remove* calls above
+      runaws.returns({
+        KeyPairs: ['placeholder'],
+      });
+      await client.ensureKeyPair(workerType);
+      assume(runaws.callCount).equals(regions.length);
+    });
   });
 
   describe('importing spot requests', () => {
