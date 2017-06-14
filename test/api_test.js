@@ -54,7 +54,7 @@ describe('Api', () => {
     assume(result).has.property('alive', true);
   });
 
-  describe('managing resources', () => {
+  describe.only('managing resources', () => {
     beforeEach(async () => {
       let status = 'pending-fulfillment';
       await state.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType, state: 'running'});
@@ -66,7 +66,7 @@ describe('Api', () => {
     });
 
     it('should be able to kill all of a worker type', async () => {
-      let result = await client.killAllWorkertype(workerType); 
+      let result = await client.terminateWorkertype(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
       assume(runaws.args).has.property('length', 6);
@@ -93,10 +93,29 @@ describe('Api', () => {
             }
         }
       }
+      
+      let instances = await state.listInstances();
+      let requests = await state.listSpotRequests();
+      assume(instances).has.lengthOf(0);
+      assume(requests).has.lengthOf(0);
+    });
+
+    it('should be able to kill a single instance', async () => {
+      runaws.returns({
+        TerminatingInstances: [{
+          PreviousState: {Name: 'pending'},
+          CurrentState: {Name: 'shutting-down'},
+        }]
+      });
+      let result = await client.terminateInstance('us-east-1', 'i-1');
+      assume(result).has.property('current', 'shutting-down');
+      assume(result).has.property('previous', 'pending');
+      let instances = await state.listInstances({id: 'i-1'});
+      assume(instances).has.lengthOf(0);
     });
   });
 
-  describe.only('managing key pairs', () => {
+  describe('managing key pairs', () => {
     it('should create and delete keypairs idempotently', async () => {
       // We want the following cases covered:
       // 1. nothing exists in internal cache or ec2 --> create
