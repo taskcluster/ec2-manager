@@ -110,8 +110,22 @@ describe('Api', () => {
       let result = await client.terminateInstance('us-east-1', 'i-1');
       assume(result).has.property('current', 'shutting-down');
       assume(result).has.property('previous', 'pending');
+      assume(runaws.callCount).equals(1);
       let instances = await state.listInstances({id: 'i-1'});
       assume(instances).has.lengthOf(0);
+    });
+    
+    it('should be able to cancel a single spot instance request', async () => {
+      runaws.returns({
+        CancelledSpotInstanceRequests: [{
+          State: 'closed',
+        }]
+      });
+      let result = await client.cancelSpotInstanceRequest('us-east-1', 'r-1');
+      assume(runaws.callCount).equals(1);
+      assume(result).has.property('current', 'closed');
+      let requests = await state.listSpotRequests({id: 'r-1'});
+      assume(requests).has.lengthOf(0);
     });
   });
 
