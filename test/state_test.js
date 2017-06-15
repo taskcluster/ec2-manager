@@ -21,23 +21,60 @@ describe('State', () => {
     await db._runScript('clear-db.sql');
   });
 
-  it('should generate valid listing queries', () => {
+  describe('query generation', () => {
     let table = 'junk';
-    let listAllExpected = {text: 'SELECT * FROM junk;', values: []};
-    let listAllActual = db._generateTableListQuery(table);
-    assume(listAllActual).deeply.equals(listAllExpected);
-    let oneConditionExpected = {
-      text: 'SELECT * FROM junk WHERE a = $1;',
-      values: ['aye']
-    };
-    let oneConditionActual = db._generateTableListQuery(table, {a: 'aye'});
-    assume(oneConditionActual).deeply.equals(oneConditionExpected);
-    let twoCondititwoxpected = {
-      text: 'SELECT * FROM junk WHERE a = $1 AND b = $2;',
-      values: ['aye', 'bee']
-    };
-    let twoConditionActual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
-    assume(twoConditionActual).deeply.equals(twoCondititwoxpected);
+
+    it('no conditions', () => {
+      let expected = {text: 'SELECT * FROM junk;', values: []};
+      let actual = db._generateTableListQuery(table);
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('one flat condition', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE junk.a = $1;',
+        values: ['aye']
+      };
+      let actual = db._generateTableListQuery(table, {a: 'aye'});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('two flat conditions', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE junk.a = $1 AND junk.b = $2;',
+        values: ['aye', 'bee']
+      };
+      let actual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('one list condition', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE junk.a = $1 OR junk.a = $2 OR junk.a = $3;',
+        values: ['a', 'b', 'c']
+      };
+      let actual = db._generateTableListQuery(table, {a: ['a','b','c']});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('two list conditions', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE (junk.a = $1 OR junk.a = $2) AND (junk.b = $3 OR junk.b = $4);',
+        values: ['a', 'b', 'c', 'd']
+      };
+      let actual = db._generateTableListQuery(table, {a: ['a', 'b'], b: ['c', 'd']});
+      assume(expected).deeply.equals(actual);
+    });
+
+    it('mixed type flat-list-flat conditions', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE junk.a = $1 AND (junk.b = $2 OR junk.b = $3) AND junk.c = $4;',
+        values: ['a', 'b', 'c', 'd']
+      };
+      let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'});
+      assume(expected).deeply.equals(actual);
+    });
+
   });
 
   it('should be empty at start of tests', async () => {
@@ -136,6 +173,21 @@ describe('State', () => {
     assume(spotRequests[0]).has.property('state', secondState);
   });
 
+  it('should have list worker types', async () => {
+    // Insert some instances
+    await db.insertInstance({id: 'i-1', workerType: 'a', region: 'us-east-1', instanceType, state: 'running'});
+    await db.insertInstance({id: 'i-2', workerType: 'a', region: 'us-east-1', instanceType, state: 'running'});
+    await db.insertInstance({id: 'i-3', workerType: 'b', region: 'us-west-1', instanceType, state: 'running'});
+    await db.insertInstance({id: 'i-4', workerType: 'c', region: 'us-west-1', instanceType, state: 'running'});
+    // Insert some spot requests
+    await db.insertSpotRequest({id: 'r-1', workerType: 'b', region: 'us-east-1', instanceType, state: 'open', status});
+    await db.insertSpotRequest({id: 'r-2', workerType: 'd', region: 'us-east-1', instanceType, state: 'open', status});
+
+    let actual = await db.listWorkerTypes();
+    assume(actual).deeply.equals(['a', 'b', 'c', 'd']);
+
+  });
+
   it('should have valid instance counts', async () => {
     // Insert some instances
     await db.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType: 'm3.medium', state: 'running'});
@@ -199,5 +251,47 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(0);
   });
 
+  it('should be able to list spot requests to poll', async () => {
+    // These first spot requests should *not* show up in the list of ids
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-1', state: 'closed', status: 'irrelevant'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-2', state: 'open', status: 'price-too-low'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-3', state: 'cancelled', status: 'canceled-before-fulfillment'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-4', state: 'active', status: 'irrelevant'});
+    // These spot requests should show up
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-5', state: 'open', status: 'pending-fulfillment'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-6', state: 'open', status: 'pending-evaluation'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-7', state: 'open', status: 'pending-fulfillment'});
+    await db.insertSpotRequest({workerType, region, instanceType, id: 'r-8', state: 'open', status: 'pending-evaluation'});
+    
+    let expected = ['r-5', 'r-6', 'r-7', 'r-8'];
+    let actual = await db.spotRequestsToPoll({region});
+    assume(expected).deeply.equals(actual);
+  });
+
+  it('should be able to list all instance ids and spot requests of a worker type', async () => {
+    // Insert some instances
+    await db.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType: 'm3.medium', state: 'running'});
+    await db.insertInstance({id: 'i-2', workerType, region: 'us-west-1', instanceType: 'm3.xlarge', state: 'running'});
+    await db.insertInstance({id: 'i-3', workerType, region: 'us-west-2', instanceType: 'm3.medium', state: 'pending', srid: 'r-3'});
+    // Insert some spot requests
+    await db.insertSpotRequest({id: 'r-1', workerType, region: 'us-east-1', instanceType: 'c4.medium', state: 'open', status});
+    await db.insertSpotRequest({id: 'r-2', workerType, region: 'us-west-1', instanceType: 'c4.xlarge', state: 'open', status});
+    
+    let expected = {
+      instanceIds: [
+        {region: 'us-east-1', id: 'i-1'},
+        {region: 'us-west-1', id: 'i-2'},
+        {region: 'us-west-2', id: 'i-3'},
+      ],
+      requestIds: [
+        {region: 'us-east-1', id: 'r-1'},
+        {region: 'us-west-1', id: 'r-2'},
+        {region: 'us-west-2', id: 'r-3'},
+      ],
+    }
+    let actual = await db.listIdsOfWorkerType({workerType});
+    console.dir(actual);
+    assume(expected).deeply.equals(actual);
+  });
 
 });

@@ -1,7 +1,8 @@
 defaults:
   app:
-    keyPreifx: 'ec2-manager:'
-    spotPollFreq: 200
+    keyPrefix: 'ec2-manager:'
+    instancePubKey: 'lalalalla'
+    spotPollDelay: 10
     regions:
       - us-east-1
       - us-east-2
@@ -10,6 +11,7 @@ defaults:
       - eu-central-1
     queueName: 'ec2-events'
     ruleName: 'ec2-instance-state-transitions'
+    publishMetadata: false
   ec2:
     apiVersion: 2014-01-01
   sqs:
@@ -25,6 +27,7 @@ defaults:
   server:
     port: 5555
     publicUrl: localhost:5555
+    baseUrl: 'http://localhost:5555/v1'
     env: development
     forceSSL: false
     trustProxy: false
@@ -39,4 +42,21 @@ defaults:
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
 development:
 production:
+  server:
+    port: !env:number PORT
+    env: production
+    forceSSL: true
+    trustProxy: true
+    baseUrl: 'https://ec2-manager.herokuapp.com/v1'
+  app:
+    publishMetadata: true
+  postgres:
+    maxClients: 110
+  monitor:
+    project: ec2-manager
+    mock: false
 test:
+  app:
+    keyPrefix: 'ec2-manager-test:'
+    instancePubKey: 'ssh-rsa pubkeydata'
+    spotPollDelay: 200
