@@ -2,7 +2,7 @@ defaults:
   app:
     keyPrefix: 'ec2-manager:'
     instancePubKey: 'lalalalla'
-    spotPollDelay: 10
+    spotPollDelay: 25
     regions:
       - us-east-1
       - us-east-2
