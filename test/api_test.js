@@ -5,7 +5,7 @@ const main = require('../lib/main');
 const {api} = require('../lib/api');
 const sinon = require('sinon');
 
-describe.only('Api', () => {
+describe('Api', () => {
   let state;
   let region = 'us-west-2';
   let instanceType = 'c3.xlarge';
@@ -33,6 +33,7 @@ describe.only('Api', () => {
       credentials: {
         clientId: 'hasauth',
         accessToken: 'abcde',
+        algorithm: 'sha256',
       }
     });
   });
@@ -43,8 +44,11 @@ describe.only('Api', () => {
     server = await main('server', {profile: 'test', process: 'test', runaws});
   });
 
-  afterEach(() => {
+  after(() => {
     testing.fakeauth.stop();
+  });
+
+  afterEach(() => {
     server.terminate();
     sandbox.restore();
   });
