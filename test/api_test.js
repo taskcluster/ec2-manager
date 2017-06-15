@@ -90,6 +90,77 @@ describe('Api', () => {
     });
   });
 
+  describe('requesting resources', () => {
+    let ClientToken;
+    let Region;
+    let SpotPrice;
+    let LaunchSpecification;
+
+    beforeEach(() => {
+      ClientToken = 'client-token';
+      Region = region;
+      SpotPrice = 1.66;
+
+      LaunchSpecification = {
+        KeyName: `ec2-manager-test:${workerType}:ffe27db`,
+        ImageId: 'ami-1',
+        InstanceType: instanceType,
+        SecurityGroups: [],
+      }
+
+      runaws.returns({
+        SpotInstanceRequests: [{
+          SpotInstanceRequestId: 'r-1',
+          LaunchSpecification,
+          InstanceType: instanceType,
+          State: 'open',
+          Status: {
+            Code: 'pending-evaluation',
+          }
+        }]
+      });
+    });
+
+    // NOTE: The idempotency assertions are a combination of trusting Postgres
+    // to return the primary key conflict, a check that the worker type
+    // argument is the same as that in the LaunchSpecification and that EC2
+    // idempotency works
+    it('should request a spot instance (idempotent)', async () => {
+      await client.requestSpotInstance(workerType, {
+        ClientToken, 
+        Region,
+        SpotPrice,
+        LaunchSpecification,
+      });
+
+      let requests = await state.listSpotRequests();
+      assume(requests).has.lengthOf(1);
+      assume(runaws.callCount).equals(1);
+      let call = runaws.firstCall.args;
+      assume(call[0].config.region).equals(region);
+      assume(call[1]).equals('requestSpotInstances');
+      assume(call[2]).deeply.equals({
+        ClientToken,
+        SpotPrice,
+        InstanceCount: 1,
+        Type: 'one-time',
+        LaunchSpecification,
+      });
+      runaws.resetHistory();
+
+      await client.requestSpotInstance(workerType, {
+        ClientToken, 
+        Region,
+        SpotPrice,
+        LaunchSpecification,
+      });
+      requests = await state.listSpotRequests();
+      assume(requests).has.lengthOf(1);
+      assume(runaws.callCount).equals(1);
+ 
+    });
+  });
+
   describe('managing resources', () => {
     beforeEach(async () => {
       let status = 'pending-fulfillment';
