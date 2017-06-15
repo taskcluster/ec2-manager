@@ -54,7 +54,7 @@ describe('Api', () => {
     assume(result).has.property('alive', true);
   });
 
-  describe.only('managing resources', () => {
+  describe('managing resources', () => {
     beforeEach(async () => {
       let status = 'pending-fulfillment';
       await state.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType, state: 'running'});
