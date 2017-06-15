@@ -100,7 +100,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(requests).lengthOf(0);
   });
 
-  it.only('should skip a pending message for a different manager', async () => {
+  it('should skip a pending message for a different manager', async () => {
     let mock = sandbox.stub(listener, 'awsrun');
 
     mock.onFirstCall().returns(Promise.resolve({

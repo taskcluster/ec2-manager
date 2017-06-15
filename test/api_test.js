@@ -5,7 +5,7 @@ const main = require('../lib/main');
 const {api} = require('../lib/api');
 const sinon = require('sinon');
 
-describe('Api', () => {
+describe.only('Api', () => {
   let state;
   let region = 'us-west-2';
   let instanceType = 'c3.xlarge';
@@ -52,6 +52,14 @@ describe('Api', () => {
   it('api comes up', async () => {
     let result = await client.ping();
     assume(result).has.property('alive', true);
+  });
+
+  it('should list worker types', async () => {
+    let status = 'pending-evaluation';
+    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running'});
+    await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status});
+    let result = await client.listWorkerTypes();
+    assume(result).deeply.equals(['w-1', 'w-2']);
   });
 
   describe('managing resources', () => {
