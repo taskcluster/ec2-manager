@@ -23,7 +23,7 @@ describe.only('Api', () => {
     regions = cfg.app.regions;
 
     testing.fakeauth.start({
-      hasauth: ['ec2-manager:import-spot-request']
+      hasauth: ['*'],
     });
 
     let apiRef = api.reference({baseUrl: 'http://localhost:5555/v1'});
@@ -60,6 +60,30 @@ describe.only('Api', () => {
     await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status});
     let result = await client.listWorkerTypes();
     assume(result).deeply.equals(['w-1', 'w-2']);
+  });
+
+  it('should show instance counts', async () => {
+    let status = 'pending-evaluation';
+    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running'});
+    await state.insertInstance({id: 'i-2', workerType: 'w-1', region, instanceType, state: 'pending'});
+    await state.insertSpotRequest({id: 'r-1', workerType: 'w-1', region, instanceType, state: 'open', status});
+    let result = await client.workerTypeStats('w-1');
+    assume(result).deeply.equals({
+      pending: [{
+        instanceType,
+        count: 1,
+        type: 'instance',
+      }, {
+        instanceType,
+        count: 1,
+        type: 'spot-request',
+      }],
+      running: [{
+        instanceType,
+        count: 1,
+        type: 'instance',
+      }],
+    });
   });
 
   describe('managing resources', () => {

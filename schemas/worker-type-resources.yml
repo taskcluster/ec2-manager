@@ -1,0 +1,37 @@
+$schema: http://json-schema.org/draft-04/schema#
+title: "Overview of computational resources"
+description: |
+  Overview of computational resources for a given worker type
+type: object
+properties:
+  pending:
+    type: array
+    items:
+      type: object
+      properties:
+        instanceType:
+          type: string
+        count:
+          type: number
+        type:
+          type: string
+          enum: 
+            - 'instance'
+            - 'spot-request'
+  running:
+    type: array
+    item:
+      type: object
+      properties:
+        instanceType:
+          type: string
+        count:
+          type: number
+        type:
+          type: string
+          enum: 
+            - 'instance'
+additionalProperties: false
+requiredProperties:
+  - pending
+  - running
