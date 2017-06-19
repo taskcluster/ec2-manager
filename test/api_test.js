@@ -19,6 +19,8 @@ describe('Api', () => {
   before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
+    await state._runScript('drop-db.sql');
+    await state._runScript('create-db.sql');
     let cfg = await main('cfg', {profile: 'test', process: 'test'});
     regions = cfg.app.regions;
 
