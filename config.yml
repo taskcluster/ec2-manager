@@ -41,6 +41,8 @@ defaults:
       clientId: !env TASKCLUSTER_CLIENT_ID
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
 development:
+  app:
+    keyPrefix: 'aws-provisioner-v1-managed:'
 production:
   server:
     port: !env:number PORT
@@ -49,6 +51,7 @@ production:
     trustProxy: true
     baseUrl: 'https://ec2-manager.herokuapp.com/v1'
   app:
+    keyPrefix: 'aws-provisioner-v1-managed:'
     publishMetadata: true
   postgres:
     maxClients: 110
