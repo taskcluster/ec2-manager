@@ -58,7 +58,7 @@ properties:
           This is a list of the security groups this image will use.  These
           groups must already exist in the region.
         items:
-          type: object
+          type: string
     requiredProperties:
       - KeyName
       - InstanceType
