@@ -145,6 +145,20 @@ describe('State', () => {
   });
 
 
+  it('should be able to update an instance', async () => {
+    let id = 'i-123456789';
+    let firstState = 'pending';
+    let secondState = 'running';
+    await db.insertInstance({workerType, region, instanceType, id, state: firstState});
+    let instances = await db.listInstances(); 
+    assume(instances).has.length(1);
+    assume(instances[0]).has.property('state', firstState);
+    await db.updateInstanceState({region, id, state: secondState});
+    instances = await db.listInstances(); 
+    assume(instances).has.length(1);
+    assume(instances[0]).has.property('state', secondState);
+  });
+
   it('should be able to update a spot request', async () => {
     let id = 'r-123456789';
     let firstState = 'open';

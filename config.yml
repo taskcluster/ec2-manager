@@ -2,13 +2,18 @@ defaults:
   app:
     keyPrefix: 'ec2-manager:'
     instancePubKey: 'lalalalla'
-    spotPollDelay: 10
+    spotPollDelay: 25
+    houseKeepingPollDelay: 86400 # One day
+    maxInstanceLifeHours: 96
     regions:
       - us-east-1
       - us-east-2
       - us-west-1
       - us-west-2
+      - ca-central-1
       - eu-central-1
+      - eu-west-1
+      - eu-west-2
     queueName: 'ec2-events'
     ruleName: 'ec2-instance-state-transitions'
     publishMetadata: false
@@ -41,6 +46,9 @@ defaults:
       clientId: !env TASKCLUSTER_CLIENT_ID
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
 development:
+  app:
+    keyPrefix: 'aws-provisioner-dev:'
+    instancePubKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbPJ9W0lOXMQX8+ooo054m96IRcyhEJZ+ocdBqklFSlyC+6UZPwDBoY3lmT1PPOE/niVYKjSGqGtnw9Y0iSEE1MuNvrLDzmFd3+mmHOhHVs6buDOdIFS+MXVyjcdhRoZBqCNg1tz9vvq1NXzYZ4DIWo8xQG/Xq5EKcsgRiitl6VfssCw6jZla8YEQ7ARk8EqJ1BbaMfW8PceiqkmpL/SPNnFyKkbnfVkiqjYarLJJZaW21Wq7eEcZZdUOaHuSpFdNlfGORuDD35VjQDNB+QximDrAEDUN2LOKmS718Yf6+w2k72PZkHwMUHxA4GvlkQO61v+Jm/A2fYTp3QPtQuKuh'
 production:
   server:
     port: !env:number PORT
@@ -49,11 +57,27 @@ production:
     trustProxy: true
     baseUrl: 'https://ec2-manager.herokuapp.com/v1'
   app:
+    keyPrefix: 'aws-provisioner-v1-managed:'
     publishMetadata: true
   postgres:
     maxClients: 110
   monitor:
     project: ec2-manager
+    mock: false
+staging:
+  server:
+    port: !env:number PORT
+    env: production
+    forceSSL: true
+    trustProxy: true
+    baseUrl: 'https://ec2-manager-staging.herokuapp.com/v1'
+  app:
+    keyPrefix: 'ec2-manager-staging:'
+    publishMetadata: true
+  postgres:
+    maxClients: 110
+  monitor:
+    project: ec2-manager-staging
     mock: false
 test:
   app:

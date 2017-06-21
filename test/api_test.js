@@ -19,11 +19,13 @@ describe('Api', () => {
   before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
+    await state._runScript('drop-db.sql');
+    await state._runScript('create-db.sql');
     let cfg = await main('cfg', {profile: 'test', process: 'test'});
     regions = cfg.app.regions;
 
     testing.fakeauth.start({
-      hasauth: ['ec2-manager:import-spot-request']
+      hasauth: ['*'],
     });
 
     let apiRef = api.reference({baseUrl: 'http://localhost:5555/v1'});
@@ -43,8 +45,11 @@ describe('Api', () => {
     server = await main('server', {profile: 'test', process: 'test', runaws});
   });
 
-  afterEach(() => {
+  after(() => {
     testing.fakeauth.stop();
+  });
+
+  afterEach(() => {
     server.terminate();
     sandbox.restore();
   });
@@ -54,7 +59,110 @@ describe('Api', () => {
     assume(result).has.property('alive', true);
   });
 
-  describe.only('managing resources', () => {
+  it('should list worker types', async () => {
+    let status = 'pending-evaluation';
+    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running'});
+    await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status});
+    let result = await client.listWorkerTypes();
+    assume(result).deeply.equals(['w-1', 'w-2']);
+  });
+
+  it('should show instance counts', async () => {
+    let status = 'pending-evaluation';
+    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running'});
+    await state.insertInstance({id: 'i-2', workerType: 'w-1', region, instanceType, state: 'pending'});
+    await state.insertSpotRequest({id: 'r-1', workerType: 'w-1', region, instanceType, state: 'open', status});
+    let result = await client.workerTypeStats('w-1');
+    assume(result).deeply.equals({
+      pending: [{
+        instanceType,
+        count: 1,
+        type: 'instance',
+      }, {
+        instanceType,
+        count: 1,
+        type: 'spot-request',
+      }],
+      running: [{
+        instanceType,
+        count: 1,
+        type: 'instance',
+      }],
+    });
+  });
+
+  describe('requesting resources', () => {
+    let ClientToken;
+    let Region;
+    let SpotPrice;
+    let LaunchSpecification;
+
+    beforeEach(() => {
+      ClientToken = 'client-token';
+      Region = region;
+      SpotPrice = 1.66;
+
+      LaunchSpecification = {
+        KeyName: `ec2-manager-test:${workerType}:ffe27db`,
+        ImageId: 'ami-1',
+        InstanceType: instanceType,
+        SecurityGroups: [],
+      }
+
+      runaws.returns({
+        SpotInstanceRequests: [{
+          SpotInstanceRequestId: 'r-1',
+          LaunchSpecification,
+          InstanceType: instanceType,
+          State: 'open',
+          Status: {
+            Code: 'pending-evaluation',
+          }
+        }]
+      });
+    });
+
+    // NOTE: The idempotency assertions are a combination of trusting Postgres
+    // to return the primary key conflict, a check that the worker type
+    // argument is the same as that in the LaunchSpecification and that EC2
+    // idempotency works
+    it('should request a spot instance (idempotent)', async () => {
+      await client.requestSpotInstance(workerType, {
+        ClientToken, 
+        Region,
+        SpotPrice,
+        LaunchSpecification,
+      });
+
+      let requests = await state.listSpotRequests();
+      assume(requests).has.lengthOf(1);
+      assume(runaws.callCount).equals(1);
+      let call = runaws.firstCall.args;
+      assume(call[0].config.region).equals(region);
+      assume(call[1]).equals('requestSpotInstances');
+      assume(call[2]).deeply.equals({
+        ClientToken,
+        SpotPrice: SpotPrice.toString(),
+        InstanceCount: 1,
+        Type: 'one-time',
+        LaunchSpecification,
+      });
+      runaws.resetHistory();
+
+      await client.requestSpotInstance(workerType, {
+        ClientToken, 
+        Region,
+        SpotPrice,
+        LaunchSpecification,
+      });
+      requests = await state.listSpotRequests();
+      assume(requests).has.lengthOf(1);
+      assume(runaws.callCount).equals(1);
+ 
+    });
+  });
+
+  describe('managing resources', () => {
     beforeEach(async () => {
       let status = 'pending-fulfillment';
       await state.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType, state: 'running'});
@@ -66,7 +174,7 @@ describe('Api', () => {
     });
 
     it('should be able to kill all of a worker type', async () => {
-      let result = await client.terminateWorkertype(workerType); 
+      let result = await client.terminateWorkerType(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
       assume(runaws.args).has.property('length', 6);

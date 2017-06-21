@@ -6,12 +6,12 @@
   "author": "John Ford <john@johnford.org>",
   "license": "MPL-2.0",
   "engines": {
-    "node": ">=7.10.0 <8",
+    "node": ">=8.1.0",
     "yarn": ">=0.24.5"
   },
   "scripts": {
     "start": "node lib/main.js start",
-    "test": "mocha"
+    "test": "NODE_ENV=test nyc --reporter=html mocha"
   },
   "dependencies": {
     "aws-sdk": "^2.58.0",
@@ -20,6 +20,7 @@
     "bluebird": "^3.5.0",
     "lodash": "^4.17.4",
     "mocha": "^3.4.2",
+    "nyc": "^11.0.2",
     "pg": "^6.2.3",
     "pg-pool": "^1.7.1",
     "redis": "^2.7.1",

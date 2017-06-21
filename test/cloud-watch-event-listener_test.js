@@ -48,11 +48,12 @@ describe('Cloud Watch Event Listener', () => {
     sqs = sqs[region];
 
     let monitor = await main('monitor', {profile: 'test', process: 'test'});
+    let cfg = await main('cfg', {profile: 'test', process: 'test'});
 
     await state._runScript('drop-db.sql');
     await state._runScript('create-db.sql');
 
-    listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor});
+    listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, keyPrefix: cfg.app.keyPrefix});
   });
 
   // I could add these helper functions to the actual state.js class but I'd
@@ -75,12 +76,12 @@ describe('Cloud Watch Event Listener', () => {
       status: 'pending-fulfillment',
     });
 
-    let mock = sandbox.stub(listener, 'awsrun');
+    let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
       Reservations: [{
         Instances: [{
-          KeyName: 'provisioner:workertype:hash',
+          KeyName: 'ec2-manager-test:workertype:hash',
           InstanceType: 'c3.xlarge',
           SpotInstanceRequestId: 'r-1234',
         }],
@@ -99,6 +100,25 @@ describe('Cloud Watch Event Listener', () => {
     assume(requests).lengthOf(0);
   });
 
+  it('should skip a pending message for a different manager', async () => {
+    let mock = sandbox.stub(listener, 'runaws');
+
+    mock.onFirstCall().returns(Promise.resolve({
+      Reservations: [{
+        Instances: [{
+          KeyName: 'other-manager:workertype:hash',
+          InstanceType: 'c3.xlarge',
+          SpotInstanceRequestId: 'r-1234',
+        }],
+      }]
+    }));
+
+    let instances = await state.listInstances();
+    let requests = await state.listSpotRequests();
+    assume(instances).lengthOf(0);
+    assume(requests).lengthOf(0);
+  });
+
   it('should handle shutting-down, deleting spot request', async () => {
     await state.insertSpotRequest({
       workerType: 'workertype',
@@ -109,12 +129,12 @@ describe('Cloud Watch Event Listener', () => {
       status: 'pending-fulfillment',
     });
 
-    let mock = sandbox.stub(listener, 'awsrun');
+    let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
       Reservations: [{
         Instances: [{
-          KeyName: 'provisioner:workertype:hash',
+          KeyName: 'ec2-manager-test:workertype:hash',
           InstanceType: 'c3.xlarge',
           SpotInstanceRequestId: 'r-1234',
         }],
