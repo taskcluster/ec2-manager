@@ -1,7 +1,7 @@
 defaults:
   app:
     keyPrefix: 'ec2-manager:'
-    instancePubKey: 'lalalalla'
+    instancePubKey: !env AWS_INSTANCE_PUBKEY
     spotPollDelay: 25
     houseKeepingPollDelay: 86400 # One day
     maxInstanceLifeHours: 96
