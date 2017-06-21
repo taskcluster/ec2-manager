@@ -35,7 +35,6 @@ describe('Api', () => {
       credentials: {
         clientId: 'hasauth',
         accessToken: 'abcde',
-        algorithm: 'sha256',
       }
     });
   });

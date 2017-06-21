@@ -17,6 +17,7 @@ describe('House Keeper', () => {
   let describeInstancesStub;
   let describeSpotInstanceRequestsStub;
   let terminateInstancesStub;
+  let createTagsStub;
   let keyPrefix;
   let regions;
   let houseKeeper;
@@ -39,6 +40,7 @@ describe('House Keeper', () => {
     describeInstancesStub = sandbox.stub();
     describeSpotInstanceRequestsStub = sandbox.stub();
     terminateInstancesStub = sandbox.stub();
+    createTagsStub = sandbox.stub();
 
     async function runaws(service, method, params) {
       if (method === 'describeInstances') {
@@ -47,6 +49,8 @@ describe('House Keeper', () => {
         return describeSpotInstanceRequestsStub(service, method, params);
       } else if (method === 'terminateInstances') {
         return terminateInstancesStub(service, method, params);
+      } else if (method === 'createTags') {
+        return createTagsStub(service, method, params);
       } else {
         throw new Error('Only those two methods should be called, not ' + method);
       }
@@ -149,6 +153,48 @@ describe('House Keeper', () => {
       },
       zombies: [],
     });
+  });
+
+  it('should tag instances and requests which arent tagged', async () => {
+    assume(await state.listInstances()).has.lengthOf(0);
+    assume(await state.listSpotRequests()).has.lengthOf(0);
+
+    describeInstancesStub.returns({
+      Reservations: [{
+        Instances: [{
+          InstanceId: 'i-1',
+          LaunchTime: new Date().toString(),
+          KeyName: keyPrefix + workerType,
+          InstanceType: instanceType,
+          State: {
+            Name: 'running'
+          },
+          SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
+        }],
+      }]
+    });
+
+    describeSpotInstanceRequestsStub.returns({
+      SpotInstanceRequests: [{
+        SpotInstanceRequestId: 'r-1',
+        LaunchSpecification: {
+          KeyName: keyPrefix + workerType,
+          InstanceType: instanceType,
+        },
+        State: 'open',
+        Status: {
+          Code: 'pending-evaluation',
+        },
+      }]
+    });
+
+    let outcome = await houseKeeper.sweep();
+    assume(createTagsStub.args[0][2].Resources).deeply.equals(['i-1', 'r-1']);
+    assume(createTagsStub.args[0][2].Tags).deeply.equals([
+      {Key: 'Name', Value: 'apiTest'},
+      {Key: 'Owner', Value: 'ec2-manager-test'},
+      {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
+    ]);
   });
 
   it('should zombie kill', async () => {

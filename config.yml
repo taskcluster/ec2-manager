@@ -66,3 +66,7 @@ test:
     keyPrefix: 'ec2-manager-test:'
     instancePubKey: 'ssh-rsa pubkeydata'
     spotPollDelay: 200
+  server:
+    port: 5556
+    publicUrl: localhost:5556
+    baseUrl: 'http://localhost:5556/v1'

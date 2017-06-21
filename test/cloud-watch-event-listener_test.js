@@ -76,7 +76,7 @@ describe('Cloud Watch Event Listener', () => {
       status: 'pending-fulfillment',
     });
 
-    let mock = sandbox.stub(listener, 'awsrun');
+    let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
       Reservations: [{
@@ -101,7 +101,7 @@ describe('Cloud Watch Event Listener', () => {
   });
 
   it('should skip a pending message for a different manager', async () => {
-    let mock = sandbox.stub(listener, 'awsrun');
+    let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
       Reservations: [{
@@ -129,7 +129,7 @@ describe('Cloud Watch Event Listener', () => {
       status: 'pending-fulfillment',
     });
 
-    let mock = sandbox.stub(listener, 'awsrun');
+    let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
       Reservations: [{
