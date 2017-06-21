@@ -142,7 +142,7 @@ describe('Api', () => {
       assume(call[1]).equals('requestSpotInstances');
       assume(call[2]).deeply.equals({
         ClientToken,
-        SpotPrice,
+        SpotPrice: SpotPrice.toString(),
         InstanceCount: 1,
         Type: 'one-time',
         LaunchSpecification,
@@ -174,7 +174,7 @@ describe('Api', () => {
     });
 
     it('should be able to kill all of a worker type', async () => {
-      let result = await client.terminateWorkertype(workerType); 
+      let result = await client.terminateWorkerType(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
       assume(runaws.args).has.property('length', 6);
