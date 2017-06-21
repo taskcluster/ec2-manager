@@ -3,7 +3,7 @@ defaults:
     keyPrefix: 'ec2-manager:'
     instancePubKey: 'lalalalla'
     spotPollDelay: 25
-    zombiePollDelay: 86400 # One day
+    houseKeepingPollDelay: 86400 # One day
     maxInstanceLifeHours: 96
     regions:
       - us-east-1
