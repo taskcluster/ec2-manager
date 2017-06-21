@@ -10,7 +10,10 @@ defaults:
       - us-east-2
       - us-west-1
       - us-west-2
+      - ca-central-1
       - eu-central-1
+      - eu-west-1
+      - eu-west-2
     queueName: 'ec2-events'
     ruleName: 'ec2-instance-state-transitions'
     publishMetadata: false
@@ -55,6 +58,21 @@ production:
     baseUrl: 'https://ec2-manager.herokuapp.com/v1'
   app:
     keyPrefix: 'aws-provisioner-v1-managed:'
+    publishMetadata: true
+  postgres:
+    maxClients: 110
+  monitor:
+    project: ec2-manager
+    mock: false
+staging:
+  server:
+    port: !env:number PORT
+    env: production
+    forceSSL: true
+    trustProxy: true
+    baseUrl: 'https://ec2-manager-staging.herokuapp.com/v1'
+  app:
+    keyPrefix: 'ec2-manager-staging:'
     publishMetadata: true
   postgres:
     maxClients: 110
