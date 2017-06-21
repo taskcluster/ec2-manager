@@ -77,7 +77,7 @@ staging:
   postgres:
     maxClients: 110
   monitor:
-    project: ec2-manager
+    project: ec2-manager-staging
     mock: false
 test:
   app:
