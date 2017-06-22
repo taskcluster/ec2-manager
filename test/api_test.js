@@ -331,13 +331,7 @@ describe('Api', () => {
     it('should list regions', async () => {
       let result = await client.regions();
       result.regions.sort();
-      assume(result.regions).deeply.equals([
-        'us-east-1',
-        'us-east-2',
-        'us-west-1',
-        'us-west-2',
-        'eu-central-1',
-      ].sort());
+      assume(result.regions).deeply.equals(regions.sort());
     });
 
     it('should list spot requests to poll', async () => {
@@ -350,7 +344,7 @@ describe('Api', () => {
         status: 'pending-fulfillment',
       });
       let result = await client.spotRequestsToPoll();
-      assume(result).has.lengthOf(5);
+      assume(result).has.lengthOf(regions.length);
       let usw2 = result.filter(x => x.region === 'us-west-2')[0];
       assume(usw2.values).has.lengthOf(1);
       assume(usw2.values[0]).equals('r-1234');
