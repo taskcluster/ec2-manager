@@ -285,46 +285,6 @@ describe('Api', () => {
     });
   });
 
-  describe('importing spot requests', () => {
-    const sr = {
-      SpotInstanceRequests: [{
-        SpotInstanceRequestId: 'r-12345',
-        LaunchSpecification: {
-          KeyName: 'testing:workertype:hash',
-          InstanceType: instanceType,
-
-        },
-        State: 'open',
-        Status: {
-          Code: 'pending-fulfillment',
-        }
-      }]
-    }
-
-    it('should import a spot request', async () => {
-      let requests = await state.listSpotRequests();
-      assume(requests).lengthOf(0);
-      await client.importSpotRequest(region, sr);
-      requests = await state.listSpotRequests();
-      assume(requests).lengthOf(1);
-    });
-
-    it('should fail if trying to reinsert existing request', async () => {
-      let requests = await state.listSpotRequests();
-      assume(requests).lengthOf(0);
-      await client.importSpotRequest(region, sr);
-      try {
-        await client.importSpotRequest(region, sr);
-        return Promise.reject(new Error('should fail!'));
-      } catch (err) {
-        assume(err).has.property('code', 'RequestConflict');
-        assume(err).has.property('statusCode', 409);
-      }
-      requests = await state.listSpotRequests();
-      assume(requests).lengthOf(1);
-    });
-  });
-
   // These are functions which are supposed to be used for debugging and
   // troubleshooting primarily.  Maybe some ui stuff?
   describe('internal api', () => {
