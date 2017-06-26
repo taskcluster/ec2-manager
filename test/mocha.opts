@@ -1,1 +1,2 @@
---timeout 30s
+--timeout 5s
+--require ./test/throw-bad-promises.js
