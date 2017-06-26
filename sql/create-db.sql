@@ -66,11 +66,12 @@ CREATE TRIGGER update_instances_touched
 BEFORE UPDATE ON instances
 FOR EACH ROW EXECUTE PROCEDURE update_touched();
 
-
--- Here's a couple of inserts which will work with
--- these queries:
---INSERT INTO spotrequests (id, workerType, region, instanceType, state, status)
---VALUES ('r-1234', 'test-workertype', 'us-east-1', 'm3.xlarge', 'open', 'pending-fulfillment');
-
---INSERT INTO instances (id, workerType, region, instanceType, state, srid)
---VALUES ('i-1235', 'test-workertype', 'us-east-1', 'm3.xlarge', 'running', 'r-1234');
+-- Cloudwatch Events Log
+-- We want to keep a log of when every cloud watch event was received
+CREATE TABLE IF NOT EXISTS cloudwatchlog (
+  region VARCHAR(128), -- ec2 region
+  id VARCHAR(128), -- opaque ID per amazon
+  state VARCHAR(128), -- state from message
+  received TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (id, region, state, received)
+);

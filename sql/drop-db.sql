@@ -4,4 +4,5 @@ DROP TRIGGER IF EXISTS update_spotrequests_touched ON spotrequests;
 DROP TRIGGER IF EXISTS update_instances_touched ON instances;
 DROP TABLE IF EXISTS spotrequests;
 DROP TABLE IF EXISTS instances;
+DROP TABLE IF EXISTS cloudwatchlog;
 DROP FUNCTION IF EXISTS update_touched();
