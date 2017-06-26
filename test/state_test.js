@@ -304,7 +304,6 @@ describe('State', () => {
       ],
     }
     let actual = await db.listIdsOfWorkerType({workerType});
-    console.dir(actual);
     assume(expected).deeply.equals(actual);
   });
 
