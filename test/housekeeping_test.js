@@ -250,6 +250,14 @@ describe('House Keeper', () => {
       },
       zombies: ['i-1', 'i-2'],
     });
+
+    assume(terminateInstancesStub.callCount).equals(regions.length);
+    for (let argSet of terminateInstancesStub.args) {
+      assume(argSet[1] === 'terminateInstances');
+      assume(argSet[2]).deeply.equals({
+        InstanceIds: ['i-1', 'i-2'],
+      });
+    }
   });
 });
 
