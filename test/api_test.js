@@ -136,7 +136,9 @@ describe('Api', () => {
 
       let requests = await state.listSpotRequests();
       assume(requests).has.lengthOf(1);
-      assume(runaws.callCount).equals(1);
+      assume(runaws.callCount).equals(2);
+      assume(runaws.args[0][1]).equals('requestSpotInstances');
+      assume(runaws.args[1][1]).equals('createTags');
       let call = runaws.firstCall.args;
       assume(call[0].config.region).equals(region);
       assume(call[1]).equals('requestSpotInstances');
@@ -157,8 +159,9 @@ describe('Api', () => {
       });
       requests = await state.listSpotRequests();
       assume(requests).has.lengthOf(1);
-      assume(runaws.callCount).equals(1);
- 
+      assume(runaws.callCount).equals(2);
+      assume(runaws.args[0][1]).equals('requestSpotInstances');
+      assume(runaws.args[1][1]).equals('createTags');
     });
   });
 

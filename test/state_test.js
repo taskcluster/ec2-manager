@@ -308,4 +308,15 @@ describe('State', () => {
     assume(expected).deeply.equals(actual);
   });
 
+  it('should log cloud watch events', async () => {
+    await db.logCloudWatchEvent({region, id: 'i-1', state: 'pending'});
+    let client = await db.getClient();
+    let result = await client.query('select * from cloudwatchlog');
+    assume(result.rows).has.lengthOf(1);
+    let row = result.rows[0];
+    assume(row).has.property('region', region);
+    assume(row).has.property('id', 'i-1');
+    assume(row).has.property('state', 'pending');
+  });
+
 });
