@@ -10,6 +10,10 @@ describe('Api', () => {
   let region = 'us-west-2';
   let instanceType = 'c3.xlarge';
   let workerType = 'apiTest';
+  let az = 'us-west-2a';
+  let created = new Date();
+  let launched = new Date();
+  let imageId = 'ami-1';
   let client;
   let server;
   let sandbox = sinon.sandbox.create();
@@ -61,17 +65,17 @@ describe('Api', () => {
 
   it('should list worker types', async () => {
     let status = 'pending-evaluation';
-    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running'});
-    await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status});
+    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running', az, launched, imageId});
+    await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status, az, created, imageId});
     let result = await client.listWorkerTypes();
     assume(result).deeply.equals(['w-1', 'w-2']);
   });
 
   it('should show instance counts', async () => {
     let status = 'pending-evaluation';
-    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running'});
-    await state.insertInstance({id: 'i-2', workerType: 'w-1', region, instanceType, state: 'pending'});
-    await state.insertSpotRequest({id: 'r-1', workerType: 'w-1', region, instanceType, state: 'open', status});
+    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running', az, launched, imageId});
+    await state.insertInstance({id: 'i-2', workerType: 'w-1', region, instanceType, state: 'pending', az, launched, imageId});
+    await state.insertSpotRequest({id: 'r-1', workerType: 'w-1', region, instanceType, state: 'open', status, az, created, imageId});
     let result = await client.workerTypeStats('w-1');
     assume(result).deeply.equals({
       pending: [{
@@ -107,6 +111,9 @@ describe('Api', () => {
         ImageId: 'ami-1',
         InstanceType: instanceType,
         SecurityGroups: [],
+        Placement: {
+          AvailabilityZone: az,
+        },
       }
 
       runaws.returns({
@@ -115,6 +122,7 @@ describe('Api', () => {
           LaunchSpecification,
           InstanceType: instanceType,
           State: 'open',
+          CreateTime: created.toString(),
           Status: {
             Code: 'pending-evaluation',
           }
@@ -168,12 +176,60 @@ describe('Api', () => {
   describe('managing resources', () => {
     beforeEach(async () => {
       let status = 'pending-fulfillment';
-      await state.insertInstance({id: 'i-1', workerType, region: 'us-east-1', instanceType, state: 'running'});
-      await state.insertInstance({id: 'i-2', workerType, region: 'us-west-1', instanceType, state: 'running'});
-      await state.insertInstance({id: 'i-3', workerType, region: 'us-west-2', instanceType, state: 'pending', srid: 'r-3'});
+      await state.insertInstance({
+        id: 'i-1',
+        workerType,
+        region: 'us-east-1',
+        instanceType,
+        state: 'running',
+        az,
+        imageId,
+        launched,
+      });
+      await state.insertInstance({
+        id: 'i-2',
+        workerType,
+        region: 'us-west-1',
+        instanceType,
+        state: 'running',
+        az,
+        imageId,
+        launched,
+      });
+      await state.insertInstance({
+        id: 'i-3',
+        workerType,
+        region: 'us-west-2',
+        instanceType,
+        state: 'pending',
+        srid: 'r-3',
+        az,
+        imageId,
+        launched,
+      });
       // Insert some spot requests
-      await state.insertSpotRequest({id: 'r-1', workerType, region: 'us-east-1', instanceType, state: 'open', status});
-      await state.insertSpotRequest({id: 'r-2', workerType, region: 'us-west-1', instanceType, state: 'open', status});
+      await state.insertSpotRequest({
+        id: 'r-1',
+        workerType,
+        region: 'us-east-1',
+        instanceType,
+        state: 'open',
+        status,
+        az,
+        imageId,
+        created,
+      });
+      await state.insertSpotRequest({
+        id: 'r-2',
+        workerType,
+        region: 'us-west-1',
+        instanceType,
+        state: 'open',
+        status,
+        az,
+        imageId,
+        created,
+      });
     });
 
     it('should be able to kill all of a worker type', async () => {
@@ -305,6 +361,9 @@ describe('Api', () => {
         id: 'r-1234',
         state: 'open',
         status: 'pending-fulfillment',
+        az,
+        imageId,
+        created,
       });
       let result = await client.spotRequestsToPoll();
       assume(result).has.lengthOf(regions.length);
