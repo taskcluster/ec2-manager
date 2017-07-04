@@ -109,6 +109,50 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
     assume(requests).lengthOf(0);
   });
+  
+  it.only('should handle running transition with the instance already in db in pending state', async () => {
+    let pendingTimestamp = new Date();
+    let runningTimestamp = new Date(pendingTimestamp);
+    runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
+
+    await state.insertInstance({
+      workerType: 'workertype',
+      region,
+      instanceType,
+      id: 'i-1',
+      state: 'pending',
+      az,
+      launched: pendingTimestamp,
+      imageId,
+      lastevent: pendingTimestamp,
+    });
+
+    let mock = sandbox.stub(listener, 'runaws');
+
+    mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
+
+    let instances = await state.listInstances();
+    assume(instances).lengthOf(1);
+    assume(instances[0]).has.property('lastevent');
+    assume(instances[0].lastevent).deeply.equals(pendingTimestamp);
+    let pendingMsg = Object.assign({}, baseExampleMsg, {
+      detail: {
+        'instance-id': 'i-1',
+        state: 'running',
+      },
+      time: runningTimestamp,
+    });
+
+    await listener.__handler(JSON.stringify(pendingMsg));
+
+    instances = await state.listInstances();
+    assume(instances).lengthOf(1);
+    assume(instances[0]).has.property('lastevent');
+    console.dir(instances[0]);
+    assume(instances[0].lastevent.getTime()).equals(runningTimestamp.getTime());
+
+    assume(instances).lengthOf(1);
+  });
 
   it('should skip a pending message for a different manager', async () => {
     let mock = sandbox.stub(listener, 'runaws');
