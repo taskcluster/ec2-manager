@@ -110,7 +110,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(requests).lengthOf(0);
   });
   
-  it.only('should handle running transition with the instance already in db in pending state', async () => {
+  it('should handle running transition with the instance already in db in pending state', async () => {
     let pendingTimestamp = new Date();
     let runningTimestamp = new Date(pendingTimestamp);
     runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
@@ -134,7 +134,7 @@ describe('Cloud Watch Event Listener', () => {
     let instances = await state.listInstances();
     assume(instances).lengthOf(1);
     assume(instances[0]).has.property('lastevent');
-    assume(instances[0].lastevent).deeply.equals(pendingTimestamp);
+    assume(instances[0].lastevent.getTime()).equals(pendingTimestamp.getTime());
     let pendingMsg = Object.assign({}, baseExampleMsg, {
       detail: {
         'instance-id': 'i-1',
@@ -148,8 +148,52 @@ describe('Cloud Watch Event Listener', () => {
     instances = await state.listInstances();
     assume(instances).lengthOf(1);
     assume(instances[0]).has.property('lastevent');
-    console.dir(instances[0]);
     assume(instances[0].lastevent.getTime()).equals(runningTimestamp.getTime());
+    assume(instances[0].state).equals('running');
+
+    assume(instances).lengthOf(1);
+  });  
+
+  it('should handle out of order delivery', async () => {
+    let pendingTimestamp = new Date();
+    let runningTimestamp = new Date(pendingTimestamp);
+    runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
+
+    await state.insertInstance({
+      workerType: 'workertype',
+      region,
+      instanceType,
+      id: 'i-1',
+      state: 'running',
+      az,
+      launched: runningTimestamp,
+      imageId,
+      lastevent: runningTimestamp,
+    });
+
+    let mock = sandbox.stub(listener, 'runaws');
+
+    mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
+
+    let instances = await state.listInstances();
+    assume(instances).lengthOf(1);
+    assume(instances[0]).has.property('lastevent');
+    assume(instances[0].lastevent.getTime()).deeply.equals(runningTimestamp.getTime());
+    let pendingMsg = Object.assign({}, baseExampleMsg, {
+      detail: {
+        'instance-id': 'i-1',
+        state: 'pending',
+      },
+      time: pendingTimestamp,
+    });
+
+    await listener.__handler(JSON.stringify(pendingMsg));
+
+    instances = await state.listInstances();
+    assume(instances).lengthOf(1);
+    assume(instances[0]).has.property('lastevent');
+    assume(instances[0].lastevent.getTime()).equals(runningTimestamp.getTime());
+    assume(instances[0].state).equals('running');
 
     assume(instances).lengthOf(1);
   });
