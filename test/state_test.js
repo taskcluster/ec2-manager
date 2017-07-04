@@ -41,6 +41,29 @@ describe('State', () => {
     };
   });
 
+  describe('type parsers', () => {
+    it('should parse ints (20) to js ints', async () => {
+      let result = await db._pgpool.query('SELECT count(id) FROM instances;');
+      assume(result).has.property('rows');
+      assume(result.rows).has.lengthOf(1);
+      assume(result.rows[0]).has.property('count', 0);
+    });
+
+    it('should parse timestamptz (1184) to js dates (UTC)', async () => {
+      let d = new Date(0);
+      let result = await db._pgpool.query("SELECT timestamptz '1970-1-1 UTC' as a;");
+      let {a} = result.rows[0];
+      assume(d.getTime()).equals(a.getTime());
+    });
+
+    it('should parse timestamptz (1184) to js dates (CEST)', async () => {
+      let d = new Date('Tue Jul 04 2017 1:00:00 GMT+0200 (CEST)');
+      let result = await db._pgpool.query("SELECT timestamptz '2017-7-4 1:00:00 CEST' as a;");
+      let {a} = result.rows[0];
+      assume(d.getTime()).equals(a.getTime());
+    });
+  });
+
   describe('query generation', () => {
     let table = 'junk';
 
