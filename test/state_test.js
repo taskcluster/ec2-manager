@@ -26,6 +26,7 @@ describe('State', () => {
       instanceType: 'm1.medium',
       state: 'pending',
       launched: new Date(),
+      lastevent: new Date(),
     };
     defaultSR = {
       id: 'r-1',
@@ -162,7 +163,12 @@ describe('State', () => {
     assume(instances).has.length(1);
     assume(instances[0]).has.property('state', firstState);
 
-    await db.updateInstanceState({region: defaultInst.region, id: defaultInst.id, state: secondState});
+    await db.updateInstanceState({
+      region: defaultInst.region,
+      id: defaultInst.id,
+      state: secondState,
+      lastevent: new Date(),
+    });
     instances = await db.listInstances(); 
     assume(instances).has.length(1);
     assume(instances[0]).has.property('state', secondState);
@@ -369,11 +375,13 @@ describe('State', () => {
     assume(expected).deeply.equals(actual);
   });
 
-  it('should log cloud watch events', async () => {
+  it('should log cloud watch events (with received time)', async () => {
+    let time = new Date();
     await db.logCloudWatchEvent({
       region: defaultInst.region,
       id: defaultInst.id,
       state: 'pending',
+      received: time,
     });
     let client = await db.getClient();
     let result = await client.query('select * from cloudwatchlog');
@@ -382,6 +390,8 @@ describe('State', () => {
     assume(row).has.property('region', defaultInst.region);
     assume(row).has.property('id', defaultInst.id);
     assume(row).has.property('state', 'pending');
+    assume(row).has.property('received');
+    assume(row.received).deeply.equals(time);
   });
 
 });

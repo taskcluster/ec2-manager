@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS instances (
   srid VARCHAR(128), -- spot request id if applicable
   imageid VARCHAR(128) NOT NULL, -- AMI/ImageId value
   launched TIMESTAMPTZ NOT NULL, -- Time instance launched
+  lastevent TIMESTAMPTZ NOT NULL, -- Time that the last event happened in the api. Used
+                                  -- to ensure that we have correct ordering of cloud watch
+                                  -- events
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
