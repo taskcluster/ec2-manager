@@ -82,5 +82,6 @@ CREATE TABLE IF NOT EXISTS cloudwatchlog (
   id VARCHAR(128), -- opaque ID per amazon
   state VARCHAR(128), -- state from message
   generated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  received TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (id, region, state, generated)
 );
