@@ -76,11 +76,11 @@ BEFORE UPDATE ON instances
 FOR EACH ROW EXECUTE PROCEDURE update_touched();
 
 -- Cloudwatch Events Log
--- We want to keep a log of when every cloud watch event was received
+-- We want to keep a log of when every cloud watch event was generated
 CREATE TABLE IF NOT EXISTS cloudwatchlog (
   region VARCHAR(128), -- ec2 region
   id VARCHAR(128), -- opaque ID per amazon
   state VARCHAR(128), -- state from message
-  received TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (id, region, state, received)
+  generated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (id, region, state, generated)
 );

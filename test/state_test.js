@@ -398,13 +398,13 @@ describe('State', () => {
     assume(expected).deeply.equals(actual);
   });
 
-  it('should log cloud watch events (with received time)', async () => {
+  it('should log cloud watch events (with generated time)', async () => {
     let time = new Date();
     await db.logCloudWatchEvent({
       region: defaultInst.region,
       id: defaultInst.id,
       state: 'pending',
-      received: time,
+      generated: time,
     });
     let client = await db.getClient();
     let result = await client.query('select * from cloudwatchlog');
@@ -413,8 +413,8 @@ describe('State', () => {
     assume(row).has.property('region', defaultInst.region);
     assume(row).has.property('id', defaultInst.id);
     assume(row).has.property('state', 'pending');
-    assume(row).has.property('received');
-    assume(row.received).deeply.equals(time);
+    assume(row).has.property('generated');
+    assume(row.generated).deeply.equals(time);
   });
 
 });
