@@ -2,9 +2,9 @@ defaults:
   app:
     keyPrefix: 'ec2-manager:'
     instancePubKey: !env AWS_INSTANCE_PUBKEY
-    spotPollDelay: 25
-    houseKeepingPollDelay: 86400 # One day
-    maxInstanceLifeHours: 96
+    spotPollDelay: 25 # (seconds)
+    houseKeepingPollDelay: 86400 # (seconds) 1 day
+    maxInstanceLifeHours: 96 # (hours)
     regions:
       - us-east-1
       - us-east-2
@@ -17,6 +17,8 @@ defaults:
     queueName: 'ec2-events'
     ruleName: 'ec2-instance-state-transitions'
     publishMetadata: false
+    pricingPollDelay: 900 # (seconds) 15 minutes
+    pricingTimePeriod: 30 # (seconds)
   ec2:
     apiVersion: 2014-01-01
   sqs:

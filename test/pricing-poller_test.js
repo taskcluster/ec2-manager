@@ -24,6 +24,8 @@ describe('Pricing', () => {
       regions: [region],
       runaws: () => {},
       timePeriod: 30,
+      pollDelay: 3600,
+      monitor: {},
     });
 
     let result = poller._findSpotPriceForInstanceType([
@@ -43,6 +45,8 @@ describe('Pricing', () => {
       regions: [region],
       runaws: () => {},
       timePeriod: 30,
+      pollDelay: 3600,
+      monitor: {},
     });
 
     let result = poller._findSpotPricesForRegion({pricePoints:[{
@@ -88,6 +92,8 @@ describe('Pricing', () => {
         }
       },
       timePeriod: 30,
+      pollDelay: 3600,
+      monitor: {},
     });
 
     describeSPHStub.onFirstCall().returns({
@@ -167,6 +173,8 @@ describe('Pricing', () => {
         regions: [region],
         runaws:() => {},
         timePeriod: 30,
+        pollDelay: 3600,
+        monitor: {},
       });
     });
 
@@ -250,27 +258,25 @@ describe('Pricing', () => {
     });    
 
     it('should get a price with a string and numeric min and max price restriction', () => {
-      poller.prices.push({
+      poller.prices = [{
         instanceType: 'm3.xlarge',
         price: 0.1,
         region,
         type: 'spot',
         zone: zones[1]
-      });
-      poller.prices.push({
+      }, {
         instanceType: 'm3.xlarge',
         price: 0.2,
         region,
         type: 'spot',
         zone: zones[1]
-      });
-      poller.prices.push({
+      }, {
         instanceType: 'm3.xlarge',
         price: 0.3,
         region,
         type: 'spot',
         zone: zones[1]
-      });
+      }];
 
       assume(poller.getPrices([
         {key: 'minPrice', restriction: 0.2}
