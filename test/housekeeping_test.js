@@ -76,8 +76,28 @@ describe('House Keeper', () => {
 
   it('should remove instances and requests not in api state', async () => {
     let status = 'pending-fulfillment';
-    await state.insertInstance({id: 'i-1', workerType, region, instanceType, state: 'running', az, imageId, launched});
-    await state.insertInstance({id: 'i-2', workerType, region, instanceType, state: 'running', az, imageId, launched});
+    await state.insertInstance({
+      id: 'i-1',
+      workerType,
+      region,
+      instanceType,
+      state: 'running',
+      az,
+      imageId,
+      launched,
+      lastevent: new Date(),
+    });
+    await state.insertInstance({
+      id: 'i-2',
+      workerType,
+      region,
+      instanceType,
+      state: 'running',
+      az,
+      imageId,
+      launched,
+      lastevent: new Date(),
+    });
     await state.insertSpotRequest({id: 'r-1', workerType, region, instanceType, state: 'open', status, az, imageId, created});
     await state.insertSpotRequest({id: 'r-2', workerType, region, instanceType, state: 'open', status, az, imageId, created});
 
@@ -225,7 +245,17 @@ describe('House Keeper', () => {
 
     // We want to have one zombie in internal state and one not in internal state
     // but we want to kill both and delete the one in state
-    await state.insertInstance({id: 'i-1', workerType, region, instanceType, state: 'running', az, imageId, launched});
+    await state.insertInstance({
+      id: 'i-1',
+      workerType,
+      region,
+      instanceType,
+      state: 'running',
+      az,
+      imageId,
+      launched,
+      lastevent: new Date(),
+    });
 
     let oldAsMud = new Date();
     oldAsMud.setHours(oldAsMud.getHours() - 97);
