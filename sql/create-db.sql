@@ -30,9 +30,12 @@ CREATE TABLE IF NOT EXISTS spotrequests (
   id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
   workerType VARCHAR(128) NOT NULL, -- taskcluster worker type
   region VARCHAR(128) NOT NULL, -- ec2 region
+  az VARCHAR(128) NOT NULL, -- availability zone
   instanceType VARCHAR(128) NOT NULL, -- ec2 instance type
   state VARCHAR(128) NOT NULL, -- e.g. open, closed, failed
   status VARCHAR(128) NOT NULL, -- e.g. pending-fulfillment
+  imageid VARCHAR(128) NOT NULL, -- AMI/ImageId value
+  created TIMESTAMPTZ NOT NULL, -- Time spot request was created
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
@@ -45,9 +48,12 @@ CREATE TABLE IF NOT EXISTS instances (
   id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
   workerType VARCHAR(128) NOT NULL, -- taskcluster worker type
   region VARCHAR(128) NOT NULL, -- ec2 region
+  az VARCHAR(128) NOT NULL, -- availability zone
   instanceType VARCHAR(128) NOT NULL, -- ec2 instance type
   state VARCHAR(128) NOT NULL, -- e.g. running, pending, terminated
   srid VARCHAR(128), -- spot request id if applicable
+  imageid VARCHAR(128) NOT NULL, -- AMI/ImageId value
+  launched TIMESTAMPTZ NOT NULL, -- Time instance launched
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );

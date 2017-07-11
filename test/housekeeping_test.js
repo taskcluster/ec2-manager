@@ -13,6 +13,10 @@ describe('House Keeper', () => {
   let region = 'us-west-2';
   let instanceType = 'c3.xlarge';
   let workerType = 'apiTest';
+  let az = 'us-west-2a';
+  let imageId = 'ami-1';
+  let created = new Date();
+  let launched = new Date();
   let sandbox = sinon.sandbox.create();
   let describeInstancesStub;
   let describeSpotInstanceRequestsStub;
@@ -72,10 +76,10 @@ describe('House Keeper', () => {
 
   it('should remove instances and requests not in api state', async () => {
     let status = 'pending-fulfillment';
-    await state.insertInstance({id: 'i-1', workerType, region, instanceType, state: 'running'});
-    await state.insertInstance({id: 'i-2', workerType, region, instanceType, state: 'running'});
-    await state.insertSpotRequest({id: 'r-1', workerType, region, instanceType, state: 'open', status});
-    await state.insertSpotRequest({id: 'r-2', workerType, region, instanceType, state: 'open', status});
+    await state.insertInstance({id: 'i-1', workerType, region, instanceType, state: 'running', az, imageId, launched});
+    await state.insertInstance({id: 'i-2', workerType, region, instanceType, state: 'running', az, imageId, launched});
+    await state.insertSpotRequest({id: 'r-1', workerType, region, instanceType, state: 'open', status, az, imageId, created});
+    await state.insertSpotRequest({id: 'r-2', workerType, region, instanceType, state: 'open', status, az, imageId, created});
 
     assume(await state.listInstances()).has.lengthOf(2);
     assume(await state.listSpotRequests()).has.lengthOf(2);
@@ -117,10 +121,14 @@ describe('House Keeper', () => {
           LaunchTime: new Date().toString(),
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
+          ImageId: 'ami-1',
           State: {
             Name: 'running'
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
+          Placement: {
+            AvailabilityZone: az,
+          },
         }],
       }]
     });
@@ -128,9 +136,14 @@ describe('House Keeper', () => {
     describeSpotInstanceRequestsStub.returns({
       SpotInstanceRequests: [{
         SpotInstanceRequestId: 'r-1',
+        CreateTime: new Date().toString(),
         LaunchSpecification: {
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
+          ImageId: 'ami-1',
+          Placement: {
+            AvailabilityZone: az,
+          },
         },
         State: 'open',
         Status: {
@@ -170,6 +183,10 @@ describe('House Keeper', () => {
             Name: 'running'
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
+          ImageId: 'ami-1',
+          Placement: {
+            AvailabilityZone: az,
+          },
         }],
       }]
     });
@@ -177,9 +194,14 @@ describe('House Keeper', () => {
     describeSpotInstanceRequestsStub.returns({
       SpotInstanceRequests: [{
         SpotInstanceRequestId: 'r-1',
+        CreateTime: new Date().toString(),
         LaunchSpecification: {
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
+          ImageId: 'ami-1',
+          Placement: {
+            AvailabilityZone: az,
+          },
         },
         State: 'open',
         Status: {
@@ -203,7 +225,7 @@ describe('House Keeper', () => {
 
     // We want to have one zombie in internal state and one not in internal state
     // but we want to kill both and delete the one in state
-    await state.insertInstance({id: 'i-1', workerType, region, instanceType, state: 'running'});
+    await state.insertInstance({id: 'i-1', workerType, region, instanceType, state: 'running', az, imageId, launched});
 
     let oldAsMud = new Date();
     oldAsMud.setHours(oldAsMud.getHours() - 97);
@@ -212,22 +234,30 @@ describe('House Keeper', () => {
       Reservations: [{
         Instances: [{
           InstanceId: 'i-1',
-          LaunchTime: oldAsMud,
+          LaunchTime: oldAsMud.toString(),
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
           State: {
             Name: 'running'
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
+          ImageId: 'ami-1',
+          Placement: {
+            AvailabilityZone: az,
+          },
         }, {
           InstanceId: 'i-2',
-          LaunchTime: oldAsMud,
+          LaunchTime: oldAsMud.toString(),
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
           State: {
             Name: 'running'
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
+          ImageId: 'ami-1',
+          Placement: {
+            AvailabilityZone: az,
+          },
         }],
       }]
     });

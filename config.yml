@@ -74,7 +74,7 @@ staging:
     keyPrefix: 'ec2-manager-staging:'
     publishMetadata: true
   postgres:
-    maxClients: 110
+    maxClients: 10
   monitor:
     project: ec2-manager-staging
     mock: false

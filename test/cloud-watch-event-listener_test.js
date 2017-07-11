@@ -34,7 +34,9 @@ describe('Cloud Watch Event Listener', () => {
   let ec2;
   let sqs;
   let region = 'us-west-2';
+  let az = 'us-west-2a';
   let instanceType = 'c3.xlarge';
+  let imageId = 'ami-1'
   let listener;
 
   before(async () => {
@@ -74,6 +76,9 @@ describe('Cloud Watch Event Listener', () => {
       id: 'r-1234',
       state: 'open',
       status: 'pending-fulfillment',
+      az,
+      created: new Date(),
+      imageId,
     });
 
     let mock = sandbox.stub(listener, 'runaws');
@@ -84,6 +89,11 @@ describe('Cloud Watch Event Listener', () => {
           KeyName: 'ec2-manager-test:workertype:hash',
           InstanceType: 'c3.xlarge',
           SpotInstanceRequestId: 'r-1234',
+          LaunchTime: new Date(),
+          ImageId: imageId,
+          Placement: {
+            AvailabilityZone: az,
+          },
         }],
       }]
     }));
@@ -109,6 +119,11 @@ describe('Cloud Watch Event Listener', () => {
           KeyName: 'other-manager:workertype:hash',
           InstanceType: 'c3.xlarge',
           SpotInstanceRequestId: 'r-1234',
+          ImageId: imageId,
+          LaunchTime: new Date(),
+          Placement: {
+            AvailabilityZone: az,
+          },
         }],
       }]
     }));
@@ -127,6 +142,9 @@ describe('Cloud Watch Event Listener', () => {
       id: 'r-1234',
       state: 'open',
       status: 'pending-fulfillment',
+      az,
+      imageId,
+      created: new Date(),
     });
 
     let mock = sandbox.stub(listener, 'runaws');
@@ -137,6 +155,11 @@ describe('Cloud Watch Event Listener', () => {
           KeyName: 'ec2-manager-test:workertype:hash',
           InstanceType: 'c3.xlarge',
           SpotInstanceRequestId: 'r-1234',
+          ImageId: imageId,
+          LaunchTime: new Date(),
+          Placement: {
+            AvailabilityZone: az,
+          },
         }],
       }]
     }));
