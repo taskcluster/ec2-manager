@@ -65,7 +65,17 @@ describe('Api', () => {
 
   it('should list worker types', async () => {
     let status = 'pending-evaluation';
-    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running', az, launched, imageId});
+    await state.insertInstance({
+      id: 'i-1',
+      workerType: 'w-1',
+      region,
+      instanceType,
+      state: 'running',
+      az,
+      launched,
+      imageId,
+      lastevent: new Date(),
+    });
     await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status, az, created, imageId});
     let result = await client.listWorkerTypes();
     assume(result).deeply.equals(['w-1', 'w-2']);
@@ -73,8 +83,28 @@ describe('Api', () => {
 
   it('should show instance counts', async () => {
     let status = 'pending-evaluation';
-    await state.insertInstance({id: 'i-1', workerType: 'w-1', region, instanceType, state: 'running', az, launched, imageId});
-    await state.insertInstance({id: 'i-2', workerType: 'w-1', region, instanceType, state: 'pending', az, launched, imageId});
+    await state.insertInstance({
+      id: 'i-1',
+      workerType: 'w-1',
+      region,
+      instanceType,
+      state: 'running',
+      az,
+      launched,
+      imageId,
+      lastevent: new Date(),
+    });
+    await state.insertInstance({
+      id: 'i-2',
+      workerType: 'w-1',
+      region,
+      instanceType,
+      state: 'pending',
+      az,
+      launched,
+      imageId,
+      lastevent: new Date(),
+    });
     await state.insertSpotRequest({id: 'r-1', workerType: 'w-1', region, instanceType, state: 'open', status, az, created, imageId});
     let result = await client.workerTypeStats('w-1');
     assume(result).deeply.equals({
@@ -185,6 +215,7 @@ describe('Api', () => {
         az,
         imageId,
         launched,
+        lastevent: new Date(),
       });
       await state.insertInstance({
         id: 'i-2',
@@ -195,6 +226,7 @@ describe('Api', () => {
         az,
         imageId,
         launched,
+        lastevent: new Date(),
       });
       await state.insertInstance({
         id: 'i-3',
@@ -206,6 +238,7 @@ describe('Api', () => {
         az,
         imageId,
         launched,
+        lastevent: new Date(),
       });
       // Insert some spot requests
       await state.insertSpotRequest({
