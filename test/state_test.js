@@ -26,6 +26,7 @@ describe('State', () => {
       instanceType: 'm1.medium',
       state: 'pending',
       launched: new Date(),
+      lastevent: new Date(),
     };
     defaultSR = {
       id: 'r-1',
@@ -38,6 +39,29 @@ describe('State', () => {
       status: 'pending-fulfillment',
       created: new Date(),
     };
+  });
+
+  describe('type parsers', () => {
+    it('should parse ints (20) to js ints', async () => {
+      let result = await db._pgpool.query('SELECT count(id) FROM instances;');
+      assume(result).has.property('rows');
+      assume(result.rows).has.lengthOf(1);
+      assume(result.rows[0]).has.property('count', 0);
+    });
+
+    it('should parse timestamptz (1184) to js dates (UTC)', async () => {
+      let d = new Date(0);
+      let result = await db._pgpool.query("SELECT timestamptz '1970-1-1 UTC' as a;");
+      let {a} = result.rows[0];
+      assume(d.getTime()).equals(a.getTime());
+    });
+
+    it('should parse timestamptz (1184) to js dates (CEST)', async () => {
+      let d = new Date('Tue Jul 04 2017 1:00:00 GMT+0200 (CEST)');
+      let result = await db._pgpool.query("SELECT timestamptz '2017-7-4 1:00:00 CEST' as a;");
+      let {a} = result.rows[0];
+      assume(d.getTime()).equals(a.getTime());
+    });
   });
 
   describe('query generation', () => {
@@ -162,7 +186,12 @@ describe('State', () => {
     assume(instances).has.length(1);
     assume(instances[0]).has.property('state', firstState);
 
-    await db.updateInstanceState({region: defaultInst.region, id: defaultInst.id, state: secondState});
+    await db.updateInstanceState({
+      region: defaultInst.region,
+      id: defaultInst.id,
+      state: secondState,
+      lastevent: new Date(),
+    });
     instances = await db.listInstances(); 
     assume(instances).has.length(1);
     assume(instances[0]).has.property('state', secondState);
@@ -369,11 +398,13 @@ describe('State', () => {
     assume(expected).deeply.equals(actual);
   });
 
-  it('should log cloud watch events', async () => {
+  it('should log cloud watch events (with generated time)', async () => {
+    let time = new Date();
     await db.logCloudWatchEvent({
       region: defaultInst.region,
       id: defaultInst.id,
       state: 'pending',
+      generated: time,
     });
     let client = await db.getClient();
     let result = await client.query('select * from cloudwatchlog');
@@ -382,6 +413,8 @@ describe('State', () => {
     assume(row).has.property('region', defaultInst.region);
     assume(row).has.property('id', defaultInst.id);
     assume(row).has.property('state', 'pending');
+    assume(row).has.property('generated');
+    assume(row.generated).deeply.equals(time);
   });
 
 });
