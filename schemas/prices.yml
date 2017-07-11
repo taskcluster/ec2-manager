@@ -1,0 +1,34 @@
+$schema: http://json-schema.org/draft-04/schema#
+title: "List of prices"
+description: |
+  A list of prices for EC2
+type: array
+items:
+  type: object
+  properties:
+    instanceType:
+      type: string
+      description: EC2 instance type
+    region:
+      type: string
+      description: EC2 region
+    price:
+      type: number
+      description: Amount of dollars for an hour of usage for this configuration
+    zone:
+      type: string
+      description: EC2 availability zone identifier
+    type:
+      type: string
+      enum:
+        - 'spot'
+        - 'ondemand'
+  requiredKeysProperties:
+    - instanceType
+    - region
+    - price
+    - zone
+    - type
+  additionalProperties: false
+
+

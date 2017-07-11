@@ -1,0 +1,29 @@
+$schema: http://json-schema.org/draft-04/schema#
+title: "List of restrictions for prices"
+description: |
+  A list of prices for EC2
+type: array
+items:
+  type: object
+  properties:
+    key:
+      type: string
+      enum:
+        - instanceType
+        - region
+        - price
+        - minPrice
+        - maxPrice
+        - zone
+        - type
+    restriction:
+      oneOf:
+        - type: number
+        - type: string
+        - type: array
+          items:
+            type: string
+  requiredProperties:
+    - key
+    - restriction
+  additionalProperties: false
