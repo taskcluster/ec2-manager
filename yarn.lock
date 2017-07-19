@@ -156,12 +156,27 @@ asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
 
-aws-sdk@^2.2.28, aws-sdk@^2.2.38, aws-sdk@^2.30.0, aws-sdk@^2.5.3, aws-sdk@^2.58.0:
+aws-sdk@^2.2.28, aws-sdk@^2.2.38, aws-sdk@^2.30.0, aws-sdk@^2.5.3:
   version "2.58.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.58.0.tgz#7ea8c3aa59e97a87c570dbe12d0042082ac1debf"
   dependencies:
     buffer "5.0.6"
     crypto-browserify "1.0.9"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.0.1"
+    xml2js "0.4.17"
+    xmlbuilder "4.2.1"
+
+aws-sdk@^2.86.0:
+  version "2.86.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.86.0.tgz#f3a46f5d036ee598317d0d5a2a55c41d15da9f21"
+  dependencies:
+    buffer "4.9.1"
+    crypto-browserify "1.0.9"
+    events "^1.1.1"
     jmespath "0.15.0"
     querystring "0.2.0"
     sax "1.2.1"
@@ -641,9 +656,13 @@ babel-types@^6.18.0, babel-types@^6.19.0, babel-types@^6.24.1:
     lodash "^4.2.0"
     to-fast-properties "^1.0.1"
 
-babylon@^6.11.0, babylon@^6.13.0, babylon@^6.15.0:
+babylon@^6.11.0, babylon@^6.15.0:
   version "6.17.0"
   resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.17.0.tgz#37da948878488b9c4e3c4038893fa3314b3fc932"
+
+babylon@^6.17.4:
+  version "6.17.4"
+  resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.17.4.tgz#3e8b7402b88d22c3423e137a1577883b15ff869a"
 
 balanced-match@^0.4.1:
   version "0.4.2"
@@ -746,6 +765,14 @@ buffer-shims@~1.0.0:
 buffer-writer@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/buffer-writer/-/buffer-writer-1.0.1.tgz#22a936901e3029afcd7547eb4487ceb697a3bf08"
+
+buffer@4.9.1:
+  version "4.9.1"
+  resolved "https://registry.yarnpkg.com/buffer/-/buffer-4.9.1.tgz#6d1bb601b07a4efced97094132093027c95bc298"
+  dependencies:
+    base64-js "^1.0.2"
+    ieee754 "^1.1.4"
+    isarray "^1.0.0"
 
 buffer@5.0.6:
   version "5.0.6"
@@ -1152,6 +1179,10 @@ etag@~1.4.0:
   dependencies:
     crc "3.0.0"
 
+events@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/events/-/events-1.1.1.tgz#9ebdb7635ad099c70dcc4c2a1f5004288e8bd924"
+
 eventsource@0.1.6:
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/eventsource/-/eventsource-0.1.6.tgz#0acede849ed7dd1ccc32c811bb11b944d4f29232"
@@ -1367,10 +1398,6 @@ fs-walk@0.0.1:
 fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
-
-generic-pool@2.4.3:
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/generic-pool/-/generic-pool-2.4.3.tgz#780c36f69dfad05a5a045dd37be7adca11a4f6ff"
 
 get-caller-file@^1.0.1:
   version "1.0.2"
@@ -1724,7 +1751,7 @@ isarray@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-0.0.1.tgz#8a18acfca9a8f4177e09abfc6038939b05d1eedf"
 
-isarray@1.0.0, isarray@~1.0.0:
+isarray@1.0.0, isarray@^1.0.0, isarray@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
 
@@ -1752,15 +1779,15 @@ istanbul-lib-hook@^1.0.7:
   dependencies:
     append-transform "^0.4.0"
 
-istanbul-lib-instrument@^1.7.2:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-instrument/-/istanbul-lib-instrument-1.7.2.tgz#6014b03d3470fb77638d5802508c255c06312e56"
+istanbul-lib-instrument@^1.7.3:
+  version "1.7.4"
+  resolved "https://registry.yarnpkg.com/istanbul-lib-instrument/-/istanbul-lib-instrument-1.7.4.tgz#e9fd920e4767f3d19edc765e2d6b3f5ccbd0eea8"
   dependencies:
     babel-generator "^6.18.0"
     babel-template "^6.16.0"
     babel-traverse "^6.18.0"
     babel-types "^6.18.0"
-    babylon "^6.13.0"
+    babylon "^6.17.4"
     istanbul-lib-coverage "^1.1.1"
     semver "^5.3.0"
 
@@ -2301,9 +2328,9 @@ number-is-nan@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/number-is-nan/-/number-is-nan-1.0.1.tgz#097b602b53422a522c1afb8790318336941a011d"
 
-nyc@^11.0.2:
-  version "11.0.2"
-  resolved "https://registry.yarnpkg.com/nyc/-/nyc-11.0.2.tgz#9e592a697186028253b668516c38f079c39c08f3"
+nyc@^11.0.3:
+  version "11.0.3"
+  resolved "https://registry.yarnpkg.com/nyc/-/nyc-11.0.3.tgz#0c28bc669a851621709bf7a08503034bee3812b6"
   dependencies:
     archy "^1.0.0"
     arrify "^1.0.1"
@@ -2317,7 +2344,7 @@ nyc@^11.0.2:
     glob "^7.0.6"
     istanbul-lib-coverage "^1.1.1"
     istanbul-lib-hook "^1.0.7"
-    istanbul-lib-instrument "^1.7.2"
+    istanbul-lib-instrument "^1.7.3"
     istanbul-lib-report "^1.1.1"
     istanbul-lib-source-maps "^1.2.1"
     istanbul-reports "^1.1.1"
@@ -2328,7 +2355,7 @@ nyc@^11.0.2:
     resolve-from "^2.0.0"
     rimraf "^2.5.4"
     signal-exit "^3.0.1"
-    spawn-wrap "^1.3.6"
+    spawn-wrap "^1.3.7"
     test-exclude "^4.1.1"
     yargs "^8.0.1"
     yargs-parser "^5.0.0"
@@ -2341,7 +2368,7 @@ oauth-sign@~0.8.1:
   version "0.8.2"
   resolved "https://registry.yarnpkg.com/oauth-sign/-/oauth-sign-0.8.2.tgz#46a6ab7f0aead8deae9ec0565780b7d4efeb9d43"
 
-object-assign@4.1.0, object-assign@^4.0.1, object-assign@^4.1.0:
+object-assign@^4.0.1, object-assign@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.0.tgz#7a3b3d0e98063d43f4c03f2e8ae6cd51a86883a0"
 
@@ -2508,33 +2535,30 @@ pg-connection-string@0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/pg-connection-string/-/pg-connection-string-0.1.3.tgz#da1847b20940e42ee1492beaf65d49d91b245df7"
 
-pg-native@^1.10.1:
-  version "1.10.1"
-  resolved "https://registry.yarnpkg.com/pg-native/-/pg-native-1.10.1.tgz#94e61ccbb85a7f3436b2e526315c7581107fe40c"
+pg-native@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/pg-native/-/pg-native-2.0.1.tgz#f7139360e001f522f44192dc2c19fb6a55e2cf18"
   dependencies:
     libpq "^1.7.0"
     pg-types "1.6.0"
     readable-stream "1.0.31"
 
-pg-pool@1.*, pg-pool@^1.7.1:
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/pg-pool/-/pg-pool-1.7.1.tgz#421105cb7469979dcc48d6fc4fe3fe4659437437"
-  dependencies:
-    generic-pool "2.4.3"
-    object-assign "4.1.0"
+pg-pool@2.*, pg-pool@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/pg-pool/-/pg-pool-2.0.1.tgz#8b12541df271b57f7020c50a3f5566471f82c77e"
 
 pg-types@1.*, pg-types@1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/pg-types/-/pg-types-1.6.0.tgz#3872a0f199143025497f4ee2a65fdaf00d7ea8b3"
 
-pg@^6.2.3:
-  version "6.2.3"
-  resolved "https://registry.yarnpkg.com/pg/-/pg-6.2.3.tgz#8988b7c69a1875a997d73b92036c42590b5f8024"
+pg@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/pg/-/pg-7.0.1.tgz#6cd31b95f58ad91af13122e4e004a43409132759"
   dependencies:
     buffer-writer "1.0.1"
     packet-reader "0.3.1"
     pg-connection-string "0.1.3"
-    pg-pool "1.*"
+    pg-pool "2.*"
     pg-types "1.*"
     pgpass "1.x"
     semver "4.3.2"
@@ -3010,9 +3034,9 @@ sinon@^1.17.1:
     samsam "1.1.2"
     util ">=0.10.3 <1"
 
-sinon@^2.3.2:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/sinon/-/sinon-2.3.2.tgz#c43a9c570f32baac1159505cfeed19108855df89"
+sinon@^2.3.8:
+  version "2.3.8"
+  resolved "https://registry.yarnpkg.com/sinon/-/sinon-2.3.8.tgz#31de06fed8fba3a671e576dd96d0a5863796f25c"
   dependencies:
     diff "^3.1.0"
     formatio "1.2.0"
@@ -3076,9 +3100,9 @@ source-map@^0.5.0, source-map@^0.5.3, source-map@^0.5.6, source-map@~0.5.1:
   version "0.5.6"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.6.tgz#75ce38f52bf0733c5a7f0c118d81334a2bb5f412"
 
-spawn-wrap@^1.3.6:
-  version "1.3.6"
-  resolved "https://registry.yarnpkg.com/spawn-wrap/-/spawn-wrap-1.3.6.tgz#ccec4a949d8ce7e2b1a35cf4671d683d2e76a1d1"
+spawn-wrap@^1.3.7:
+  version "1.3.8"
+  resolved "https://registry.yarnpkg.com/spawn-wrap/-/spawn-wrap-1.3.8.tgz#fa2a79b990cbb0bb0018dca6748d88367b19ec31"
   dependencies:
     foreground-child "^1.5.6"
     mkdirp "^0.5.0"
@@ -3306,9 +3330,9 @@ taskcluster-client@^1.0.1, taskcluster-client@^1.2.0:
   optionalDependencies:
     sockjs-client "^1.0.3"
 
-taskcluster-client@^2.4.2:
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/taskcluster-client/-/taskcluster-client-2.4.2.tgz#f167d1bb71e2c2e002adbea98139475a2f10ab87"
+taskcluster-client@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/taskcluster-client/-/taskcluster-client-2.5.0.tgz#11d3b212e0be43070434c2a1427950ddeae01cd1"
   dependencies:
     amqplib "^0.5.1"
     debug "^2.1.3"
