@@ -26,7 +26,7 @@ $$ language 'plpgsql';
 
 -- spotrequests table contains minimal information on
 -- any spot requests owned by this ec2 manager
-CREATE TABLE IF NOT EXISTS spotrequests (
+CREATE TABLE spotrequests (
   id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
   workerType VARCHAR(128) NOT NULL, -- taskcluster worker type
   region VARCHAR(128) NOT NULL, -- ec2 region
@@ -40,11 +40,16 @@ CREATE TABLE IF NOT EXISTS spotrequests (
   PRIMARY KEY(id, region)
 );
 
+-- We search by worker type often enough that we should index it
+CREATE INDEX spotrequests_workertype_index ON spotrequests (
+  workerType
+);
+
 -- instances table contains minimal information on
 -- any instances owned by this ec2 manager.  We don't reference
 -- the spotrequest table because the application logic will be
 -- required to delete any spotrequests which are outstanding
-CREATE TABLE IF NOT EXISTS instances (
+CREATE TABLE instances (
   id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
   workerType VARCHAR(128) NOT NULL, -- taskcluster worker type
   region VARCHAR(128) NOT NULL, -- ec2 region
@@ -59,6 +64,11 @@ CREATE TABLE IF NOT EXISTS instances (
                                   -- events
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
+);
+
+-- We search by worker type often enough that we should index it
+CREATE INDEX instances_workertype_index ON instances (
+  workerType
 );
 
 -- Constraints that I want but don't know how to write
@@ -77,7 +87,7 @@ FOR EACH ROW EXECUTE PROCEDURE update_touched();
 
 -- Cloudwatch Events Log
 -- We want to keep a log of when every cloud watch event was generated
-CREATE TABLE IF NOT EXISTS cloudwatchlog (
+CREATE TABLE cloudwatchlog (
   region VARCHAR(128), -- ec2 region
   id VARCHAR(128), -- opaque ID per amazon
   state VARCHAR(128), -- state from message

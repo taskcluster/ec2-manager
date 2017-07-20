@@ -394,7 +394,17 @@ describe('State', () => {
         {region: 'us-west-2', id: 'r-3'},
       ],
     }
+
+    let sorter = function (a, b) {
+      let aIdNum = a.id.split('-')[1];
+      let bIdNum = b.id.split('-')[1];
+      return aIdNum - bIdNum;
+    }
+    expected.instanceIds.sort(sorter);
+    expected.requestIds.sort(sorter);
     let actual = await db.listIdsOfWorkerType({workerType: defaultInst.workerType});
+    actual.instanceIds.sort(sorter);
+    actual.requestIds.sort(sorter);
     assume(expected).deeply.equals(actual);
   });
 
