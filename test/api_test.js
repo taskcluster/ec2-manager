@@ -125,7 +125,138 @@ describe('Api', () => {
     });
   });
 
-  describe('requesting resources', () => {
+  describe('requesting on-demand instance resources', () => {
+    let ClientToken;
+    let Region;
+    let LaunchSpecification;
+
+    beforeEach(() => {
+      ClientToken = 'client-token';
+      Region = region;
+
+      let KeyName = `ec2-manager-test:${workerType}:ffe27db`;
+
+      LaunchSpecification = {
+        KeyName,
+        ImageId: 'ami-1',
+        InstanceType: instanceType,
+        SecurityGroups: [],
+        Placement: {
+          AvailabilityZone: az,
+        },
+      }
+
+      runaws.returns({
+        Instances: [{
+          ImageId: 'i-1',
+          KeyName,
+          InstanceType: instanceType,
+          State: {
+            Code: 16,
+            Name: 'running',
+          },
+          LaunchTime: created.toString(),
+          Placemenent: {
+            AvailabilityZone: az,
+          },
+        }]
+      });
+    });
+
+    // NOTE: The idempotency assertions are a combination of trusting Postgres
+    // to return the primary key conflict, a check that the worker type
+    // argument is the same as that in the LaunchSpecification and that EC2
+    // idempotency works
+    it.skip('should request an on-demand instance (idempotent)', async () => {
+      let requests = await state.listSpotRequests();
+      assume(requests).has.lengthOf(0);
+      let instances = await state.listInstances();
+      assume(instances).has.lengthOf(0);
+
+      await client.runInstance(workerType, {
+        ClientToken, 
+        Region,
+        LaunchSpecification,
+      });
+
+      requests = await state.listSpotRequests();
+      assume(requests).has.lengthOf(0);
+      instances = await state.listInstances();
+      assume(instances).has.lengthOf(1);
+      assume(runaws.callCount).equals(1);
+
+      let call = runaws.firstCall.args;
+      assume(call[0].config.region).equals(region);
+      assume(call[1]).equals('runInstances');
+      
+      let expectedEC2CallObj = Object.assign({}, LaunchSpecification, {
+        ClientToken,
+        MinCount: 1,
+        MaxCount: 1,
+        DisableApiTermination: false,
+        DryRun: false,
+        InstanceInitiatedShutdownBehavior: 'terminate',
+        TagSpecifications: [
+          { 
+            ResourceType: 'volume',
+            Tags: [{
+              Key: 'Name',
+              Value: workerType
+            }, {
+              Key: 'Owner',
+              Value: 'ec2-manager-test'
+            }, {
+              Key: 'WorkerType',
+              Value: `ec2-manager-test/${workerType}`
+            }]
+          },
+          { 
+            ResourceType: 'instance',
+            Tags: [{
+              Key: 'Name',
+              Value: workerType
+            }, {
+              Key: 'Owner',
+              Value: 'ec2-manager-test'
+            }, {
+              Key: 'WorkerType',
+              Value: `ec2-manager-test/${workerType}`
+            }]
+          }
+        ]
+      });
+      assume(call[2]).deeply.equals(expectedEC2CallObj);
+
+      runaws.resetHistory();
+
+      await client.runInstance(workerType, {
+        ClientToken, 
+        Region,
+        LaunchSpecification,
+      });
+      requests = await state.listSpotRequests();
+      assume(requests).has.lengthOf(0);
+      instances = await state.listInstances();
+      assume(instances).has.lengthOf(1);
+      assume(runaws.callCount).equals(1);
+      assume(runaws.args[0][1]).equals('runInstances');
+
+      let [instance] = instances;
+
+      // NOTE: the return value key names may or may not be camel case, I cannot remember
+      assume(instance).has.property('id', 'i-1');
+      assume(instance).has.property('workerType', workerType);
+      assume(instance).has.property('region', region);
+      assume(instance).has.property('az', az);
+      assume(instance).has.property('instanceType', instanceType);
+      assume(instance).has.proprety('state', 'running');
+      assume(instance.srid).to.be.undefined;
+      assume(instance).has.property('imageid', LaunchSpecification.ImageId);
+      assume(instance).has.property('launched');
+    });
+  });
+
+  describe('requesting spot instance resources', () => {
     let ClientToken;
     let Region;
     let SpotPrice;
@@ -174,6 +305,8 @@ describe('Api', () => {
 
       let requests = await state.listSpotRequests();
       assume(requests).has.lengthOf(1);
+      // We assume a call count of two because we have a TagResources call as
+      // well as our requestSpotInstances call
       assume(runaws.callCount).equals(2);
       assume(runaws.args[0][1]).equals('requestSpotInstances');
       assume(runaws.args[1][1]).equals('createTags');
