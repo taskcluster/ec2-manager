@@ -20,7 +20,7 @@ describe('Api', () => {
   let runaws;
   let regions;
 
-  before(async () => {
+  before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     await state._runScript('drop-db.sql');
@@ -39,11 +39,11 @@ describe('Api', () => {
       credentials: {
         clientId: 'hasauth',
         accessToken: 'abcde',
-      }
+      },
     });
   });
 
-  beforeEach(async () => {
+  beforeEach(async() => {
     await state._runScript('clear-db.sql');
     runaws = sandbox.stub();
     server = await main('server', {profile: 'test', process: 'test', runaws});
@@ -58,12 +58,12 @@ describe('Api', () => {
     sandbox.restore();
   });
 
-  it('api comes up', async () => {
+  it('api comes up', async() => {
     let result = await client.ping();
     assume(result).has.property('alive', true);
   });
 
-  it('should list worker types', async () => {
+  it('should list worker types', async() => {
     let status = 'pending-evaluation';
     await state.insertInstance({
       id: 'i-1',
@@ -76,12 +76,22 @@ describe('Api', () => {
       imageId,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status, az, created, imageId});
+    await state.insertSpotRequest({
+      id: 'r-1',
+      workerType: 'w-2',
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      created,
+      imageId,
+    });
     let result = await client.listWorkerTypes();
     assume(result).deeply.equals(['w-1', 'w-2']);
   });
 
-  it('should show instance counts', async () => {
+  it('should show instance counts', async() => {
     let status = 'pending-evaluation';
     await state.insertInstance({
       id: 'i-1',
@@ -105,7 +115,17 @@ describe('Api', () => {
       imageId,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({id: 'r-1', workerType: 'w-1', region, instanceType, state: 'open', status, az, created, imageId});
+    await state.insertSpotRequest({
+      id: 'r-1',
+      workerType: 'w-1',
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      created,
+      imageId,
+    });
     let result = await client.workerTypeStats('w-1');
     assume(result).deeply.equals({
       pending: [{
@@ -144,7 +164,7 @@ describe('Api', () => {
         Placement: {
           AvailabilityZone: az,
         },
-      }
+      };
 
       runaws.returns({
         Instances: [{
@@ -159,7 +179,7 @@ describe('Api', () => {
           Placemenent: {
             AvailabilityZone: az,
           },
-        }]
+        }],
       });
     });
 
@@ -167,7 +187,7 @@ describe('Api', () => {
     // to return the primary key conflict, a check that the worker type
     // argument is the same as that in the LaunchSpecification and that EC2
     // idempotency works
-    it.skip('should request an on-demand instance (idempotent)', async () => {
+    it.skip('should request an on-demand instance (idempotent)', async() => {
       let requests = await state.listSpotRequests();
       assume(requests).has.lengthOf(0);
       let instances = await state.listInstances();
@@ -201,29 +221,29 @@ describe('Api', () => {
             ResourceType: 'volume',
             Tags: [{
               Key: 'Name',
-              Value: workerType
+              Value: workerType,
             }, {
               Key: 'Owner',
-              Value: 'ec2-manager-test'
+              Value: 'ec2-manager-test',
             }, {
               Key: 'WorkerType',
-              Value: `ec2-manager-test/${workerType}`
-            }]
+              Value: `ec2-manager-test/${workerType}`,
+            }],
           },
           { 
             ResourceType: 'instance',
             Tags: [{
               Key: 'Name',
-              Value: workerType
+              Value: workerType,
             }, {
               Key: 'Owner',
-              Value: 'ec2-manager-test'
+              Value: 'ec2-manager-test',
             }, {
               Key: 'WorkerType',
-              Value: `ec2-manager-test/${workerType}`
-            }]
-          }
-        ]
+              Value: `ec2-manager-test/${workerType}`,
+            }],
+          },
+        ],
       });
       assume(call[2]).deeply.equals(expectedEC2CallObj);
 
@@ -275,7 +295,7 @@ describe('Api', () => {
         Placement: {
           AvailabilityZone: az,
         },
-      }
+      };
 
       runaws.returns({
         SpotInstanceRequests: [{
@@ -286,8 +306,8 @@ describe('Api', () => {
           CreateTime: created.toString(),
           Status: {
             Code: 'pending-evaluation',
-          }
-        }]
+          },
+        }],
       });
     });
 
@@ -295,7 +315,7 @@ describe('Api', () => {
     // to return the primary key conflict, a check that the worker type
     // argument is the same as that in the LaunchSpecification and that EC2
     // idempotency works
-    it('should request a spot instance (idempotent)', async () => {
+    it('should request a spot instance (idempotent)', async() => {
       await client.requestSpotInstance(workerType, {
         ClientToken, 
         Region,
@@ -337,7 +357,7 @@ describe('Api', () => {
   });
 
   describe('managing resources', () => {
-    beforeEach(async () => {
+    beforeEach(async() => {
       let status = 'pending-fulfillment';
       await state.insertInstance({
         id: 'i-1',
@@ -398,7 +418,7 @@ describe('Api', () => {
       });
     });
 
-    it('should be able to kill all of a worker type', async () => {
+    it('should be able to kill all of a worker type', async() => {
       let result = await client.terminateWorkerType(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
@@ -417,13 +437,13 @@ describe('Api', () => {
             assume(obj.SpotInstanceRequestIds).deeply.equals(['r-3']);
           }
         } else if (endpoint === 'terminateInstances') {
-            if (region === 'us-east-1') {
-              assume(obj.InstanceIds).deeply.equals(['i-1']);
-            } else if (region === 'us-west-1') {
-              assume(obj.InstanceIds).deeply.equals(['i-2']);
-            } else if (region === 'us-west-2') {
-              assume(obj.InstanceIds).deeply.equals(['i-3']);
-            }
+          if (region === 'us-east-1') {
+            assume(obj.InstanceIds).deeply.equals(['i-1']);
+          } else if (region === 'us-west-1') {
+            assume(obj.InstanceIds).deeply.equals(['i-2']);
+          } else if (region === 'us-west-2') {
+            assume(obj.InstanceIds).deeply.equals(['i-3']);
+          }
         }
       }
       
@@ -433,12 +453,12 @@ describe('Api', () => {
       assume(requests).has.lengthOf(0);
     });
 
-    it('should be able to kill a single instance', async () => {
+    it('should be able to kill a single instance', async() => {
       runaws.returns({
         TerminatingInstances: [{
           PreviousState: {Name: 'pending'},
           CurrentState: {Name: 'shutting-down'},
-        }]
+        }],
       });
       let result = await client.terminateInstance('us-east-1', 'i-1');
       assume(result).has.property('current', 'shutting-down');
@@ -448,11 +468,11 @@ describe('Api', () => {
       assume(instances).has.lengthOf(0);
     });
     
-    it('should be able to cancel a single spot instance request', async () => {
+    it('should be able to cancel a single spot instance request', async() => {
       runaws.returns({
         CancelledSpotInstanceRequests: [{
           State: 'closed',
-        }]
+        }],
       });
       let result = await client.cancelSpotInstanceRequest('us-east-1', 'r-1');
       assume(runaws.callCount).equals(1);
@@ -463,7 +483,7 @@ describe('Api', () => {
   });
 
   describe('managing key pairs', () => {
-    it('should create and delete keypairs idempotently', async () => {
+    it('should create and delete keypairs idempotently', async() => {
       // We want the following cases covered:
       // 1. nothing exists in internal cache or ec2 --> create
       // 2. it exists in internal cache --> short circuit return
@@ -473,7 +493,7 @@ describe('Api', () => {
 
       // Case 1
       runaws.returns({
-        KeyPairs: []
+        KeyPairs: [],
       });
       await client.ensureKeyPair(workerType);
       assume(runaws.callCount).equals(regions.length * 2);
@@ -486,7 +506,7 @@ describe('Api', () => {
 
       // Case 4
       runaws.returns({
-        KeyPairs: ['placeholder']
+        KeyPairs: ['placeholder'],
       });
       await client.removeKeyPair(workerType);
       assume(runaws.callCount).equals(regions.length * 2);
@@ -494,7 +514,7 @@ describe('Api', () => {
 
       // Case 5
       runaws.returns({
-        KeyPairs: []
+        KeyPairs: [],
       });
       await client.removeKeyPair(workerType);
       assume(runaws.callCount).equals(regions.length);
@@ -513,13 +533,13 @@ describe('Api', () => {
   // These are functions which are supposed to be used for debugging and
   // troubleshooting primarily.  Maybe some ui stuff?
   describe('internal api', () => {
-    it('should list regions', async () => {
+    it('should list regions', async() => {
       let result = await client.regions();
       result.regions.sort();
       assume(result.regions).deeply.equals(regions.sort());
     });
 
-    it('should list spot requests to poll', async () => {
+    it('should list spot requests to poll', async() => {
       await state.insertSpotRequest({
         workerType: 'abcd',
         region,

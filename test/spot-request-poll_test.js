@@ -9,12 +9,12 @@ describe('Spot Request Polling', () => {
   let sandbox = sinon.sandbox.create();
   let defaultSR;
 
-  before(async () => {
+  before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
   });
 
-  beforeEach(async () => {
+  beforeEach(async() => {
     await state._runScript('clear-db.sql');
     defaultSR = {
       id: 'r-1',
@@ -33,11 +33,11 @@ describe('Spot Request Polling', () => {
     sandbox.restore();
   });
 
-  it('no outstanding spot requests', async () => {
+  it('no outstanding spot requests', async() => {
     await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: () => {}});
   });
 
-  it('one open spot request without change', async () => {
+  it('one open spot request without change', async() => {
     await state.insertSpotRequest(Object.assign({}, defaultSR, {
       state: 'open',
       status: 'pending-fulfillment',
@@ -52,9 +52,9 @@ describe('Spot Request Polling', () => {
         SpotInstanceRequestId: defaultSR.id,
         State: 'open',
         Status: {
-          Code: 'pending-fulfillment'
-        }
-      }]
+          Code: 'pending-fulfillment',
+        },
+      }],
     }));
 
     await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
@@ -65,7 +65,7 @@ describe('Spot Request Polling', () => {
     assume(requests).lengthOf(1);
   });
   
-  it('pending-evaluation -> pending-fulfillment', async () => {
+  it('pending-evaluation -> pending-fulfillment', async() => {
     await state.insertSpotRequest(Object.assign({}, defaultSR, {
       state: 'open',
       status: 'pending-evaluation',
@@ -80,9 +80,9 @@ describe('Spot Request Polling', () => {
         SpotInstanceRequestId: defaultSR.id,
         State: 'open',
         Status: {
-          Code: 'pending-fulfillment'
-        }
-      }]
+          Code: 'pending-fulfillment',
+        },
+      }],
     }));
 
     await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
@@ -94,7 +94,7 @@ describe('Spot Request Polling', () => {
     assume(requests[0]).has.property('status', 'pending-fulfillment');
   });
 
-  it('pending-evaluation -> price-too-low', async () => {
+  it('pending-evaluation -> price-too-low', async() => {
     await state.insertSpotRequest(Object.assign({}, defaultSR, {
       state: 'open',
       status: 'pending-evaluation',
@@ -109,16 +109,16 @@ describe('Spot Request Polling', () => {
         SpotInstanceRequestId: defaultSR.id,
         State: 'open',
         Status: {
-          Code: 'price-too-low'
-        }
-      }]
+          Code: 'price-too-low',
+        },
+      }],
     }));
 
     mock.onCall(1).returns(Promise.resolve({
       CancelledSpotInstanceRequests: [{
         SpotInstanceRequestId: defaultSR.id,
         State: 'open',
-      }]
+      }],
     }));
 
     await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
@@ -133,7 +133,7 @@ describe('Spot Request Polling', () => {
     assume(requests).lengthOf(0);
   });
 
-  it('pending-evaluation status -> active state', async () => {
+  it('pending-evaluation status -> active state', async() => {
     await state.insertSpotRequest(Object.assign({}, defaultSR, {
       state: 'open',
       status: 'pending-evaluation',
@@ -148,9 +148,9 @@ describe('Spot Request Polling', () => {
         SpotInstanceRequestId: defaultSR.id,
         State: 'active',
         Status: {
-          Code: 'fulfilled'
-        }
-      }]
+          Code: 'fulfilled',
+        },
+      }],
     }));
 
     await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
