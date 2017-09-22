@@ -38,6 +38,7 @@ describe('Cloud Watch Event Listener', () => {
   let instanceType = 'c3.xlarge';
   let imageId = 'ami-1'
   let listener;
+  let tagger;
 
   before(async () => {
     // We want a clean DB state to verify things happen as we intend
@@ -51,17 +52,19 @@ describe('Cloud Watch Event Listener', () => {
 
     let monitor = await main('monitor', {profile: 'test', process: 'test'});
     let cfg = await main('cfg', {profile: 'test', process: 'test'});
+    tagger = await main('tagger', {profile: 'test', process: 'test'});
 
     await state._runScript('drop-db.sql');
     await state._runScript('create-db.sql');
 
-    listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, keyPrefix: cfg.app.keyPrefix});
+    listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, keyPrefix: cfg.app.keyPrefix, tagger});
   });
 
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
   beforeEach(async () => {
     await state._runScript('clear-db.sql');
+    sandbox.stub(tagger, 'runaws');
   });
 
   afterEach(() => {
