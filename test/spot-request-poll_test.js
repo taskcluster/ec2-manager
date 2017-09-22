@@ -64,7 +64,7 @@ describe('Spot Request Poller', () => {
     it('fails with an invalid region', async () => {
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
 
-      try { 
+      try {
         await poller._poll(5);
         return Promise.reject(Error('Line should not be reached'));
       } catch (e) { }
@@ -209,6 +209,5 @@ describe('Spot Request Poller', () => {
       requests = await state.listSpotRequests();
       assume(requests).lengthOf(0);
     });
-
   });
 });
