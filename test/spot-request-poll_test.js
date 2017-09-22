@@ -1,5 +1,4 @@
-const subject = require('../lib/spot-request-poll');
-const {pollSpotRequests} = subject;
+const {SpotRequestPoller} = require('../lib/spot-request-poller');
 const sinon = require('sinon');
 const main = require('../lib/main');
 const assume = require('assume');
@@ -34,7 +33,8 @@ describe('Spot Request Polling', () => {
   });
 
   it('no outstanding spot requests', async () => {
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: () => {}});
+    const poller = new SpotRequestPoller({ec2: {}, region: defaultSR.region, state, runaws: () => {}});
+    await poller.poll();
   });
 
   it('one open spot request without change', async () => {
@@ -57,7 +57,8 @@ describe('Spot Request Polling', () => {
       }]
     }));
 
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    const poller = new SpotRequestPoller({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    await poller.poll();
     assume(mock.callCount).equals(1);
     assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
 
@@ -85,7 +86,8 @@ describe('Spot Request Polling', () => {
       }]
     }));
 
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    const poller = new SpotRequestPoller({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    await poller.poll();
     assume(mock.callCount).equals(1);
     assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
 
@@ -121,7 +123,9 @@ describe('Spot Request Polling', () => {
       }]
     }));
 
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    const poller = new SpotRequestPoller({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    await poller.poll();
+
     assume(mock.callCount).equals(2);
     assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
     assume(mock.secondCall.args[1]).equals('cancelSpotInstanceRequests');
@@ -153,7 +157,9 @@ describe('Spot Request Polling', () => {
       }]
     }));
 
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    const poller = new SpotRequestPoller({ec2: {}, region: defaultSR.region, state, runaws: mock});
+    await poller.poll();
+
     assume(mock.callCount).equals(1);
     assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
 
