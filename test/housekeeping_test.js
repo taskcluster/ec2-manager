@@ -25,6 +25,7 @@ describe('House Keeper', () => {
   let keyPrefix;
   let regions;
   let houseKeeper;
+  let tagger;
 
   before(async () => {
     // We want a clean DB state to verify things happen as we intend
@@ -60,6 +61,8 @@ describe('House Keeper', () => {
       }
     }
 
+    tagger = await main('tagger', {profile: 'test', process: 'test', runaws});
+
     houseKeeper = new HouseKeeper({
       ec2,
       state,
@@ -67,6 +70,7 @@ describe('House Keeper', () => {
       keyPrefix,
       monitor,
       runaws,
+      tagger,
     });
   });
 
