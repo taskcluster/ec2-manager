@@ -50,6 +50,20 @@ describe('Spot Request Polling', () => {
     } catch(e) { }
   });
 
+  it('successfully polls with a valid region', async () => {
+    const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+    await poller._poll('foobar');
+  });
+
+  it('fails to _poll with an invalid region', async () => {
+    const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+
+    try { 
+      await poller._poll(5);
+      return Promise.reject(Error('Line should not be reached'));
+    } catch (e) { }
+  });
+
   it('no outstanding spot requests', async () => {
     const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
     await poller.poll();
