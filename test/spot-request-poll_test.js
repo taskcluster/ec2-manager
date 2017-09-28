@@ -1,10 +1,9 @@
-const subject = require('../lib/spot-request-poll');
-const {pollSpotRequests} = subject;
+const {SpotRequestPoller} = require('../lib/spot-request-poller');
 const sinon = require('sinon');
 const main = require('../lib/main');
 const assume = require('assume');
 
-describe('Spot Request Polling', () => {
+describe('Spot Request Poller', () => {
   let state;
   let sandbox = sinon.sandbox.create();
   let defaultSR;
@@ -33,131 +32,183 @@ describe('Spot Request Polling', () => {
     sandbox.restore();
   });
 
-  it('no outstanding spot requests', async () => {
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: () => {}});
-  });
+  describe('constructor', () => {
 
-  it('one open spot request without change', async () => {
-    await state.insertSpotRequest(Object.assign({}, defaultSR, {
-      state: 'open',
-      status: 'pending-fulfillment',
-    }));
-
-    let requests = await state.listSpotRequests();
-    assume(requests).lengthOf(1);
-
-    let mock = sandbox.stub();
-    mock.onCall(0).returns(Promise.resolve({
-      SpotInstanceRequests: [{
-        SpotInstanceRequestId: defaultSR.id,
-        State: 'open',
-        Status: {
-          Code: 'pending-fulfillment'
-        }
-      }]
-    }));
-
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
-    assume(mock.callCount).equals(1);
-    assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
-
-    requests = await state.listSpotRequests();
-    assume(requests).lengthOf(1);
-  });
-  
-  it('pending-evaluation -> pending-fulfillment', async () => {
-    await state.insertSpotRequest(Object.assign({}, defaultSR, {
-      state: 'open',
-      status: 'pending-evaluation',
-    }));
-
-    let requests = await state.listSpotRequests();
-    assume(requests).lengthOf(1);
-
-    let mock = sandbox.stub();
-    mock.onCall(0).returns(Promise.resolve({
-      SpotInstanceRequests: [{
-        SpotInstanceRequestId: defaultSR.id,
-        State: 'open',
-        Status: {
-          Code: 'pending-fulfillment'
-        }
-      }]
-    }));
-
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
-    assume(mock.callCount).equals(1);
-    assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
-
-    requests = await state.listSpotRequests();
-    assume(requests).lengthOf(1);
-    assume(requests[0]).has.property('status', 'pending-fulfillment');
-  });
-
-  it('pending-evaluation -> price-too-low', async () => {
-    await state.insertSpotRequest(Object.assign({}, defaultSR, {
-      state: 'open',
-      status: 'pending-evaluation',
-    }));
-
-    let requests = await state.listSpotRequests();
-    assume(requests).lengthOf(1);
-
-    let mock = sandbox.stub();
-    mock.onCall(0).returns(Promise.resolve({
-      SpotInstanceRequests: [{
-        SpotInstanceRequestId: defaultSR.id,
-        State: 'open',
-        Status: {
-          Code: 'price-too-low'
-        }
-      }]
-    }));
-
-    mock.onCall(1).returns(Promise.resolve({
-      CancelledSpotInstanceRequests: [{
-        SpotInstanceRequestId: defaultSR.id,
-        State: 'open',
-      }]
-    }));
-
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
-    assume(mock.callCount).equals(2);
-    assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
-    assume(mock.secondCall.args[1]).equals('cancelSpotInstanceRequests');
-    assume(mock.secondCall.args[2]).deeply.equals({
-      SpotInstanceRequestIds: [defaultSR.id],
+    it('succeeds with valid args', () => {
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
     });
 
-    requests = await state.listSpotRequests();
-    assume(requests).lengthOf(0);
+    it('fails with non-list region arg', () => {
+      try {
+        const poller = new SpotRequestPoller({ec2: {}, regions: defaultSR.region, state, runaws: () => {}});
+        return Promise.reject(Error('Line should not be reached'));
+      } catch(e) { }
+    });
+
+    it('fails with list containing non-string regions', () => {
+      try {
+        const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region, 1], state, runaws: () => {}});
+        return Promise.reject(Error('Line should not be reached'));
+      } catch(e) { }
+    });
+
   });
 
-  it('pending-evaluation status -> active state', async () => {
-    await state.insertSpotRequest(Object.assign({}, defaultSR, {
-      state: 'open',
-      status: 'pending-evaluation',
-    }));
+  describe('_poll helper method', () => {
 
-    let requests = await state.listSpotRequests();
-    assume(requests).lengthOf(1);
+    it('succeeds with a valid region', async () => {
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+      await poller._poll('foobar');
+    });
 
-    let mock = sandbox.stub();
-    mock.onCall(0).returns(Promise.resolve({
-      SpotInstanceRequests: [{
-        SpotInstanceRequestId: defaultSR.id,
-        State: 'active',
-        Status: {
-          Code: 'fulfilled'
-        }
-      }]
-    }));
+    it('fails with an invalid region', async () => {
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
 
-    await pollSpotRequests({ec2: {}, region: defaultSR.region, state, runaws: mock});
-    assume(mock.callCount).equals(1);
-    assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
+      try { 
+        await poller._poll(5);
+        return Promise.reject(Error('Line should not be reached'));
+      } catch (e) { }
+    });
 
-    requests = await state.listSpotRequests();
-    assume(requests).lengthOf(0);
+  });
+
+  describe('polling', () => {
+
+    it('succeeds with no outstanding spot requests', async () => {
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+      await poller.poll();
+    });
+
+    it('succeeds with one open spot request without change', async () => {
+      await state.insertSpotRequest(Object.assign({}, defaultSR, {
+        state: 'open',
+        status: 'pending-fulfillment',
+      }));
+
+      let requests = await state.listSpotRequests();
+      assume(requests).lengthOf(1);
+
+      let mock = sandbox.stub();
+      mock.onCall(0).returns(Promise.resolve({
+        SpotInstanceRequests: [{
+          SpotInstanceRequestId: defaultSR.id,
+          State: 'open',
+          Status: {
+            Code: 'pending-fulfillment'
+          }
+        }]
+      }));
+
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      await poller.poll();
+
+      assume(mock.callCount).equals(1);
+      assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
+
+      requests = await state.listSpotRequests();
+      assume(requests).lengthOf(1);
+    });
+
+    it('succeeds with pending-evaluation -> pending-fulfillment', async () => {
+      await state.insertSpotRequest(Object.assign({}, defaultSR, {
+        state: 'open',
+        status: 'pending-evaluation',
+      }));
+
+      let requests = await state.listSpotRequests();
+      assume(requests).lengthOf(1);
+
+      let mock = sandbox.stub();
+      mock.onCall(0).returns(Promise.resolve({
+        SpotInstanceRequests: [{
+          SpotInstanceRequestId: defaultSR.id,
+          State: 'open',
+          Status: {
+            Code: 'pending-fulfillment'
+          }
+        }]
+      }));
+
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      await poller.poll();
+      assume(mock.callCount).equals(1);
+      assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
+
+      requests = await state.listSpotRequests();
+      assume(requests).lengthOf(1);
+      assume(requests[0]).has.property('status', 'pending-fulfillment');
+    });
+
+    it('succeeds with pending-evaluation -> price-too-low', async () => {
+      await state.insertSpotRequest(Object.assign({}, defaultSR, {
+        state: 'open',
+        status: 'pending-evaluation',
+      }));
+
+      let requests = await state.listSpotRequests();
+      assume(requests).lengthOf(1);
+
+      let mock = sandbox.stub();
+      mock.onCall(0).returns(Promise.resolve({
+        SpotInstanceRequests: [{
+          SpotInstanceRequestId: defaultSR.id,
+          State: 'open',
+          Status: {
+            Code: 'price-too-low'
+          }
+        }]
+      }));
+
+      mock.onCall(1).returns(Promise.resolve({
+        CancelledSpotInstanceRequests: [{
+          SpotInstanceRequestId: defaultSR.id,
+          State: 'open',
+        }]
+      }));
+
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      await poller.poll();
+
+      assume(mock.callCount).equals(2);
+      assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
+      assume(mock.secondCall.args[1]).equals('cancelSpotInstanceRequests');
+      assume(mock.secondCall.args[2]).deeply.equals({
+        SpotInstanceRequestIds: [defaultSR.id],
+      });
+
+      requests = await state.listSpotRequests();
+      assume(requests).lengthOf(0);
+    });
+
+    it('succeeds with pending-evaluation status -> active state', async () => {
+      await state.insertSpotRequest(Object.assign({}, defaultSR, {
+        state: 'open',
+        status: 'pending-evaluation',
+      }));
+
+      let requests = await state.listSpotRequests();
+      assume(requests).lengthOf(1);
+
+      let mock = sandbox.stub();
+      mock.onCall(0).returns(Promise.resolve({
+        SpotInstanceRequests: [{
+          SpotInstanceRequestId: defaultSR.id,
+          State: 'active',
+          Status: {
+            Code: 'fulfilled'
+          }
+        }]
+      }));
+
+      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      await poller.poll();
+
+      assume(mock.callCount).equals(1);
+      assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
+
+      requests = await state.listSpotRequests();
+      assume(requests).lengthOf(0);
+    });
+
   });
 });
