@@ -74,7 +74,7 @@ staging:
     baseUrl: 'https://ec2-manager-staging.herokuapp.com/v1'
   app:
     keyPrefix: 'ec2-manager-staging:'
-    publishMetadata: true
+    publishMetadata: false
   postgres:
     maxClients: 10
   monitor:
