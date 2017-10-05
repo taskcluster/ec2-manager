@@ -32,7 +32,7 @@ request it was associated is removed from the list of spot requests we need to
 poll.
 
 The messages from CloudWatch Events reach us through an SQS queue.  In the case
-that the instance's metadata isn't available through the `decribeInstances`
+that the instance's metadata isn't available through the `describeInstances`
 endpoint, we redeliver the message a number of times.  If it is unsuccesful on
 the last attempt, we report it to Sentry and move on.  The periodic
 housekeeping will ensure that it is inserted into the state database when

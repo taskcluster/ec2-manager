@@ -44,6 +44,7 @@ describe('House Keeper', () => {
 
     describeInstancesStub = sandbox.stub();
     describeSpotInstanceRequestsStub = sandbox.stub();
+    describeVolumesStub = sandbox.stub();
     terminateInstancesStub = sandbox.stub();
     createTagsStub = sandbox.stub();
 
@@ -52,6 +53,8 @@ describe('House Keeper', () => {
         return describeInstancesStub(service, method, params);
       } else if (method === 'describeSpotInstanceRequests') {
         return describeSpotInstanceRequestsStub(service, method, params);
+      } else if (method === 'describeVolumes') {
+        return describeVolumesStub(service, method, params);
       } else if (method === 'terminateInstances') {
         return terminateInstancesStub(service, method, params);
       } else if (method === 'createTags') {
@@ -323,5 +326,14 @@ describe('House Keeper', () => {
       });
     }
   });
-});
 
+  it('should not fail if no volume data is returned', async() => {
+    describeVolumesStub.returns({
+      Volumes: [
+      ]
+    });
+
+    let outcome = await houseKeeper.sweep();
+    
+  });
+});

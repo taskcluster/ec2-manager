@@ -209,5 +209,6 @@ describe('Spot Request Poller', () => {
       requests = await state.listSpotRequests();
       assume(requests).lengthOf(0);
     });
+    
   });
 });
