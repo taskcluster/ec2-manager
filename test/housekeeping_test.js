@@ -20,12 +20,14 @@ describe('House Keeper', () => {
   let sandbox = sinon.sandbox.create();
   let describeInstancesStub;
   let describeSpotInstanceRequestsStub;
+  let describeVolumesStub;
   let terminateInstancesStub;
   let createTagsStub;
   let keyPrefix;
   let regions;
   let houseKeeper;
   let tagger;
+  let houseKeeperMock;
 
   before(async () => {
     // We want a clean DB state to verify things happen as we intend
@@ -75,6 +77,8 @@ describe('House Keeper', () => {
       runaws,
       tagger,
     });
+    
+     houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
   afterEach(() => {
@@ -120,6 +124,11 @@ describe('House Keeper', () => {
 
     describeSpotInstanceRequestsStub.returns({
       SpotInstanceRequests: [
+      ]
+    });
+
+    describeVolumesStub.returns({
+      Volumes: [
       ]
     });
 
@@ -179,6 +188,11 @@ describe('House Keeper', () => {
       }]
     });
 
+    describeVolumesStub.returns({
+      Volumes: [
+      ]
+    });
+
     let outcome = await houseKeeper.sweep();
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
@@ -235,6 +249,11 @@ describe('House Keeper', () => {
           Code: 'pending-evaluation',
         },
       }]
+    });
+
+    describeVolumesStub.returns({
+      Volumes: [
+      ]
     });
 
     let outcome = await houseKeeper.sweep();
@@ -303,6 +322,11 @@ describe('House Keeper', () => {
       SpotInstanceRequests: []
     });
 
+    describeVolumesStub.returns({
+      Volumes: [
+      ]
+    });
+
     let outcome = await houseKeeper.sweep();
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
@@ -327,12 +351,81 @@ describe('House Keeper', () => {
     }
   });
 
+  it('should call sweepVolumes exactly once', async() => {
+    houseKeeperMock.expects("sweepVolumes").exactly(regions.length);
+    
+    describeInstancesStub.returns({
+      Reservations: [
+      ]
+    });
+    
+    describeSpotInstanceRequestsStub.returns({
+      SpotInstanceRequests: [
+      ]
+    });
+    
+    await houseKeeper.sweep();
+    houseKeeperMock.verify();
+  });
+
   it('should not fail if no volume data is returned', async() => {
+    houseKeeperMock.expects("handleVolumeData").never();
+    describeInstancesStub.returns({
+      Reservations: [
+      ]
+    });
+    
+    describeSpotInstanceRequestsStub.returns({
+      SpotInstanceRequests: [
+      ]
+    });
+    
     describeVolumesStub.returns({
       Volumes: [
       ]
     });
 
-    let outcome = await houseKeeper.sweep();
+    await houseKeeper.sweep();
+    houseKeeperMock.verify();
   });
+  
+  it('should call handleVolumeData once per volume', async() => {
+    houseKeeperMock.expects("handleVolumeData").twice();
+      
+    describeInstancesStub.returns({
+      Reservations: [
+      ]
+    });
+    
+    describeSpotInstanceRequestsStub.returns({
+      SpotInstanceRequests: [
+      ]
+    });
+    
+    describeVolumesStub.returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: region, 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: "snap-1234567890abcdef0", 
+        State: "in-use", 
+        VolumeId: "vol-049df61146c4d7901", 
+        VolumeType: "standard",
+      },
+      {
+        Attachments: [], 
+        AvailabilityZone: 'us-east-2', 
+        CreateTime: new Date().toString(), 
+        Size: 16, 
+        SnapshotId: "snap-1234567890abcdef09", 
+        State: "in-use", 
+        VolumeId: "vol-049df61146c4d7902", 
+        VolumeType: "standard",
+      }]
+    });
+      
+    await houseKeeper.sweep();
+    houseKeeperMock.verify();
+   });
 });
