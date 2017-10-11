@@ -215,6 +215,11 @@ describe('House Keeper', () => {
       }],
     });
 
+    describeVolumesStub.returns({
+      Volumes: [
+      ]
+    });
+
     let outcome = await houseKeeper.sweep();
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
@@ -271,6 +276,11 @@ describe('House Keeper', () => {
           Code: 'pending-evaluation',
         },
       }],
+    });
+
+    describeVolumesStub.returns({
+      Volumes: [
+      ]
     });
 
     let outcome = await houseKeeper.sweep();
@@ -333,6 +343,11 @@ describe('House Keeper', () => {
           },
         }],
       }],
+    });
+
+    describeVolumesStub.returns({
+      Volumes: [
+      ]
     });
 
     let outcome = await houseKeeper.sweep();
@@ -590,4 +605,44 @@ describe('House Keeper', () => {
     await houseKeeper.sweep();
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
+  
+  it('should call handleVolumeData once per volume', async() => {
+    houseKeeperMock.expects("handleVolumeData").twice();
+      
+    describeInstancesStub.returns({
+      Reservations: [
+      ]
+    });
+    
+    describeSpotInstanceRequestsStub.returns({
+      SpotInstanceRequests: [
+      ]
+    });
+    
+    describeVolumesStub.returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: region, 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: "snap-1234567890abcdef0", 
+        State: "in-use", 
+        VolumeId: "vol-049df61146c4d7901", 
+        VolumeType: "standard",
+      },
+      {
+        Attachments: [], 
+        AvailabilityZone: 'us-east-2', 
+        CreateTime: new Date().toString(), 
+        Size: 16, 
+        SnapshotId: "snap-1234567890abcdef09", 
+        State: "in-use", 
+        VolumeId: "vol-049df61146c4d7902", 
+        VolumeType: "standard",
+      }]
+    });
+      
+    await houseKeeper.sweep();
+    houseKeeperMock.verify();
+   });
 });
