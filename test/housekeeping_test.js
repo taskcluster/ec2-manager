@@ -401,28 +401,38 @@ describe('House Keeper', () => {
       SpotInstanceRequests: [
       ]
     });
-    
+
+    describeVolumesStub.withArgs(ec2[region], 'describeVolumes', houseKeeper.describeVolumesParams)
+      .returns({
+        Volumes: [{
+          Attachments: [],
+          AvailabilityZone: region, 
+          CreateTime: new Date().toString(), 
+          Size: 8, 
+          SnapshotId: "snap-1234567890abcdef0", 
+          State: "in-use", 
+          VolumeId: "vol-049df61146c4d7901", 
+          VolumeType: "standard",
+        }]
+      });
+
+    describeVolumesStub.withArgs(ec2['us-east-2'], 'describeVolumes', houseKeeper.describeVolumesParams)
+      .returns({
+        Volumes: [{
+          Attachments: [], 
+          AvailabilityZone: 'us-east-2', 
+          CreateTime: new Date().toString(), 
+          Size: 16, 
+          SnapshotId: "snap-1234567890abcdef09", 
+          State: "in-use", 
+          VolumeId: "vol-049df61146c4d7902", 
+          VolumeType: "standard",
+        }]
+      });
+
     describeVolumesStub.returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: region, 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: "snap-1234567890abcdef0", 
-        State: "in-use", 
-        VolumeId: "vol-049df61146c4d7901", 
-        VolumeType: "standard",
-      },
-      {
-        Attachments: [], 
-        AvailabilityZone: 'us-east-2', 
-        CreateTime: new Date().toString(), 
-        Size: 16, 
-        SnapshotId: "snap-1234567890abcdef09", 
-        State: "in-use", 
-        VolumeId: "vol-049df61146c4d7902", 
-        VolumeType: "standard",
-      }]
+      Volumes: [
+      ]
     });
       
     await houseKeeper.sweep();
