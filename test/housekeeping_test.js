@@ -606,8 +606,8 @@ describe('House Keeper', () => {
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
   
-  it('should call handleVolumeData once per volume', async() => {
-    houseKeeperMock.expects("handleVolumeData").twice();
+  it('should call handleVolumeData exactly once per volume', async() => {
+    houseKeeperMock.expects("_handleVolumeData").twice();
       
     describeInstancesStub.returns({
       Reservations: [
@@ -619,33 +619,35 @@ describe('House Keeper', () => {
       ]
     });
 
-    describeVolumesStub.withArgs(ec2[region], 'describeVolumes', houseKeeper.describeVolumesParams)
-      .returns({
-        Volumes: [{
-          Attachments: [],
-          AvailabilityZone: region, 
-          CreateTime: new Date().toString(), 
-          Size: 8, 
-          SnapshotId: "snap-1234567890abcdef0", 
-          State: "in-use", 
-          VolumeId: "vol-049df61146c4d7901", 
-          VolumeType: "standard",
-        }]
-      });
+    describeVolumesStub.withArgs(sinon.match(function(value) {
+      return value === ec2['us-west-2'] 
+    })).returns({
+       Volumes: [{
+         Attachments: [],
+         AvailabilityZone: 'us-west-2', 
+         CreateTime: new Date().toString(), 
+         Size: 8, 
+         SnapshotId: "snap-1234567890abcdef0", 
+         State: "in-use", 
+         VolumeId: "vol-049df61146c4d7901", 
+         VolumeType: "standard",
+       }]
+    });
 
-    describeVolumesStub.withArgs(ec2['us-east-2'], 'describeVolumes', houseKeeper.describeVolumesParams)
-      .returns({
-        Volumes: [{
-          Attachments: [], 
-          AvailabilityZone: 'us-east-2', 
-          CreateTime: new Date().toString(), 
-          Size: 16, 
-          SnapshotId: "snap-1234567890abcdef09", 
-          State: "in-use", 
-          VolumeId: "vol-049df61146c4d7902", 
-          VolumeType: "standard",
-        }]
-      });
+    describeVolumesStub.withArgs(sinon.match(function(value) {
+      return value === ec2['us-east-2']
+    })).returns({
+      Volumes: [{
+        Attachments: [], 
+        AvailabilityZone: 'us-east-2', 
+        CreateTime: new Date().toString(), 
+        Size: 16, 
+        SnapshotId: "snap-1234567890abcdef09", 
+        State: "in-use", 
+        VolumeId: "vol-049df61146c4d7902", 
+        VolumeType: "standard",
+      }]
+    });
 
     describeVolumesStub.returns({
       Volumes: [
