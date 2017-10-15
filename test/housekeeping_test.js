@@ -50,6 +50,24 @@ describe('House Keeper', () => {
     terminateInstancesStub = sandbox.stub();
     createTagsStub = sandbox.stub();
 
+    // Since many of the tests will not need to specify custom input, we can set the default
+    // behaviour of these stubs as returning empty objects. This way, only custom return statements
+    // need to be specified in any of the tests.
+    describeInstancesStub.returns({
+      Reservations: [{
+        Instances: [
+        ],
+      }]
+    });
+    describeSpotInstanceRequestsStub.returns({
+      SpotInstanceRequests: [
+      ]
+    });
+    describeVolumesStub.returns({
+       Volumes: [
+       ],
+    });
+
     async function runaws(service, method, params) {
       if (method === 'describeInstances') {
         return describeInstancesStub(service, method, params);
@@ -78,7 +96,7 @@ describe('House Keeper', () => {
       tagger,
     });
     
-     houseKeeperMock = sandbox.mock(houseKeeper);
+    houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
   afterEach(() => {
@@ -114,23 +132,6 @@ describe('House Keeper', () => {
 
     assume(await state.listInstances()).has.lengthOf(2);
     assume(await state.listSpotRequests()).has.lengthOf(2);
-
-    describeInstancesStub.returns({
-      Reservations: [{
-        Instances: [
-        ],
-      }]
-    });
-
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [
-      ]
-    });
-
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
-    });
 
     let outcome = await houseKeeper.sweep();
     assume(await state.listInstances()).has.lengthOf(0);
@@ -186,11 +187,6 @@ describe('House Keeper', () => {
           Code: 'pending-evaluation',
         },
       }]
-    });
-
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
     });
 
     let outcome = await houseKeeper.sweep();
@@ -249,11 +245,6 @@ describe('House Keeper', () => {
           Code: 'pending-evaluation',
         },
       }]
-    });
-
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
     });
 
     let outcome = await houseKeeper.sweep();
@@ -318,15 +309,6 @@ describe('House Keeper', () => {
       }]
     });
 
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: []
-    });
-
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
-    });
-
     let outcome = await houseKeeper.sweep();
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
@@ -354,36 +336,12 @@ describe('House Keeper', () => {
   it('should call sweepVolumes exactly once', async() => {
     houseKeeperMock.expects("_sweepVolumes").exactly(regions.length);
     
-    describeInstancesStub.returns({
-      Reservations: [
-      ]
-    });
-    
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [
-      ]
-    });
-    
     await houseKeeper.sweep();
     houseKeeperMock.verify();
   });
 
   it('should not fail if no volume data is returned', async() => {
     houseKeeperMock.expects("_handleVolumeData").never();
-    describeInstancesStub.returns({
-      Reservations: [
-      ]
-    });
-    
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [
-      ]
-    });
-    
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
-    });
 
     await houseKeeper.sweep();
     houseKeeperMock.verify();
@@ -392,16 +350,6 @@ describe('House Keeper', () => {
   it('should call handleVolumeData exactly once per volume', async() => {
     houseKeeperMock.expects("_handleVolumeData").twice();
       
-    describeInstancesStub.returns({
-      Reservations: [
-      ]
-    });
-    
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [
-      ]
-    });
-
     describeVolumesStub.withArgs(sinon.match(function(value) {
       return value === ec2['us-west-2'] 
     })).returns({
@@ -432,11 +380,7 @@ describe('House Keeper', () => {
       }]
     });
 
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
-    });
-      
+     
     await houseKeeper.sweep();
     houseKeeperMock.verify();
    });
