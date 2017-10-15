@@ -215,11 +215,6 @@ describe('House Keeper', () => {
       }],
     });
 
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
-    });
-
     let outcome = await houseKeeper.sweep();
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
@@ -276,11 +271,6 @@ describe('House Keeper', () => {
           Code: 'pending-evaluation',
         },
       }],
-    });
-
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
     });
 
     let outcome = await houseKeeper.sweep();
@@ -609,16 +599,6 @@ describe('House Keeper', () => {
   it('should call handleVolumeData exactly once per volume', async() => {
     houseKeeperMock.expects("_handleVolumeData").twice();
       
-    describeInstancesStub.returns({
-      Reservations: [
-      ]
-    });
-    
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [
-      ]
-    });
-
     describeVolumesStub.withArgs(sinon.match(function(value) {
       return value === ec2['us-west-2'] 
     })).returns({
@@ -649,11 +629,7 @@ describe('House Keeper', () => {
       }]
     });
 
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
-    });
-      
+     
     await houseKeeper.sweep();
     houseKeeperMock.verify();
    });
