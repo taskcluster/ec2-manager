@@ -250,7 +250,7 @@ describe('State', () => {
     assume(amiUsage[0]).has.property('region', 'us-west-1');
   });
 
-  it('should be able to do an AMI usage upsert', async () => {
+  it('should be able to upsert an AMI\'s usage', async () => {
 
     await db.upsertAmiUsage({region: defaultSR.region, id: defaultSR.id});
     let amiUsage = await db.listAmiUsage(); 
