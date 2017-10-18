@@ -135,13 +135,6 @@ describe('State', () => {
     assume(result).has.length(1);
     assume(result[0]).has.property('id', defaultSR.id);
   });
-   
-  it('should be able to insert an AMI\'s usage', async () => {
-    let result = await db.insertAmiUsage({region: defaultSR.region, id: defaultSR.id});
-    result = await db.listAmiUsage();
-    assume(result).has.length(1);
-    assume(result[0]).has.property('id', defaultSR.id);
-  });
 
   it('should be able to filter spot requests', async () => {
     let result = await db.insertSpotRequest(defaultSR);
@@ -152,7 +145,7 @@ describe('State', () => {
   });
    
   it('should be able to filter AMI usages', async () => {
-    let result = await db.insertAmiUsage({region: defaultSR.region, id: defaultSR.id});
+    let result = await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
     result = await db.listAmiUsage({region: 'us-east-1', id: 'r-1'});
     assume(result).has.length(0);
     result = await db.listAmiUsage({region: 'us-west-1', id: 'r-1'});
@@ -177,6 +170,23 @@ describe('State', () => {
     let result = await db.insertInstance(defaultInst);
     assume(await db.listSpotRequests()).has.length(0);
     assume(await db.listInstances()).has.length(1);
+  });
+   
+  it('should be able to do a spot request upsert', async () => {
+    let firstState = 'open';
+    let secondState = 'closed';
+    defaultSR.state = firstState;
+     
+    await db.upsertSpotRequest(defaultSR);
+    let spotRequests = await db.listSpotRequests();
+    assume(spotRequests).has.length(1);
+    assume(spotRequests[0]).has.property('state', firstState);
+    
+    defaultSR.state = secondState;
+    await db.upsertSpotRequest(defaultSR);
+    spotRequests = await db.listSpotRequests();
+    assume(spotRequests).has.length(1);
+    assume(spotRequests[0]).has.property('state', secondState);
   });
 
   it('should be able to upsert a spot instance, removing the spot request', async () => {
@@ -234,31 +244,17 @@ describe('State', () => {
     assume(spotRequests).has.length(1);
     assume(spotRequests[0]).has.property('state', secondState);
   });
-   
-  it('should be able to update an AMI\'s usage', async () => {
-    await db.insertAmiUsage({region: defaultSR.region, id: defaultSR.id});
-    let amiUsage = await db.listAmiUsage(); 
-    assume(amiUsage).has.length(1);
-    
-    await db.updateAmiUsage({
-      region: 'us-west-1',
-      id: defaultSR.id,
-    });
-     
-    amiUsage = await db.listAmiUsage();
-    assume(amiUsage).has.length(1);
-    assume(amiUsage[0]).has.property('region', 'us-west-1');
-  });
 
-  it('should be able to upsert an AMI\'s usage', async () => {
+  it('should be able to report an AMI\'s usage', async () => {
 
-    await db.upsertAmiUsage({region: defaultSR.region, id: defaultSR.id});
+    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
     let amiUsage = await db.listAmiUsage(); 
     assume(amiUsage).has.length(1);
     assume(amiUsage[0]).has.property('region', defaultSR.region);
+    assume(amiUsage[0]).has.property('id', defaultSR.id);
 
     let newRegion = 'us-west-1';
-    await db.upsertAmiUsage({region: newRegion, id: defaultSR.id});
+    await db.reportAmiUsage({region: newRegion, id: defaultSR.id});
     amiUsage = await db.listAmiUsage(); 
     assume(amiUsage).has.length(1);
     assume(amiUsage[0]).has.property('region', 'us-west-1');
