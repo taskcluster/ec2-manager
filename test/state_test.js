@@ -202,7 +202,6 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(1);
   });
 
-
   it('should be able to update an instance', async () => {
     let firstState = 'pending';
     let secondState = 'running';
@@ -252,12 +251,17 @@ describe('State', () => {
     assume(amiUsage).has.length(1);
     assume(amiUsage[0]).has.property('region', defaultSR.region);
     assume(amiUsage[0]).has.property('id', defaultSR.id);
-
-    let newRegion = 'us-west-1';
-    await db.reportAmiUsage({region: newRegion, id: defaultSR.id});
-    amiUsage = await db.listAmiUsage(); 
+    let lastUse = amiUsage[0].lastused;
+    
+    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
+    let updatedAmiUsage = await db.listAmiUsage();
     assume(amiUsage).has.length(1);
-    assume(amiUsage[0]).has.property('region', 'us-west-1');
+    assume(amiUsage[0]).has.property('region', defaultSR.region);
+    assume(amiUsage[0]).has.property('id', defaultSR.id);
+    let updatedUse = updatedAmiUsage[0].lastused;
+    
+    assume(lastUse < updatedUse).true();
+    
   });
    
   it('should have list worker types', async () => {
