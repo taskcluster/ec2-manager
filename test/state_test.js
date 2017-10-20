@@ -246,18 +246,18 @@ describe('State', () => {
 
   it('should be able to report an AMI\'s usage', async () => {
 
-    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
+    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
     let amiUsage = await db.listAmiUsage(); 
     assume(amiUsage).has.length(1);
     assume(amiUsage[0]).has.property('region', defaultSR.region);
-    assume(amiUsage[0]).has.property('id', defaultSR.id);
+    assume(amiUsage[0]).has.property('id', defaultSR.imageId);
     let lastUse = amiUsage[0].lastused;
     
-    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
+    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
     let updatedAmiUsage = await db.listAmiUsage();
     assume(amiUsage).has.length(1);
     assume(amiUsage[0]).has.property('region', defaultSR.region);
-    assume(amiUsage[0]).has.property('id', defaultSR.id);
+    assume(amiUsage[0]).has.property('id', defaultSR.imageId);
     let updatedUse = updatedAmiUsage[0].lastused;
     
     assume(lastUse < updatedUse).true();
