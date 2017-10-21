@@ -137,6 +137,7 @@ describe('House Keeper', () => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
     assume(outcome[region]).deeply.equals({
+      volumes: {},
       state: {
         missingRequests: 0,
         missingInstances: 0,
@@ -195,6 +196,7 @@ describe('House Keeper', () => {
     assume(await state.listInstances()).has.lengthOf(regions.length);
     assume(await state.listSpotRequests()).has.lengthOf(regions.length);
     assume(outcome[region]).deeply.equals({
+      volumes: {},
       state: {
         missingRequests: 1,
         missingInstances: 1,
@@ -315,6 +317,7 @@ describe('House Keeper', () => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
     assume(outcome[region]).deeply.equals({
+      volumes: {},
       state: {
         missingRequests: 0,
         missingInstances: 0,
@@ -333,7 +336,7 @@ describe('House Keeper', () => {
     }
   });
 
-  it('should call sweepVolumes exactly once', async() => {
+  it('should call sweepVolumes exactly once per region', async() => {
     houseKeeperMock.expects("_sweepVolumes").exactly(regions.length);
     
     await houseKeeper.sweep();
@@ -342,14 +345,14 @@ describe('House Keeper', () => {
 
   it('should not fail if no volume data is returned', async() => {
     houseKeeperMock.expects("_handleVolumeData").never();
-
+    
     await houseKeeper.sweep();
     houseKeeperMock.verify();
   });
   
   it('should call handleVolumeData exactly once per volume', async() => {
     houseKeeperMock.expects("_handleVolumeData").twice();
-      
+    
     describeVolumesStub.withArgs(sinon.match(function(value) {
       return value === ec2['us-west-2'] 
     })).returns({
@@ -379,8 +382,7 @@ describe('House Keeper', () => {
         VolumeType: "standard",
       }]
     });
-
-     
+    
     await houseKeeper.sweep();
     houseKeeperMock.verify();
    });
