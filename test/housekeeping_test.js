@@ -137,7 +137,6 @@ describe('House Keeper', () => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
     assume(outcome[region]).deeply.equals({
-      volumes: {},
       state: {
         missingRequests: 0,
         missingInstances: 0,
@@ -196,7 +195,6 @@ describe('House Keeper', () => {
     assume(await state.listInstances()).has.lengthOf(regions.length);
     assume(await state.listSpotRequests()).has.lengthOf(regions.length);
     assume(outcome[region]).deeply.equals({
-      volumes: {},
       state: {
         missingRequests: 1,
         missingInstances: 1,
@@ -317,7 +315,6 @@ describe('House Keeper', () => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
     assume(outcome[region]).deeply.equals({
-      volumes: {},
       state: {
         missingRequests: 0,
         missingInstances: 0,
