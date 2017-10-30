@@ -8,12 +8,12 @@ describe('Spot Request Poller', () => {
   let sandbox = sinon.sandbox.create();
   let defaultSR;
 
-  before(async () => {
+  before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
   });
 
-  beforeEach(async () => {
+  beforeEach(async() => {
     await state._runScript('clear-db.sql');
     defaultSR = {
       id: 'r-1',
@@ -42,26 +42,26 @@ describe('Spot Request Poller', () => {
       try {
         const poller = new SpotRequestPoller({ec2: {}, regions: defaultSR.region, state, runaws: () => {}});
         return Promise.reject(Error('Line should not be reached'));
-      } catch(e) { }
+      } catch (e) { }
     });
 
     it('fails with list containing non-string regions', () => {
       try {
         const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region, 1], state, runaws: () => {}});
         return Promise.reject(Error('Line should not be reached'));
-      } catch(e) { }
+      } catch (e) { }
     });
 
   });
 
   describe('_poll helper method', () => {
 
-    it('succeeds with a valid region', async () => {
+    it('succeeds with a valid region', async() => {
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
       await poller._poll('foobar');
     });
 
-    it('fails with an invalid region', async () => {
+    it('fails with an invalid region', async() => {
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
 
       try { 
@@ -74,12 +74,12 @@ describe('Spot Request Poller', () => {
 
   describe('polling', () => {
 
-    it('succeeds with no outstanding spot requests', async () => {
+    it('succeeds with no outstanding spot requests', async() => {
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
       await poller.poll();
     });
 
-    it('succeeds with one open spot request without change', async () => {
+    it('succeeds with one open spot request without change', async() => {
       await state.insertSpotRequest(Object.assign({}, defaultSR, {
         state: 'open',
         status: 'pending-fulfillment',
@@ -94,9 +94,9 @@ describe('Spot Request Poller', () => {
           SpotInstanceRequestId: defaultSR.id,
           State: 'open',
           Status: {
-            Code: 'pending-fulfillment'
-          }
-        }]
+            Code: 'pending-fulfillment',
+          },
+        }],
       }));
 
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
@@ -109,7 +109,7 @@ describe('Spot Request Poller', () => {
       assume(requests).lengthOf(1);
     });
 
-    it('succeeds with pending-evaluation -> pending-fulfillment', async () => {
+    it('succeeds with pending-evaluation -> pending-fulfillment', async() => {
       await state.insertSpotRequest(Object.assign({}, defaultSR, {
         state: 'open',
         status: 'pending-evaluation',
@@ -124,9 +124,9 @@ describe('Spot Request Poller', () => {
           SpotInstanceRequestId: defaultSR.id,
           State: 'open',
           Status: {
-            Code: 'pending-fulfillment'
-          }
-        }]
+            Code: 'pending-fulfillment',
+          },
+        }],
       }));
 
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
@@ -139,7 +139,7 @@ describe('Spot Request Poller', () => {
       assume(requests[0]).has.property('status', 'pending-fulfillment');
     });
 
-    it('succeeds with pending-evaluation -> price-too-low', async () => {
+    it('succeeds with pending-evaluation -> price-too-low', async() => {
       await state.insertSpotRequest(Object.assign({}, defaultSR, {
         state: 'open',
         status: 'pending-evaluation',
@@ -154,16 +154,16 @@ describe('Spot Request Poller', () => {
           SpotInstanceRequestId: defaultSR.id,
           State: 'open',
           Status: {
-            Code: 'price-too-low'
-          }
-        }]
+            Code: 'price-too-low',
+          },
+        }],
       }));
 
       mock.onCall(1).returns(Promise.resolve({
         CancelledSpotInstanceRequests: [{
           SpotInstanceRequestId: defaultSR.id,
           State: 'open',
-        }]
+        }],
       }));
 
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
@@ -180,7 +180,7 @@ describe('Spot Request Poller', () => {
       assume(requests).lengthOf(0);
     });
 
-    it('succeeds with pending-evaluation status -> active state', async () => {
+    it('succeeds with pending-evaluation status -> active state', async() => {
       await state.insertSpotRequest(Object.assign({}, defaultSR, {
         state: 'open',
         status: 'pending-evaluation',
@@ -195,9 +195,9 @@ describe('Spot Request Poller', () => {
           SpotInstanceRequestId: defaultSR.id,
           State: 'active',
           Status: {
-            Code: 'fulfilled'
-          }
-        }]
+            Code: 'fulfilled',
+          },
+        }],
       }));
 
       const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
