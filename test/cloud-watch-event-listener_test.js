@@ -1,4 +1,4 @@
-'use strict';
+
 const _ = require('lodash');
 const main = require('../lib/main');
 const assume = require('assume');
@@ -6,7 +6,6 @@ const sinon = require('sinon');
 const subject = require('../lib/cloud-watch-event-listener');
 const {CloudWatchEventListener} = subject;
 const runaws = require('../lib/aws-request');
-
 
 // This is the basis of an example message from cloud watch.  The only thing
 // which should change is the state in the detail object.  Intentionally a
@@ -20,12 +19,12 @@ const baseExampleMsg = {
   time: '2017-06-04T13:14:15Z',
   region: 'us-west-2',
   resources: [
-    'arn:aws:ec2:us-west-2:692406183521:instance/i-0d0cf3d89cbab142c'
+    'arn:aws:ec2:us-west-2:692406183521:instance/i-0d0cf3d89cbab142c',
   ],
   detail: {
     'instance-id': 'i-0d0cf3d89cbab142c',
-    state: 'pending'
-  }
+    state: 'pending',
+  },
 };
 
 describe('Cloud Watch Event Listener', () => {
@@ -36,11 +35,11 @@ describe('Cloud Watch Event Listener', () => {
   let region = 'us-west-2';
   let az = 'us-west-2a';
   let instanceType = 'c3.xlarge';
-  let imageId = 'ami-1'
+  let imageId = 'ami-1';
   let listener;
   let tagger;
 
-  before(async () => {
+  before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
 
@@ -62,7 +61,7 @@ describe('Cloud Watch Event Listener', () => {
 
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
-  beforeEach(async () => {
+  beforeEach(async() => {
     await state._runScript('clear-db.sql');
     sandbox.stub(tagger, 'runaws');
   });
@@ -71,7 +70,7 @@ describe('Cloud Watch Event Listener', () => {
     sandbox.restore();
   });
 
-  it('should handle pending, deleting spot request', async () => {
+  it('should handle pending, deleting spot request', async() => {
     await state.insertSpotRequest({
       workerType: 'workertype',
       region,
@@ -98,7 +97,7 @@ describe('Cloud Watch Event Listener', () => {
             AvailabilityZone: az,
           },
         }],
-      }]
+      }],
     }));
 
     let instances = await state.listInstances();
@@ -113,7 +112,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(requests).lengthOf(0);
   });
   
-  it('should handle running transition with the instance already in db in pending state', async () => {
+  it('should handle running transition with the instance already in db in pending state', async() => {
     let pendingTimestamp = new Date();
     let runningTimestamp = new Date(pendingTimestamp);
     runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
@@ -157,7 +156,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });  
 
-  it('should handle out of order delivery', async () => {
+  it('should handle out of order delivery', async() => {
     let pendingTimestamp = new Date();
     let runningTimestamp = new Date(pendingTimestamp);
     runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
@@ -201,7 +200,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });
 
-  it('should skip a pending message for a different manager', async () => {
+  it('should skip a pending message for a different manager', async() => {
     let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
@@ -216,7 +215,7 @@ describe('Cloud Watch Event Listener', () => {
             AvailabilityZone: az,
           },
         }],
-      }]
+      }],
     }));
 
     let instances = await state.listInstances();
@@ -225,7 +224,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(requests).lengthOf(0);
   });
 
-  it('should handle shutting-down, deleting spot request', async () => {
+  it('should handle shutting-down, deleting spot request', async() => {
     await state.insertSpotRequest({
       workerType: 'workertype',
       region,
@@ -252,7 +251,7 @@ describe('Cloud Watch Event Listener', () => {
             AvailabilityZone: az,
           },
         }],
-      }]
+      }],
     }));
 
     let instances = await state.listInstances();
