@@ -11,9 +11,9 @@
   },
   "scripts": {
     "start": "node lib/main.js start",
-    "test": "LOG_LEVEL=*:warn DEBUG= NODE_ENV=test yarn run _test",
+    "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
     "_test": "NODE_ENV=test nyc --reporter=html mocha",
-    "lint": "LOG_LEVEL=*:warn DEBUG= NODE_ENV=test yarn run _test lint.js"
+    "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js"
   },
   "dependencies": {
     "aws-sdk": "^2.86.0",
