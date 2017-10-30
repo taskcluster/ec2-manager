@@ -102,8 +102,28 @@ describe('House Keeper', () => {
       launched,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({id: 'r-1', workerType, region, instanceType, state: 'open', status, az, imageId, created});
-    await state.insertSpotRequest({id: 'r-2', workerType, region, instanceType, state: 'open', status, az, imageId, created});
+    await state.insertSpotRequest({
+      id: 'r-1',
+      workerType,
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      imageId,
+      created,
+    });
+    await state.insertSpotRequest({
+      id: 'r-2',
+      workerType,
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      imageId,
+      created,
+    });
 
     assume(await state.listInstances()).has.lengthOf(2);
     assume(await state.listSpotRequests()).has.lengthOf(2);
