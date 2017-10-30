@@ -74,6 +74,10 @@ describe('House Keeper', () => {
     });
   });
 
+  after(async() => {
+    await state._runScript('drop-db.sql');
+  });
+
   afterEach(() => {
     sandbox.restore();
   });

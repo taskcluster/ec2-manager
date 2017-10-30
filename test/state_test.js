@@ -13,6 +13,10 @@ describe('State', () => {
     await db._runScript('create-db.sql');
   });
 
+  after(async() => {
+    await db._runScript('drop-db.sql');
+  });
+
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
   beforeEach(async() => {

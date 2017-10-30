@@ -49,8 +49,9 @@ describe('Api', () => {
     server = await main('server', {profile: 'test', process: 'test', runaws});
   });
 
-  after(() => {
+  after(async () => {
     testing.fakeauth.stop();
+    await state._runScript('drop-db.sql');
   });
 
   afterEach(() => {
