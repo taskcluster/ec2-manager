@@ -76,7 +76,17 @@ describe('Api', () => {
       imageId,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({id: 'r-1', workerType: 'w-2', region, instanceType, state: 'open', status, az, created, imageId});
+    await state.insertSpotRequest({
+      id: 'r-1',
+      workerType: 'w-2',
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      created,
+      imageId,
+    });
     let result = await client.listWorkerTypes();
     assume(result).deeply.equals(['w-1', 'w-2']);
   });
@@ -105,7 +115,17 @@ describe('Api', () => {
       imageId,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({id: 'r-1', workerType: 'w-1', region, instanceType, state: 'open', status, az, created, imageId});
+    await state.insertSpotRequest({
+      id: 'r-1',
+      workerType: 'w-1',
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      created,
+      imageId,
+    });
     let result = await client.workerTypeStats('w-1');
     assume(result).deeply.equals({
       pending: [{
