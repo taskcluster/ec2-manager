@@ -614,22 +614,36 @@ describe('House Keeper', () => {
        }]
     });
 
+  it('should call describeVolumes endpoint again if NextToken is provided', async() => {
     describeVolumesStub.withArgs(sinon.match(function(value) {
-      return value === ec2['us-east-2']
-    })).returns({
+      return value === ec2['us-west-2'] 
+    })).onFirstCall().returns({
       Volumes: [{
-        Attachments: [], 
-        AvailabilityZone: 'us-east-2', 
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
         CreateTime: new Date().toString(), 
-        Size: 16, 
-        SnapshotId: "snap-1234567890abcdef09", 
+        Size: 8, 
+        SnapshotId: "snap-1234567890abcdef0", 
         State: "in-use", 
-        VolumeId: "vol-049df61146c4d7902", 
+        VolumeId: "vol-049df61146c4d7901", 
         VolumeType: "standard",
-      }]
+      }],
+      NextToken: "1" 
+    }).onSecondCall().returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: "snap-1234567890abcdef0", 
+        State: "in-use", 
+        VolumeId: "vol-049df61146c4d7901", 
+        VolumeType: "standard",
+      }],
+      NextToken: null
     });
     
     await houseKeeper.sweep();
-    houseKeeperMock.verify();
+    assume(describeVolumesStub.callCount).equals(regions.length + 1);
    });
 });
