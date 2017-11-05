@@ -366,7 +366,7 @@ describe('House Keeper', () => {
     assume(describeVolumesStub.callCount).equals(regions.length);
   });
 
-  it.only('should call describeVolumes endpoint again if NextToken is provided', async() => {
+  it('should call describeVolumes endpoint again if NextToken is provided', async() => {
     describeVolumesStub.withArgs(sinon.match(function(value) {
       return value === ec2['us-west-2']; 
     })).onFirstCall().returns({
