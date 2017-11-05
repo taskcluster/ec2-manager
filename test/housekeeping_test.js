@@ -29,7 +29,7 @@ describe('House Keeper', () => {
   let tagger;
   let houseKeeperMock;
 
-  before(async () => {
+  before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     ec2 = await main('ec2', {profile: 'test', process: 'test'});
@@ -40,7 +40,7 @@ describe('House Keeper', () => {
     regions = cfg.app.regions;
   });
 
-  beforeEach(async () => {
+  beforeEach(async() => {
     monitor = await main('monitor', {profile: 'test', process: 'test'});
     await state._runScript('clear-db.sql');
 
@@ -57,15 +57,16 @@ describe('House Keeper', () => {
       Reservations: [{
         Instances: [
         ],
-      }]
+      }],
     });
     describeSpotInstanceRequestsStub.returns({
       SpotInstanceRequests: [
-      ]
+      ],
     });
     describeVolumesStub.returns({
-       Volumes: [
-       ],
+      Volumes: [
+      ],
+      NextToken: null,
     });
 
     async function runaws(service, method, params) {
@@ -103,7 +104,7 @@ describe('House Keeper', () => {
     sandbox.restore();
   });
 
-  it('should remove instances and requests not in api state', async () => {
+  it('should remove instances and requests not in api state', async() => {
     let status = 'pending-fulfillment';
     await state.insertInstance({
       id: 'i-1',
@@ -127,8 +128,28 @@ describe('House Keeper', () => {
       launched,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({id: 'r-1', workerType, region, instanceType, state: 'open', status, az, imageId, created});
-    await state.insertSpotRequest({id: 'r-2', workerType, region, instanceType, state: 'open', status, az, imageId, created});
+    await state.insertSpotRequest({
+      id: 'r-1',
+      workerType,
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      imageId,
+      created,
+    });
+    await state.insertSpotRequest({
+      id: 'r-2',
+      workerType,
+      region,
+      instanceType,
+      state: 'open',
+      status,
+      az,
+      imageId,
+      created,
+    });
 
     assume(await state.listInstances()).has.lengthOf(2);
     assume(await state.listSpotRequests()).has.lengthOf(2);
@@ -147,7 +168,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should add instances and requests not in local state', async () => {
+  it('should add instances and requests not in local state', async() => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
 
@@ -160,14 +181,14 @@ describe('House Keeper', () => {
           InstanceType: instanceType,
           ImageId: 'ami-1',
           State: {
-            Name: 'running'
+            Name: 'running',
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           Placement: {
             AvailabilityZone: az,
           },
         }],
-      }]
+      }],
     });
 
     describeSpotInstanceRequestsStub.returns({
@@ -186,7 +207,7 @@ describe('House Keeper', () => {
         Status: {
           Code: 'pending-evaluation',
         },
-      }]
+      }],
     });
 
     let outcome = await houseKeeper.sweep();
@@ -205,7 +226,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should tag instances and requests which arent tagged', async () => {
+  it('should tag instances and requests which arent tagged', async() => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
 
@@ -217,7 +238,7 @@ describe('House Keeper', () => {
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
           State: {
-            Name: 'running'
+            Name: 'running',
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           ImageId: 'ami-1',
@@ -225,7 +246,7 @@ describe('House Keeper', () => {
             AvailabilityZone: az,
           },
         }],
-      }]
+      }],
     });
 
     describeSpotInstanceRequestsStub.returns({
@@ -244,7 +265,7 @@ describe('House Keeper', () => {
         Status: {
           Code: 'pending-evaluation',
         },
-      }]
+      }],
     });
 
     let outcome = await houseKeeper.sweep();
@@ -256,7 +277,7 @@ describe('House Keeper', () => {
     ]);
   });
 
-  it('should zombie kill', async () => {
+  it('should zombie kill', async() => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
 
@@ -285,7 +306,7 @@ describe('House Keeper', () => {
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
           State: {
-            Name: 'running'
+            Name: 'running',
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           ImageId: 'ami-1',
@@ -298,7 +319,7 @@ describe('House Keeper', () => {
           KeyName: keyPrefix + workerType,
           InstanceType: instanceType,
           State: {
-            Name: 'running'
+            Name: 'running',
           },
           SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           ImageId: 'ami-1',
@@ -306,7 +327,7 @@ describe('House Keeper', () => {
             AvailabilityZone: az,
           },
         }],
-      }]
+      }],
     });
 
     let outcome = await houseKeeper.sweep();
@@ -333,54 +354,54 @@ describe('House Keeper', () => {
     }
   });
 
-  it('should call sweepVolumes exactly once per region', async() => {
-    houseKeeperMock.expects("_sweepVolumes").exactly(regions.length);
+  it('should call sweepVolumes exactly once', async() => {
+    houseKeeperMock.expects('_sweepVolumes').exactly(regions.length);
     
     await houseKeeper.sweep();
     houseKeeperMock.verify();
   });
 
   it('should not fail if no volume data is returned', async() => {
-    houseKeeperMock.expects("_handleVolumeData").never();
-    
+    houseKeeperMock.expects('_handleVolumeData').never();
+
     await houseKeeper.sweep();
     houseKeeperMock.verify();
   });
   
   it('should call handleVolumeData exactly once per volume', async() => {
-    houseKeeperMock.expects("_handleVolumeData").twice();
-    
+    houseKeeperMock.expects('_handleVolumeData').twice();
+      
     describeVolumesStub.withArgs(sinon.match(function(value) {
-      return value === ec2['us-west-2'] 
+      return value === ec2['us-west-2']; 
     })).returns({
-       Volumes: [{
-         Attachments: [],
-         AvailabilityZone: 'us-west-2', 
-         CreateTime: new Date().toString(), 
-         Size: 8, 
-         SnapshotId: "snap-1234567890abcdef0", 
-         State: "in-use", 
-         VolumeId: "vol-049df61146c4d7901", 
-         VolumeType: "standard",
-       }]
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: 'snap-1234567890abcdef0', 
+        State: 'in-use', 
+        VolumeId: 'vol-049df61146c4d7901', 
+        VolumeType: 'standard',
+      }],
     });
 
     describeVolumesStub.withArgs(sinon.match(function(value) {
-      return value === ec2['us-east-2']
+      return value === ec2['us-east-2'];
     })).returns({
       Volumes: [{
         Attachments: [], 
         AvailabilityZone: 'us-east-2', 
         CreateTime: new Date().toString(), 
         Size: 16, 
-        SnapshotId: "snap-1234567890abcdef09", 
-        State: "in-use", 
-        VolumeId: "vol-049df61146c4d7902", 
-        VolumeType: "standard",
-      }]
+        SnapshotId: 'snap-1234567890abcdef09',
+        State: 'in-use',
+        VolumeId: 'vol-049df61146c4d7902', 
+        VolumeType: 'standard',
+      }],
     });
-    
+     
     await houseKeeper.sweep();
     houseKeeperMock.verify();
-   });
+  });
 });
