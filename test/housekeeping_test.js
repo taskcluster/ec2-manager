@@ -354,26 +354,22 @@ describe('House Keeper', () => {
     }
   });
 
-  it('should call sweepVolumes exactly once', async() => {
-    houseKeeperMock.expects('_sweepVolumes').exactly(regions.length);
+  it('should call handleVolumeData exactly once', async() => {
+    houseKeeperMock.expects('_handleVolumeData').once();
     
     await houseKeeper.sweep();
     houseKeeperMock.verify();
   });
 
-  it('should not fail if no volume data is returned', async() => {
-    houseKeeperMock.expects('_handleVolumeData').never();
-
+  it('should call describeVolumes endpoint exactly once per region if no NextToken is provided', async() => {
     await houseKeeper.sweep();
-    houseKeeperMock.verify();
+    assume(describeVolumesStub.callCount).equals(regions.length);
   });
-  
-  it('should call handleVolumeData exactly once per volume', async() => {
-    houseKeeperMock.expects('_handleVolumeData').twice();
-      
+
+  it('should call describeVolumes endpoint again if NextToken is provided', async() => {
     describeVolumesStub.withArgs(sinon.match(function(value) {
       return value === ec2['us-west-2']; 
-    })).returns({
+    })).onFirstCall().returns({
       Volumes: [{
         Attachments: [],
         AvailabilityZone: 'us-west-2', 
@@ -384,24 +380,22 @@ describe('House Keeper', () => {
         VolumeId: 'vol-049df61146c4d7901', 
         VolumeType: 'standard',
       }],
-    });
-
-    describeVolumesStub.withArgs(sinon.match(function(value) {
-      return value === ec2['us-east-2'];
-    })).returns({
+      NextToken: '1', 
+    }).onSecondCall().returns({
       Volumes: [{
-        Attachments: [], 
-        AvailabilityZone: 'us-east-2', 
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
         CreateTime: new Date().toString(), 
-        Size: 16, 
-        SnapshotId: 'snap-1234567890abcdef09',
-        State: 'in-use',
-        VolumeId: 'vol-049df61146c4d7902', 
+        Size: 8, 
+        SnapshotId: 'snap-1234567890abcdef0', 
+        State: 'in-use', 
+        VolumeId: 'vol-049df61146c4d7901', 
         VolumeType: 'standard',
       }],
+      NextToken: null,
     });
-     
+
     await houseKeeper.sweep();
-    houseKeeperMock.verify();
+    assume(describeVolumesStub.callCount).equals(regions.length + 1);
   });
 });
