@@ -197,6 +197,10 @@ describe('Api', () => {
       assume(runaws.callCount).equals(2);
       assume(runaws.args[0][1]).equals('requestSpotInstances');
       assume(runaws.args[1][1]).equals('createTags');
+      let amiUsage = await state.listAmiUsage();
+      assume(amiUsage).has.length(1);
+      assume(amiUsage[0]).has.property('region', region);
+      assume(amiUsage[0]).has.property('id', imageId);
       let call = runaws.firstCall.args;
       assume(call[0].config.region).equals(region);
       assume(call[1]).equals('requestSpotInstances');
@@ -220,6 +224,10 @@ describe('Api', () => {
       assume(runaws.callCount).equals(2);
       assume(runaws.args[0][1]).equals('requestSpotInstances');
       assume(runaws.args[1][1]).equals('createTags');
+      amiUsage = await state.listAmiUsage();
+      assume(amiUsage).has.length(1);
+      assume(amiUsage[0]).has.property('region', region);
+      assume(amiUsage[0]).has.property('id', imageId);
     });
   });
 
