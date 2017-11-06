@@ -398,4 +398,132 @@ describe('House Keeper', () => {
     await houseKeeper.sweep();
     assume(describeVolumesStub.callCount).equals(regions.length + 1);
   });
+  
+  it('should return no total volume size and counts when there are no volumes', async() => {
+    let calculateTotalVolumesSpy = sinon.spy(houseKeeper, '_calculateVolumeTotals'); 
+    let expectedTotals = {};
+    
+    await houseKeeper.sweep();
+    sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
+  });
+  
+  it('should return total size and counts of all volumes when the volumes are of same type and region', async() => {
+    describeVolumesStub.withArgs(sinon.match(function(value) {
+      return value === ec2['us-west-2']; 
+    })).onFirstCall().returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: 'snap-1234567890abcdef0', 
+        State: 'in-use', 
+        VolumeId: 'vol-049df61146c4d7900', 
+        VolumeType: 'standard',
+      }],
+      NextToken: '1', 
+    }).onSecondCall().returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 4, 
+        SnapshotId: 'snap-1234567890abcdef1', 
+        State: 'in-use', 
+        VolumeId: 'vol-049df61146c4d7901', 
+        VolumeType: 'standard',
+      }],
+      NextToken: '2',
+    }).onThirdCall().returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: 'snap-1234567890abcdef2', 
+        State: 'available', 
+        VolumeId: 'vol-049df61146c4d7902', 
+        VolumeType: 'standard',
+      }],
+      NextToken: null,
+    });
+    
+    let calculateTotalVolumesSpy = sinon.spy(houseKeeper, '_calculateVolumeTotals'); 
+    let expectedTotals = {
+      'us-west-2': {
+        standard: {
+          active: {
+            gb: 12,
+            count: 2,
+          },
+          unused: {
+            gb: 8,
+            count: 1,
+          },
+        },
+      },
+    };
+    
+    await houseKeeper.sweep();
+    sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
+  });
+  
+  it('should return total size and counts of all volumes when the volumes are of different types', async() => {
+    describeVolumesStub.withArgs(sinon.match(function(value) {
+      return value === ec2['us-west-2']; 
+    })).onFirstCall().returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: 'snap-1234567890abcdef0', 
+        State: 'available', 
+        VolumeId: 'vol-049df61146c4d7900', 
+        VolumeType: 'standard',
+      }],
+      NextToken: '1', 
+    }).onSecondCall().returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 4, 
+        SnapshotId: 'snap-1234567890abcdef1', 
+        State: 'in-use', 
+        VolumeId: 'vol-049df61146c4d7901', 
+        VolumeType: 'gp2',
+      }],
+      NextToken: null,
+    });
+    
+    let calculateTotalVolumesSpy = sinon.spy(houseKeeper, '_calculateVolumeTotals'); 
+    let expectedTotals = {
+      'us-west-2': {
+        standard: {
+          active: {
+            gb: 0,
+            count: 0,
+          },
+          unused: {
+            gb: 8,
+            count: 1,
+          },
+        },
+        gp2: {
+          active: {
+            gb: 4,
+            count: 1,
+          },
+          unused: {
+            gb: 0,
+            count: 0,
+          },
+        },
+      },
+    };
+    
+    await houseKeeper.sweep();
+    sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
+  });
 });
