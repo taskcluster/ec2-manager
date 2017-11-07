@@ -527,7 +527,7 @@ describe('House Keeper', () => {
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
   
-  it.only('should return total size and counts of all volumes when the volumes are of different regions', async() => {
+  it('should return total size and counts of all volumes when the volumes are of different regions', async() => {
     describeVolumesStub.withArgs(sinon.match(value => {
       return value === ec2['us-east-2']; 
     })).onFirstCall().returns({
