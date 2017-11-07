@@ -20,12 +20,14 @@ describe('House Keeper', () => {
   let sandbox = sinon.sandbox.create();
   let describeInstancesStub;
   let describeSpotInstanceRequestsStub;
+  let describeVolumesStub;
   let terminateInstancesStub;
   let createTagsStub;
   let keyPrefix;
   let regions;
   let houseKeeper;
   let tagger;
+  let houseKeeperMock;
 
   before(async() => {
     // We want a clean DB state to verify things happen as we intend
@@ -44,14 +46,36 @@ describe('House Keeper', () => {
 
     describeInstancesStub = sandbox.stub();
     describeSpotInstanceRequestsStub = sandbox.stub();
+    describeVolumesStub = sandbox.stub();
     terminateInstancesStub = sandbox.stub();
     createTagsStub = sandbox.stub();
+
+    // Since many of the tests will not need to specify custom input, we can set the default
+    // behaviour of these stubs as returning empty objects. This way, only custom return statements
+    // need to be specified in any of the tests.
+    describeInstancesStub.returns({
+      Reservations: [{
+        Instances: [
+        ],
+      }],
+    });
+    describeSpotInstanceRequestsStub.returns({
+      SpotInstanceRequests: [
+      ],
+    });
+    describeVolumesStub.returns({
+      Volumes: [
+      ],
+      NextToken: null,
+    });
 
     async function runaws(service, method, params) {
       if (method === 'describeInstances') {
         return describeInstancesStub(service, method, params);
       } else if (method === 'describeSpotInstanceRequests') {
         return describeSpotInstanceRequestsStub(service, method, params);
+      } else if (method === 'describeVolumes') {
+        return describeVolumesStub(service, method, params);
       } else if (method === 'terminateInstances') {
         return terminateInstancesStub(service, method, params);
       } else if (method === 'createTags') {
@@ -72,6 +96,8 @@ describe('House Keeper', () => {
       runaws,
       tagger,
     });
+    
+    houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
   afterEach(() => {
@@ -127,18 +153,6 @@ describe('House Keeper', () => {
 
     assume(await state.listInstances()).has.lengthOf(2);
     assume(await state.listSpotRequests()).has.lengthOf(2);
-
-    describeInstancesStub.returns({
-      Reservations: [{
-        Instances: [
-        ],
-      }],
-    });
-
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [
-      ],
-    });
 
     let outcome = await houseKeeper.sweep();
     assume(await state.listInstances()).has.lengthOf(0);
@@ -316,10 +330,6 @@ describe('House Keeper', () => {
       }],
     });
 
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [],
-    });
-
     let outcome = await houseKeeper.sweep();
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
@@ -343,5 +353,55 @@ describe('House Keeper', () => {
       });
     }
   });
-});
 
+  it('should call sweepVolumes exactly once', async() => {
+    houseKeeperMock.expects('_sweepVolumes').exactly(regions.length);
+    
+    await houseKeeper.sweep();
+    houseKeeperMock.verify();
+  });
+
+  it('should not fail if no volume data is returned', async() => {
+    houseKeeperMock.expects('_handleVolumeData').never();
+
+    await houseKeeper.sweep();
+    houseKeeperMock.verify();
+  });
+  
+  it('should call handleVolumeData exactly once per volume', async() => {
+    houseKeeperMock.expects('_handleVolumeData').twice();
+      
+    describeVolumesStub.withArgs(sinon.match(function(value) {
+      return value === ec2['us-west-2']; 
+    })).returns({
+      Volumes: [{
+        Attachments: [],
+        AvailabilityZone: 'us-west-2', 
+        CreateTime: new Date().toString(), 
+        Size: 8, 
+        SnapshotId: 'snap-1234567890abcdef0', 
+        State: 'in-use', 
+        VolumeId: 'vol-049df61146c4d7901', 
+        VolumeType: 'standard',
+      }],
+    });
+
+    describeVolumesStub.withArgs(sinon.match(function(value) {
+      return value === ec2['us-east-2'];
+    })).returns({
+      Volumes: [{
+        Attachments: [], 
+        AvailabilityZone: 'us-east-2', 
+        CreateTime: new Date().toString(), 
+        Size: 16, 
+        SnapshotId: 'snap-1234567890abcdef09',
+        State: 'in-use',
+        VolumeId: 'vol-049df61146c4d7902', 
+        VolumeType: 'standard',
+      }],
+    });
+     
+    await houseKeeper.sweep();
+    houseKeeperMock.verify();
+  });
+});
