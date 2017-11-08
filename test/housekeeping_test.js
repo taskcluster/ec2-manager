@@ -97,6 +97,7 @@ describe('House Keeper', () => {
       tagger,
     });
     
+    calculateTotalVolumesSpy = sandbox.spy(houseKeeper, '_calculateVolumeTotals'); 
     houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
@@ -356,7 +357,6 @@ describe('House Keeper', () => {
 
   it('should call handleVolumeData exactly once', async() => {
     houseKeeperMock.expects('_handleVolumeData').once();
-    
     await houseKeeper.sweep();
     houseKeeperMock.verify();
   });
@@ -400,9 +400,7 @@ describe('House Keeper', () => {
   });
   
   it('should return no total volume size and counts when there are no volumes', async() => {
-    let calculateTotalVolumesSpy = sinon.spy(houseKeeper, '_calculateVolumeTotals'); 
     let expectedTotals = {};
-    
     await houseKeeper.sweep();
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
@@ -448,7 +446,6 @@ describe('House Keeper', () => {
       NextToken: null,
     });
     
-    let calculateTotalVolumesSpy = sinon.spy(houseKeeper, '_calculateVolumeTotals'); 
     let expectedTotals = {
       'us-west-2': {
         standard: {
@@ -497,7 +494,6 @@ describe('House Keeper', () => {
       NextToken: null,
     });
     
-    let calculateTotalVolumesSpy = sinon.spy(houseKeeper, '_calculateVolumeTotals'); 
     let expectedTotals = {
       'us-west-2': {
         standard: {
@@ -560,7 +556,6 @@ describe('House Keeper', () => {
       NextToken: null,
     });
     
-    let calculateTotalVolumesSpy = sinon.spy(houseKeeper, '_calculateVolumeTotals'); 
     let expectedTotals = {
       'us-east-2': {
         standard: {
