@@ -635,9 +635,9 @@ describe('House Keeper', () => {
         AvailabilityZone: 'us-west-2', 
         CreateTime: new Date().toString(), 
         Size: 8, 
-        SnapshotId: "snap-1234567890abcdef0", 
+        SnapshotId: "snap-1234567890abcdef9", 
         State: "in-use", 
-        VolumeId: "vol-049df61146c4d7901", 
+        VolumeId: "vol-049df61146c4d7902", 
         VolumeType: "standard",
       }],
       NextToken: null
