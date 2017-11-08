@@ -1,4 +1,4 @@
-'use strict';
+
 const main = require('../lib/main');
 const assume = require('assume');
 
@@ -7,7 +7,7 @@ describe('State', () => {
   let defaultInst;
   let defaultSR;
 
-  before(async () => {
+  before(async() => {
     db = await main('state', {profile: 'test', process: 'test'});
     await db._runScript('drop-db.sql');
     await db._runScript('create-db.sql');
@@ -15,7 +15,7 @@ describe('State', () => {
 
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
-  beforeEach(async () => {
+  beforeEach(async() => {
     await db._runScript('clear-db.sql');
     defaultInst = {
       id: 'i-1',
@@ -42,23 +42,23 @@ describe('State', () => {
   });
 
   describe('type parsers', () => {
-    it('should parse ints (20) to js ints', async () => {
+    it('should parse ints (20) to js ints', async() => {
       let result = await db._pgpool.query('SELECT count(id) FROM instances;');
       assume(result).has.property('rows');
       assume(result.rows).has.lengthOf(1);
       assume(result.rows[0]).has.property('count', 0);
     });
 
-    it('should parse timestamptz (1184) to js dates (UTC)', async () => {
+    it('should parse timestamptz (1184) to js dates (UTC)', async() => {
       let d = new Date(0);
-      let result = await db._pgpool.query("SELECT timestamptz '1970-1-1 UTC' as a;");
+      let result = await db._pgpool.query('SELECT timestamptz \'1970-1-1 UTC\' as a;');
       let {a} = result.rows[0];
       assume(d.getTime()).equals(a.getTime());
     });
 
-    it('should parse timestamptz (1184) to js dates (CEST)', async () => {
+    it('should parse timestamptz (1184) to js dates (CEST)', async() => {
       let d = new Date('Tue Jul 04 2017 1:00:00 GMT+0200 (CEST)');
-      let result = await db._pgpool.query("SELECT timestamptz '2017-7-4 1:00:00 CEST' as a;");
+      let result = await db._pgpool.query('SELECT timestamptz \'2017-7-4 1:00:00 CEST\' as a;');
       let {a} = result.rows[0];
       assume(d.getTime()).equals(a.getTime());
     });
@@ -76,7 +76,7 @@ describe('State', () => {
     it('one flat condition', () => {
       let expected = {
         text: 'SELECT * FROM junk WHERE junk.a = $1;',
-        values: ['aye']
+        values: ['aye'],
       };
       let actual = db._generateTableListQuery(table, {a: 'aye'});
       assume(expected).deeply.equals(actual);
@@ -85,7 +85,7 @@ describe('State', () => {
     it('two flat conditions', () => {
       let expected = {
         text: 'SELECT * FROM junk WHERE junk.a = $1 AND junk.b = $2;',
-        values: ['aye', 'bee']
+        values: ['aye', 'bee'],
       };
       let actual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
       assume(expected).deeply.equals(actual);
@@ -94,16 +94,16 @@ describe('State', () => {
     it('one list condition', () => {
       let expected = {
         text: 'SELECT * FROM junk WHERE junk.a = $1 OR junk.a = $2 OR junk.a = $3;',
-        values: ['a', 'b', 'c']
+        values: ['a', 'b', 'c'],
       };
-      let actual = db._generateTableListQuery(table, {a: ['a','b','c']});
+      let actual = db._generateTableListQuery(table, {a: ['a', 'b', 'c']});
       assume(expected).deeply.equals(actual);
     });
 
     it('two list conditions', () => {
       let expected = {
         text: 'SELECT * FROM junk WHERE (junk.a = $1 OR junk.a = $2) AND (junk.b = $3 OR junk.b = $4);',
-        values: ['a', 'b', 'c', 'd']
+        values: ['a', 'b', 'c', 'd'],
       };
       let actual = db._generateTableListQuery(table, {a: ['a', 'b'], b: ['c', 'd']});
       assume(expected).deeply.equals(actual);
@@ -112,7 +112,7 @@ describe('State', () => {
     it('mixed type flat-list-flat conditions', () => {
       let expected = {
         text: 'SELECT * FROM junk WHERE junk.a = $1 AND (junk.b = $2 OR junk.b = $3) AND junk.c = $4;',
-        values: ['a', 'b', 'c', 'd']
+        values: ['a', 'b', 'c', 'd'],
       };
       let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'});
       assume(expected).deeply.equals(actual);
@@ -120,36 +120,46 @@ describe('State', () => {
 
   });
 
-  it('should be empty at start of tests', async () => {
+  it('should be empty at start of tests', async() => {
     let instances = await db.listInstances();
     let pendingSpotRequests = await db.listSpotRequests();
+    let amiUsage = await db.listAmiUsage();
     assume(instances).has.length(0);
     assume(pendingSpotRequests).has.length(0);
+    assume(amiUsage).has.length(0);
   });
 
-  it('should be able to insert a spot request', async () => {
+  it('should be able to insert a spot request', async() => {
     let result = await db.insertSpotRequest(defaultSR);
     result = await db.listSpotRequests();
     assume(result).has.length(1);
     assume(result[0]).has.property('id', defaultSR.id);
   });
 
-  it('should be able to filter spot requests', async () => {
+  it('should be able to filter spot requests', async() => {
     let result = await db.insertSpotRequest(defaultSR);
     result = await db.listSpotRequests({region: 'us-east-1', state: 'open'});
     assume(result).has.length(0);
     result = await db.listSpotRequests({region: 'us-west-1', state: 'open'});
     assume(result).has.length(1);
   });
+   
+  it('should be able to filter AMI usages', async() => {
+    let result = await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
+    result = await db.listAmiUsage({region: 'us-east-1', id: 'r-1'});
+    assume(result).has.length(0);
+    result = await db.listAmiUsage({region: 'us-west-1', id: 'r-1'});
+    assume(result).has.length(1);
+  });
 
-  it('should be able to insert an on-demand instance', async () => {
+  it('should be able to insert an on-demand instance', async() => {
     let result = await db.insertInstance(defaultInst);
     let instances = await db.listInstances();
     assume(instances).has.length(1);
     assume(instances[0]).has.property('id', defaultInst.id);
   });
 
-  it('should be able to insert a spot instance, removing the spot request', async () => {
+  it('should be able to insert a spot instance, removing the spot request', async() => {
     // We only delete a spot request if the instance has a corresponding spot request
     defaultInst.srid = defaultSR.id;
 
@@ -162,7 +172,7 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(1);
   });
 
-  it('should be able to upsert a spot instance, removing the spot request', async () => {
+  it('should be able to upsert a spot instance, removing the spot request', async() => {
     defaultInst.srid = defaultSR.id;
 
     await db.insertSpotRequest(defaultSR);
@@ -175,8 +185,7 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(1);
   });
 
-
-  it('should be able to update an instance', async () => {
+  it('should be able to update an instance', async() => {
     let firstState = 'pending';
     let secondState = 'running';
     defaultInst.state = firstState;
@@ -197,7 +206,7 @@ describe('State', () => {
     assume(instances[0]).has.property('state', secondState);
   });
 
-  it('should be able to update a spot request', async () => {
+  it('should be able to update a spot request', async() => {
     let firstState = 'open';
     let secondState = 'closed';
     defaultSR.state = firstState;
@@ -218,24 +227,42 @@ describe('State', () => {
     assume(spotRequests[0]).has.property('state', secondState);
   });
 
-  it('should be able to do a spot request upsert', async () => {
+  it('should be able to do a spot request upsert', async() => {
     let firstState = 'open';
     let secondState = 'closed';
     defaultSR.state = firstState;
-
+     
     await db.upsertSpotRequest(defaultSR);
-    let spotRequests = await db.listSpotRequests(); 
+    let spotRequests = await db.listSpotRequests();
     assume(spotRequests).has.length(1);
     assume(spotRequests[0]).has.property('state', firstState);
-
+    
     defaultSR.state = secondState;
     await db.upsertSpotRequest(defaultSR);
-    spotRequests = await db.listSpotRequests(); 
+    spotRequests = await db.listSpotRequests();
     assume(spotRequests).has.length(1);
     assume(spotRequests[0]).has.property('state', secondState);
   });
 
-  it('should have list worker types', async () => {
+  it('should be able to report an AMI\'s usage', async() => {
+    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
+    let amiUsage = await db.listAmiUsage(); 
+    assume(amiUsage).has.length(1);
+    assume(amiUsage[0]).has.property('region', defaultSR.region);
+    assume(amiUsage[0]).has.property('id', defaultSR.imageId);
+    let lastUse = amiUsage[0].lastused;
+    
+    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
+    let updatedAmiUsage = await db.listAmiUsage();
+    assume(amiUsage).has.length(1);
+    assume(amiUsage[0]).has.property('region', defaultSR.region);
+    assume(amiUsage[0]).has.property('id', defaultSR.imageId);
+    let updatedUse = updatedAmiUsage[0].lastused;
+    
+    assume(lastUse < updatedUse).true();
+  });
+   
+  it('should have list worker types', async() => {
     // Insert some instances
     await db.insertInstance(Object.assign({}, defaultInst, {
       id: 'i-1',
@@ -273,52 +300,52 @@ describe('State', () => {
 
   });
 
-  it('should have valid instance counts', async () => {
+  it('should have valid instance counts', async() => {
     // Insert some instances
     await db.insertInstance(Object.assign({}, defaultInst, {
-      id: 'i-1', region: 'us-east-1', instanceType: 'm3.medium', state: 'running'
+      id: 'i-1', region: 'us-east-1', instanceType: 'm3.medium', state: 'running',
     }));
     await db.insertInstance(Object.assign({}, defaultInst, {
-      id: 'i-2', region: 'us-east-1', instanceType: 'm3.xlarge', state: 'running'
+      id: 'i-2', region: 'us-east-1', instanceType: 'm3.xlarge', state: 'running',
     }));
     await db.insertInstance(Object.assign({}, defaultInst, {
-      id: 'i-3',region: 'us-west-1', instanceType: 'm3.medium', state: 'running'
+      id: 'i-3', region: 'us-west-1', instanceType: 'm3.medium', state: 'running',
     }));
     await db.insertInstance(Object.assign({}, defaultInst, {
-      id: 'i-4', region: 'us-east-1', instanceType: 'm3.medium', state: 'pending'
+      id: 'i-4', region: 'us-east-1', instanceType: 'm3.medium', state: 'pending',
     }));
     await db.insertInstance(Object.assign({}, defaultInst, {
-      id: 'i-5', region: 'us-east-1', instanceType: 'm3.xlarge', state: 'pending'
+      id: 'i-5', region: 'us-east-1', instanceType: 'm3.xlarge', state: 'pending',
     }));
     await db.insertInstance(Object.assign({}, defaultInst, {
-      id: 'i-6', region: 'us-west-1', instanceType: 'm3.medium', state: 'pending'
+      id: 'i-6', region: 'us-west-1', instanceType: 'm3.medium', state: 'pending',
     }));
     // Let's ensure an instance in a state which we don't care about is in there
     await db.insertInstance(Object.assign({}, defaultInst, {
-      id: 'i-7', region: 'us-east-1', instanceType: 'm3.2xlarge', state: 'terminated'
+      id: 'i-7', region: 'us-east-1', instanceType: 'm3.2xlarge', state: 'terminated',
     }));
 
     // Insert some spot requests
     await db.insertSpotRequest(Object.assign({}, defaultSR, {
-      id: 'r-1', region: 'us-east-1', instanceType: 'c4.medium'
+      id: 'r-1', region: 'us-east-1', instanceType: 'c4.medium',
     }));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {
-      id: 'r-2', region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open'
+      id: 'r-2', region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open',
     }));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {
-      id: 'r-3', region: 'us-west-1', instanceType: 'c4.medium', state: 'open'
+      id: 'r-3', region: 'us-west-1', instanceType: 'c4.medium', state: 'open',
     }));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {
-      id: 'r-4', region: 'us-east-1', instanceType: 'c4.medium', state: 'open'
+      id: 'r-4', region: 'us-east-1', instanceType: 'c4.medium', state: 'open',
     }));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {
-      id: 'r-5', region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open'
+      id: 'r-5', region: 'us-east-1', instanceType: 'c4.xlarge', state: 'open',
     }));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {
-      id: 'r-6', region: 'us-west-1', instanceType: 'c4.medium', state: 'open'
+      id: 'r-6', region: 'us-west-1', instanceType: 'c4.medium', state: 'open',
     }));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {
-      id: 'r-7', region: 'us-west-1', instanceType: 'c4.2xlarge', state: 'failed'
+      id: 'r-7', region: 'us-west-1', instanceType: 'c4.2xlarge', state: 'failed',
     }));
 
     let result = await db.instanceCounts({workerType: defaultInst.workerType});
@@ -329,7 +356,7 @@ describe('State', () => {
     assume(result.running).has.lengthOf(2);
   });
 
-  it('should list the pending spot requests', async () => {
+  it('should list the pending spot requests', async() => {
     // Insert some spot requests
     await db.insertSpotRequest(Object.assign({}, defaultSR, {id: 'r-1', state: 'open'}));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {id: 'r-2', state: 'closed'}));
@@ -344,7 +371,7 @@ describe('State', () => {
     assume(result).deeply.equals(['r-1']);
   });
 
-  it('should be able to remove a spot request', async () => {
+  it('should be able to remove a spot request', async() => {
     await db.insertSpotRequest(defaultSR);
     assume(await db.listSpotRequests()).has.length(1);
     await db.removeSpotRequest({region: defaultSR.region, id: defaultSR.id});
@@ -352,14 +379,14 @@ describe('State', () => {
 
   });
 
-  it('should be able to remove an instance', async () => {
+  it('should be able to remove an instance', async() => {
     await db.insertInstance(defaultInst);
     assume(await db.listInstances()).has.length(1);
     await db.removeInstance({region: defaultInst.region, id: defaultInst.id});
     assume(await db.listInstances()).has.length(0);
   });
 
-  it('should be able to list all instance ids and spot requests of a worker type', async () => {
+  it('should be able to list all instance ids and spot requests of a worker type', async() => {
     // Insert some instances
     await db.insertInstance(Object.assign({}, defaultInst, {
       id: 'i-1',
@@ -393,12 +420,12 @@ describe('State', () => {
         {region: 'us-west-1', id: 'r-2'},
         {region: 'us-west-2', id: 'r-3'},
       ],
-    }
+    };
     let actual = await db.listIdsOfWorkerType({workerType: defaultInst.workerType});
     assume(expected).deeply.equals(actual);
   });
 
-  it('should log cloud watch events (with generated time)', async () => {
+  it('should log cloud watch events (with generated time)', async() => {
     let time = new Date();
     await db.logCloudWatchEvent({
       region: defaultInst.region,

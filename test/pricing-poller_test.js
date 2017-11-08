@@ -5,7 +5,7 @@ const assume = require('assume');
 describe('Pricing', () => {
   const sandbox = sinon.sandbox.create();
   const region = 'us-east-1';
-  const zones = ['a','b','c'].map(x => region + x);
+  const zones = ['a', 'b', 'c'].map(x => region + x);
   let describeAZStub;
   let describeSPHStub;
 
@@ -16,7 +16,7 @@ describe('Pricing', () => {
 
   afterEach(() => {
     sandbox.restore();
-  })
+  });
 
   it('should calculate the correct price for a type', () => {
     let poller = new PricingPoller({
@@ -75,12 +75,12 @@ describe('Pricing', () => {
 
   });
 
-  it('should be able to do a full poll', async () => {
+  it('should be able to do a full poll', async() => {
     let poller = new PricingPoller({
       ec2: {},
       regions: [region],
       runaws: (ec2, method, params) => {
-        switch(method) {
+        switch (method) {
           case 'describeSpotPriceHistory':
             return describeSPHStub(ec2, method, params);
             break;
@@ -102,31 +102,31 @@ describe('Pricing', () => {
         AvailabilityZone: zones[0], 
         InstanceType: 'm3.medium', 
         ProductDescription: 'Linux/UNIX', 
-        SpotPrice: '0.1'
+        SpotPrice: '0.1',
       }, {
         Timestamp: '2017-07-05T13:14:21.000Z', 
         AvailabilityZone: zones[0], 
         InstanceType: 'm3.medium', 
         ProductDescription: 'Linux/UNIX', 
-        SpotPrice: '0.2'
+        SpotPrice: '0.2',
       }, {
         Timestamp: '2017-07-05T13:14:21.000Z', 
         AvailabilityZone: zones[0], 
         InstanceType: 'm3.xlarge', 
         ProductDescription: 'Linux/UNIX', 
-        SpotPrice: '0.7'
+        SpotPrice: '0.7',
       }, {
         Timestamp: '2017-07-05T13:14:21.000Z', 
         AvailabilityZone: zones[0], 
         InstanceType: 'm3.xlarge', 
         ProductDescription: 'Linux/UNIX', 
-        SpotPrice: '0.1'
+        SpotPrice: '0.1',
       }, {
         Timestamp: '2017-07-05T13:14:21.000Z', 
         AvailabilityZone: zones[1], 
         InstanceType: 'm3.medium', 
         ProductDescription: 'Linux/UNIX', 
-        SpotPrice: '0.1'
+        SpotPrice: '0.1',
       }],
     });
 
@@ -134,20 +134,20 @@ describe('Pricing', () => {
 
     describeAZStub.onFirstCall().returns({
       AvailabilityZones: [{
-        State: "available", 
+        State: 'available', 
         ZoneName: zones[0], 
         Messages: [], 
-        RegionName: region
+        RegionName: region,
       }, {
-        State: "available", 
+        State: 'available', 
         ZoneName: zones[1], 
         Messages: [], 
-        RegionName: region
+        RegionName: region,
       }, {
-        State: "available", 
+        State: 'available', 
         ZoneName: zones[2], 
         Messages: [], 
-        RegionName: region
+        RegionName: region,
       }],
     });
 
@@ -198,7 +198,7 @@ describe('Pricing', () => {
         price: 0.1,
         region,
         type: 'spot',
-        zone: zones[1]
+        zone: zones[1],
       });
       let actual = poller.getPrices([{key: 'instanceType', restriction: 'm3.medium'}]);
       assume(actual).deeply.equals(expected);
@@ -216,11 +216,11 @@ describe('Pricing', () => {
         price: 0.1,
         region,
         type: 'spot',
-        zone: zones[1]
+        zone: zones[1],
       });
 
       let actual = poller.getPrices([
-        {key: 'instanceType', restriction: ['m3.medium', 'm3.large']}
+        {key: 'instanceType', restriction: ['m3.medium', 'm3.large']},
       ]);
       assume(actual).deeply.equals(expected);
     });
@@ -236,23 +236,23 @@ describe('Pricing', () => {
         price: 0.1,
         region,
         type: 'spot',
-        zone: zones[1]
+        zone: zones[1],
       });
       poller.prices.push({
         instanceType: 'm3.xlarge',
         price: 0.3,
         region,
         type: 'spot',
-        zone: zones[1]
+        zone: zones[1],
       });
 
       let actual = poller.getPrices([
-        {key: 'price', restriction: '0.2'}
+        {key: 'price', restriction: '0.2'},
       ]);
       assume(actual).deeply.equals(expected);
 
       actual = poller.getPrices([
-        {key: 'price', restriction: 0.2}
+        {key: 'price', restriction: 0.2},
       ]);
       assume(actual).deeply.equals(expected);
     });    
@@ -263,65 +263,64 @@ describe('Pricing', () => {
         price: 0.1,
         region,
         type: 'spot',
-        zone: zones[1]
+        zone: zones[1],
       }, {
         instanceType: 'm3.xlarge',
         price: 0.2,
         region,
         type: 'spot',
-        zone: zones[1]
+        zone: zones[1],
       }, {
         instanceType: 'm3.xlarge',
         price: 0.3,
         region,
         type: 'spot',
-        zone: zones[1]
+        zone: zones[1],
       }];
 
       assume(poller.getPrices([
-        {key: 'minPrice', restriction: 0.2}
+        {key: 'minPrice', restriction: 0.2},
       ])).deeply.equals([
-         {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
-         {instanceType: 'm3.xlarge', price: 0.3, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.3, region, type: 'spot', zone: zones[1]}, 
       ]);
       
       assume(poller.getPrices([
-        {key: 'minPrice', restriction: '0.2'}
+        {key: 'minPrice', restriction: '0.2'},
       ])).deeply.equals([
-         {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
-         {instanceType: 'm3.xlarge', price: 0.3, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.3, region, type: 'spot', zone: zones[1]}, 
       ]);
       
       assume(poller.getPrices([
-        {key: 'maxPrice', restriction: 0.2}
+        {key: 'maxPrice', restriction: 0.2},
       ])).deeply.equals([
-         {instanceType: 'm3.xlarge', price: 0.1, region, type: 'spot', zone: zones[1]}, 
-         {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.1, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
       ]);
 
       assume(poller.getPrices([
-        {key: 'maxPrice', restriction: '0.2'}
+        {key: 'maxPrice', restriction: '0.2'},
       ])).deeply.equals([
-         {instanceType: 'm3.xlarge', price: 0.1, region, type: 'spot', zone: zones[1]}, 
-         {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.1, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
       ]);
 
       assume(poller.getPrices([
         {key: 'minPrice', restriction: 0.2},
-        {key: 'maxPrice', restriction: 0.2}
+        {key: 'maxPrice', restriction: 0.2},
       ])).deeply.equals([
-         {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
       ]);
 
       assume(poller.getPrices([
         {key: 'minPrice', restriction: '0.2'},
-        {key: 'maxPrice', restriction: '0.2'}
+        {key: 'maxPrice', restriction: '0.2'},
       ])).deeply.equals([
-         {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
+        {instanceType: 'm3.xlarge', price: 0.2, region, type: 'spot', zone: zones[1]}, 
       ]);
     });
   });
   
 });
-
 

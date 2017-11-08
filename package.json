@@ -11,8 +11,9 @@
   },
   "scripts": {
     "start": "node lib/main.js start",
-    "test": "LOG_LEVEL=*:warn DEBUG= NODE_ENV=test yarn run _test",
-    "_test": "NODE_ENV=test nyc --reporter=html mocha"
+    "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
+    "_test": "NODE_ENV=test nyc --reporter=html mocha",
+    "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js"
   },
   "dependencies": {
     "aws-sdk": "^2.86.0",
@@ -20,7 +21,6 @@
     "babel-preset-taskcluster": "^3.0.0",
     "bluebird": "^3.5.0",
     "lodash": "^4.17.4",
-    "mocha": "^3.4.2",
     "nyc": "^11.0.3",
     "pg": "^7.0.1",
     "pg-pool": "^2.0.1",
@@ -44,6 +44,12 @@
     "pg-native": "^2.0.1"
   },
   "devDependencies": {
-    "assume": "^1.5.1"
+    "assume": "^1.5.1",
+    "babel-eslint": "^8.0.1",
+    "eslint": "^4.9.0",
+    "eslint-config-taskcluster": "^2.0.0",
+    "eslint-plugin-taskcluster": "^1.0.2",
+    "mocha": "^2.2.1",
+    "mocha-eslint": "^3.0.1"
   }
 }

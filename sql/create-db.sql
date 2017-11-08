@@ -85,3 +85,11 @@ CREATE TABLE IF NOT EXISTS cloudwatchlog (
   received TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (id, region, state, generated)
 );
+
+-- Amazon Machine Image (ami) usage
+CREATE TABLE IF NOT EXISTS amiusage (
+  region VARCHAR(128) NOT NULL, -- ec2 region
+  id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
+  lastused TIMESTAMPTZ NOT NULL, -- most recent usage
+  PRIMARY KEY(id, region)
+);
