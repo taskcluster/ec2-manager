@@ -432,5 +432,16 @@ describe('Api', () => {
       assume(usw2.values).has.lengthOf(1);
       assume(usw2.values[0]).equals('r-1234');
     });
+  
+    it('should list AMI usage', async() => {
+      await state.reportAmiUsage({
+        region: region,
+        id: imageId,
+      });
+      let result = await client.amiUsage();
+      assume(result).has.lengthOf(1);
+      assume(result[0]).has.property('region', region);
+      assume(result[0]).has.property('id', imageId);
+    });
   });
 });
