@@ -59,6 +59,10 @@ describe('Cloud Watch Event Listener', () => {
     listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, keyPrefix: cfg.app.keyPrefix, tagger});
   });
 
+  after(async() => {
+    await state._runScript('drop-db.sql');
+  });
+
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
   beforeEach(async() => {
