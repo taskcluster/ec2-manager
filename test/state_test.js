@@ -128,9 +128,11 @@ describe('State', () => {
     let instances = await db.listInstances();
     let pendingSpotRequests = await db.listSpotRequests();
     let amiUsage = await db.listAmiUsage();
+    let ebsUsage = await db.listEbsUsage();
     assume(instances).has.length(0);
     assume(pendingSpotRequests).has.length(0);
     assume(amiUsage).has.length(0);
+    assume(ebsUsage).has.length(0);
   });
 
   it('should be able to insert a spot request', async() => {
@@ -153,6 +155,20 @@ describe('State', () => {
     result = await db.listAmiUsage({region: 'us-east-1', id: 'r-1'});
     assume(result).has.length(0);
     result = await db.listAmiUsage({region: 'us-west-1', id: 'r-1'});
+    assume(result).has.length(1);
+  });
+
+  it('should be able to filter EBS usage', async() => {
+    let result = await db.reportEbsUsage({
+      region: defaultSR.region, 
+      volumetype: 'gp2',
+      state: 'active',
+      totalcount: 1,
+      totalgb: 8,
+    });
+    result = await db.listEbsUsage({region: 'us-west-1', volumetype: 'st1'});
+    assume(result).has.length(0);
+    result = await db.listEbsUsage({region: 'us-west-1', volumetype: 'gp2'});
     assume(result).has.length(1);
   });
 
