@@ -101,10 +101,6 @@ describe('House Keeper', () => {
     houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
-  after(async() => {
-    await state._runScript('drop-db.sql');
-  });
-
   afterEach(() => {
     sandbox.restore();
   });
@@ -333,11 +329,6 @@ describe('House Keeper', () => {
           },
         }],
       }],
-    });
-
-    describeVolumesStub.returns({
-      Volumes: [
-      ]
     });
 
     let outcome = await houseKeeper.sweep();
@@ -595,55 +586,4 @@ describe('House Keeper', () => {
     await houseKeeper.sweep();
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
-  
-  it('should call handleVolumeData exactly once per volume', async() => {
-    houseKeeperMock.expects("_handleVolumeData").twice();
-    
-    describeVolumesStub.withArgs(sinon.match(function(value) {
-      return value === ec2['us-west-2'] 
-    })).returns({
-       Volumes: [{
-         Attachments: [],
-         AvailabilityZone: 'us-west-2', 
-         CreateTime: new Date().toString(), 
-         Size: 8, 
-         SnapshotId: "snap-1234567890abcdef0", 
-         State: "in-use", 
-         VolumeId: "vol-049df61146c4d7901", 
-         VolumeType: "standard",
-       }]
-    });
-
-  it('should call describeVolumes endpoint again if NextToken is provided', async() => {
-    describeVolumesStub.withArgs(sinon.match(function(value) {
-      return value === ec2['us-west-2'] 
-    })).onFirstCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: "snap-1234567890abcdef0", 
-        State: "in-use", 
-        VolumeId: "vol-049df61146c4d7901", 
-        VolumeType: "standard",
-      }],
-      NextToken: "1" 
-    }).onSecondCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: "snap-1234567890abcdef9", 
-        State: "in-use", 
-        VolumeId: "vol-049df61146c4d7902", 
-        VolumeType: "standard",
-      }],
-      NextToken: null
-    });
-    
-    await houseKeeper.sweep();
-    assume(describeVolumesStub.callCount).equals(regions.length + 1);
-   });
 });
