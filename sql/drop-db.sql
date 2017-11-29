@@ -6,4 +6,5 @@ DROP TABLE IF EXISTS spotrequests;
 DROP TABLE IF EXISTS instances;
 DROP TABLE IF EXISTS cloudwatchlog;
 DROP TABLE IF EXISTS amiusage;
+DROP TABLE IF EXISTS ebsusage;
 DROP FUNCTION IF EXISTS update_touched();

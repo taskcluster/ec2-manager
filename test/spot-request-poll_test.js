@@ -11,6 +11,8 @@ describe('Spot Request Poller', () => {
   before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
+    await state._runScript('drop-db.sql');
+    await state._runScript('create-db.sql');
   });
 
   beforeEach(async() => {
@@ -26,6 +28,10 @@ describe('Spot Request Poller', () => {
       status: 'pending-fulfillment',
       created: new Date(),
     };
+  });
+
+  after(async() => {
+    await state._runScript('drop-db.sql');
   });
 
   afterEach(() => {
