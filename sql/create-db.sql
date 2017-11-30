@@ -100,9 +100,9 @@ CREATE TABLE IF NOT EXISTS amiusage (
 CREATE TABLE IF NOT EXISTS ebsusage (
   region VARCHAR(128) NOT NULL, -- ec2 region
   volumetype VARCHAR(128) NOT NULL,  -- volume type (e.g gp2, st1)
-  state VARCHAR(128) NOT NULL CHECK (state in ('active', 'unused')), -- state of aggregated volumes
-  totalcount VARCHAR(128) NOT NULL, -- number of volumes in region, of volumetype and state
-  totalgb VARCHAR(128) NOT NULL, -- number of GBs among volumes in region, of volumetype and state
+  state VARCHAR(6) NOT NULL CHECK (state in ('active', 'unused')), -- state of aggregated volumes
+  totalcount INTEGER NOT NULL, -- number of volumes in region, of volumetype and state
+  totalgb INTEGER NOT NULL, -- number of GBs among volumes in region, of volumetype and state
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(region, volumetype, state)
 );
