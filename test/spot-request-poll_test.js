@@ -5,12 +5,14 @@ const assume = require('assume');
 
 describe('Spot Request Poller', () => {
   let state;
+  let ec2;
   let sandbox = sinon.sandbox.create();
   let defaultSR;
 
   before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
+    ec2 = await main('ec2', {profile: 'test', process: 'test'});
     await state._runScript('drop-db.sql');
     await state._runScript('create-db.sql');
   });
@@ -41,19 +43,25 @@ describe('Spot Request Poller', () => {
   describe('constructor', () => {
 
     it('succeeds with valid args', () => {
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: () => {}, monitor: {}});
     });
 
     it('fails with non-list region arg', () => {
       try {
-        const poller = new SpotRequestPoller({ec2: {}, regions: defaultSR.region, state, runaws: () => {}});
+        const poller = new SpotRequestPoller({ec2, regions: defaultSR.region, state, runaws: () => {}, monitor: {}});
         return Promise.reject(Error('Line should not be reached'));
       } catch (e) { }
     });
 
     it('fails with list containing non-string regions', () => {
       try {
-        const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region, 1], state, runaws: () => {}});
+        const poller = new SpotRequestPoller({
+          ec2,
+          regions: [defaultSR.region, 1],
+          state,
+          runaws: () => {},
+          monitor: {},
+        });
         return Promise.reject(Error('Line should not be reached'));
       } catch (e) { }
     });
@@ -63,12 +71,12 @@ describe('Spot Request Poller', () => {
   describe('_poll helper method', () => {
 
     it('succeeds with a valid region', async() => {
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: () => {}, monitor: {}});
       await poller._poll('foobar');
     });
 
     it('fails with an invalid region', async() => {
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: () => {}, monitor: {}});
 
       try { 
         await poller._poll(5);
@@ -81,7 +89,7 @@ describe('Spot Request Poller', () => {
   describe('polling', () => {
 
     it('succeeds with no outstanding spot requests', async() => {
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: () => {}});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: () => {}, monitor: {}});
       await poller.poll();
     });
 
@@ -105,7 +113,7 @@ describe('Spot Request Poller', () => {
         }],
       }));
 
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: mock, monitor: {}});
       await poller.poll();
 
       assume(mock.callCount).equals(1);
@@ -135,7 +143,7 @@ describe('Spot Request Poller', () => {
         }],
       }));
 
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: mock, monitor: {}});
       await poller.poll();
       assume(mock.callCount).equals(1);
       assume(mock.firstCall.args[1]).equals('describeSpotInstanceRequests');
@@ -172,7 +180,7 @@ describe('Spot Request Poller', () => {
         }],
       }));
 
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: mock, monitor: {}});
       await poller.poll();
 
       assume(mock.callCount).equals(2);
@@ -206,7 +214,7 @@ describe('Spot Request Poller', () => {
         }],
       }));
 
-      const poller = new SpotRequestPoller({ec2: {}, regions: [defaultSR.region], state, runaws: mock});
+      const poller = new SpotRequestPoller({ec2, regions: [defaultSR.region], state, runaws: mock, monitor: {}});
       await poller.poll();
 
       assume(mock.callCount).equals(1);
