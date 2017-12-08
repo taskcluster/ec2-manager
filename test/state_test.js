@@ -501,4 +501,46 @@ describe('State', () => {
 
     assume(lastTouched < updatedTouched).true();
   });
+
+  it('should do nothing if no row data is given', async() => {
+    await db.reportEbsUsage([{
+      region: defaultSR.region, 
+      volumetype: 'gp2',
+      state: 'active',
+      totalcount: 1,
+      totalgb: 8,
+    }]);
+
+    let ebsUsage = await db.listEbsUsage();
+    assume(ebsUsage).has.length(1);
+
+    let rowData = [];
+
+    await db.reportEbsUsage(rowData);
+    let updatedEbsUsage = await db.listEbsUsage();
+    assume(updatedEbsUsage).has.length(1);
+    assume(updatedEbsUsage[0]).deeply.equals(ebsUsage[0]);
+  });
+
+  it('should be able to add multiple rows at once', async() => {
+    await db.reportEbsUsage([
+      {
+        region: defaultSR.region, 
+        volumetype: 'gp2',
+        state: 'active',
+        totalcount: 1,
+        totalgb: 8,
+      },
+      {
+        region: defaultSR.region,
+        volumetype: 'gp2',
+        state: 'unused',
+        totalcount: 2,
+        totalgb: 12,
+      },
+    ]);
+
+    let ebsUsage = await db.listEbsUsage();
+    assume(ebsUsage).has.length(2);
+  });
 });
