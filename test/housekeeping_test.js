@@ -101,6 +101,10 @@ describe('House Keeper', () => {
     houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
+  after(async() => {
+    await state._runScript('drop-db.sql');
+  });
+
   afterEach(() => {
     sandbox.restore();
   });
