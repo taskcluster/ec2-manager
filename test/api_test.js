@@ -444,5 +444,21 @@ describe('Api', () => {
       assume(result[0]).has.property('region', region);
       assume(result[0]).has.property('id', imageId);
     });
+    
+    it('should list EBS usage', async() => {
+      await state.reportEbsUsage([{
+        region: region,
+        volumetype: 'standard',
+        state: 'active',
+        totalcount: 1,
+        totalgb: 8,
+      }]);
+      let result = await client.ebsUsage();
+      assume(result).has.lengthOf(1);
+      assume(result[0]).has.property('volumetype', 'standard');
+      assume(result[0]).has.property('state', 'active');
+      assume(result[0]).has.property('totalcount', 1);
+      assume(result[0]).has.property('totalgb', 8);
+    });
   });
 });
