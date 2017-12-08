@@ -159,13 +159,13 @@ describe('State', () => {
   });
 
   it('should be able to filter EBS usage', async() => {
-    let result = await db.reportEbsUsage({
+    let result = await db.reportEbsUsage([{
       region: defaultSR.region, 
       volumetype: 'gp2',
       state: 'active',
       totalcount: 1,
       totalgb: 8,
-    });
+    }]);
     result = await db.listEbsUsage({region: 'us-west-1', volumetype: 'st1'});
     assume(result).has.length(0);
     result = await db.listEbsUsage({region: 'us-west-1', volumetype: 'gp2'});
@@ -464,4 +464,41 @@ describe('State', () => {
     assume(row.generated).deeply.equals(time);
   });
 
+  it('should clear table each time new data is inserted', async() => {
+    await db.reportEbsUsage([{
+      region: defaultSR.region, 
+      volumetype: 'gp2',
+      state: 'active',
+      totalcount: 1,
+      totalgb: 8,
+    }]);
+
+    let ebsUsage = await db.listEbsUsage();
+    assume(ebsUsage).has.length(1);
+    assume(ebsUsage[0]).has.property('region', defaultSR.region);
+    assume(ebsUsage[0]).has.property('volumetype', 'gp2');
+    assume(ebsUsage[0]).has.property('state', 'active');
+    assume(ebsUsage[0]).has.property('totalcount', 1);
+    assume(ebsUsage[0]).has.property('totalgb', 8);
+    let lastTouched = ebsUsage[0].touched;
+
+    await db.reportEbsUsage([{
+      region: defaultSR.region, 
+      volumetype: 'gp2',
+      state: 'active',
+      totalcount: 10,
+      totalgb: 96,
+    }]); 
+
+    let updatedEbsUsage = await db.listEbsUsage();
+    assume(updatedEbsUsage).has.length(1);
+    assume(updatedEbsUsage[0]).has.property('region', defaultSR.region);
+    assume(updatedEbsUsage[0]).has.property('volumetype', 'gp2');
+    assume(updatedEbsUsage[0]).has.property('state', 'active');
+    assume(updatedEbsUsage[0]).has.property('totalcount', 10);
+    assume(updatedEbsUsage[0]).has.property('totalgb', 96);
+    let updatedTouched = updatedEbsUsage[0].touched;
+
+    assume(lastTouched < updatedTouched).true();
+  });
 });
