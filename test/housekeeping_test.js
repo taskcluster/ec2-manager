@@ -29,7 +29,7 @@ describe('House Keeper', () => {
   let tagger;
   let houseKeeperMock;
 
-  before(async() => {
+  before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     ec2 = await main('ec2', {profile: 'test', process: 'test'});
@@ -40,7 +40,7 @@ describe('House Keeper', () => {
     regions = cfg.app.regions;
   });
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     monitor = await main('monitor', {profile: 'test', process: 'test'});
     await state._runScript('clear-db.sql');
 
@@ -101,7 +101,7 @@ describe('House Keeper', () => {
     houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
-  after(async() => {
+  after(async () => {
     await state._runScript('drop-db.sql');
   });
 
@@ -109,7 +109,7 @@ describe('House Keeper', () => {
     sandbox.restore();
   });
 
-  it('should remove instances and requests not in api state', async() => {
+  it('should remove instances and requests not in api state', async () => {
     let status = 'pending-fulfillment';
     await state.insertInstance({
       id: 'i-1',
@@ -173,7 +173,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should add instances and requests not in local state', async() => {
+  it('should add instances and requests not in local state', async () => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
 
@@ -231,7 +231,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should tag instances and requests which arent tagged', async() => {
+  it('should tag instances and requests which arent tagged', async () => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
 
@@ -282,7 +282,7 @@ describe('House Keeper', () => {
     ]);
   });
 
-  it('should zombie kill', async() => {
+  it('should zombie kill', async () => {
     assume(await state.listInstances()).has.lengthOf(0);
     assume(await state.listSpotRequests()).has.lengthOf(0);
 
@@ -359,18 +359,18 @@ describe('House Keeper', () => {
     }
   });
 
-  it('should call handleVolumeData exactly once', async() => {
+  it('should call handleVolumeData exactly once', async () => {
     houseKeeperMock.expects('_handleVolumeData').once();
     await houseKeeper.sweep();
     houseKeeperMock.verify();
   });
 
-  it('should call describeVolumes endpoint exactly once per region if no NextToken is provided', async() => {
+  it('should call describeVolumes endpoint exactly once per region if no NextToken is provided', async () => {
     await houseKeeper.sweep();
     assume(describeVolumesStub.callCount).equals(regions.length);
   });
 
-  it('should call describeVolumes endpoint again if NextToken is provided', async() => {
+  it('should call describeVolumes endpoint again if NextToken is provided', async () => {
     describeVolumesStub.withArgs(sinon.match(value => {
       return value === ec2['us-west-2']; 
     })).onFirstCall().returns({
@@ -403,13 +403,13 @@ describe('House Keeper', () => {
     assume(describeVolumesStub.callCount).equals(regions.length + 1);
   });
   
-  it('should return no total volume size and counts when there are no volumes', async() => {
+  it('should return no total volume size and counts when there are no volumes', async () => {
     let expectedTotals = {};
     await houseKeeper.sweep();
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
   
-  it('should return total size and counts of all volumes when the volumes are of same type and region', async() => {
+  it('should return total size and counts of all volumes when the volumes are of same type and region', async () => {
     describeVolumesStub.withArgs(sinon.match(value => {
       return value === ec2['us-west-2']; 
     })).onFirstCall().returns({
@@ -469,7 +469,7 @@ describe('House Keeper', () => {
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
   
-  it('should return total size and counts of all volumes when the volumes are of different types', async() => {
+  it('should return total size and counts of all volumes when the volumes are of different types', async () => {
     describeVolumesStub.withArgs(sinon.match(value => {
       return value === ec2['us-west-2']; 
     })).onFirstCall().returns({
@@ -527,7 +527,7 @@ describe('House Keeper', () => {
     sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
   
-  it('should return total size and counts of all volumes when the volumes are of different regions', async() => {
+  it('should return total size and counts of all volumes when the volumes are of different regions', async () => {
     describeVolumesStub.withArgs(sinon.match(value => {
       return value === ec2['us-east-2']; 
     })).onFirstCall().returns({

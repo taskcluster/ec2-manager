@@ -7,19 +7,19 @@ describe('State', () => {
   let defaultInst;
   let defaultSR;
 
-  before(async() => {
+  before(async () => {
     db = await main('state', {profile: 'test', process: 'test'});
     await db._runScript('drop-db.sql');
     await db._runScript('create-db.sql');
   });
 
-  after(async() => {
+  after(async () => {
     await db._runScript('drop-db.sql');
   });
 
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
-  beforeEach(async() => {
+  beforeEach(async () => {
     await db._runScript('clear-db.sql');
     defaultInst = {
       id: 'i-1',
@@ -46,21 +46,21 @@ describe('State', () => {
   });
 
   describe('type parsers', () => {
-    it('should parse ints (20) to js ints', async() => {
+    it('should parse ints (20) to js ints', async () => {
       let result = await db._pgpool.query('SELECT count(id) FROM instances;');
       assume(result).has.property('rows');
       assume(result.rows).has.lengthOf(1);
       assume(result.rows[0]).has.property('count', 0);
     });
 
-    it('should parse timestamptz (1184) to js dates (UTC)', async() => {
+    it('should parse timestamptz (1184) to js dates (UTC)', async () => {
       let d = new Date(0);
       let result = await db._pgpool.query('SELECT timestamptz \'1970-1-1 UTC\' as a;');
       let {a} = result.rows[0];
       assume(d.getTime()).equals(a.getTime());
     });
 
-    it('should parse timestamptz (1184) to js dates (CEST)', async() => {
+    it('should parse timestamptz (1184) to js dates (CEST)', async () => {
       let d = new Date('Tue Jul 04 2017 1:00:00 GMT+0200 (CEST)');
       let result = await db._pgpool.query('SELECT timestamptz \'2017-7-4 1:00:00 CEST\' as a;');
       let {a} = result.rows[0];
@@ -124,7 +124,7 @@ describe('State', () => {
 
   });
 
-  it('should be empty at start of tests', async() => {
+  it('should be empty at start of tests', async () => {
     let instances = await db.listInstances();
     let pendingSpotRequests = await db.listSpotRequests();
     let amiUsage = await db.listAmiUsage();
@@ -135,14 +135,14 @@ describe('State', () => {
     assume(ebsUsage).has.length(0);
   });
 
-  it('should be able to insert a spot request', async() => {
+  it('should be able to insert a spot request', async () => {
     let result = await db.insertSpotRequest(defaultSR);
     result = await db.listSpotRequests();
     assume(result).has.length(1);
     assume(result[0]).has.property('id', defaultSR.id);
   });
 
-  it('should be able to filter spot requests', async() => {
+  it('should be able to filter spot requests', async () => {
     let result = await db.insertSpotRequest(defaultSR);
     result = await db.listSpotRequests({region: 'us-east-1', state: 'open'});
     assume(result).has.length(0);
@@ -150,7 +150,7 @@ describe('State', () => {
     assume(result).has.length(1);
   });
    
-  it('should be able to filter AMI usages', async() => {
+  it('should be able to filter AMI usages', async () => {
     let result = await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
     result = await db.listAmiUsage({region: 'us-east-1', id: 'r-1'});
     assume(result).has.length(0);
@@ -158,7 +158,7 @@ describe('State', () => {
     assume(result).has.length(1);
   });
 
-  it('should be able to filter EBS usage', async() => {
+  it('should be able to filter EBS usage', async () => {
     let result = await db.reportEbsUsage([{
       region: defaultSR.region, 
       volumetype: 'gp2',
@@ -172,14 +172,14 @@ describe('State', () => {
     assume(result).has.length(1);
   });
 
-  it('should be able to insert an on-demand instance', async() => {
+  it('should be able to insert an on-demand instance', async () => {
     let result = await db.insertInstance(defaultInst);
     let instances = await db.listInstances();
     assume(instances).has.length(1);
     assume(instances[0]).has.property('id', defaultInst.id);
   });
 
-  it('should be able to insert a spot instance, removing the spot request', async() => {
+  it('should be able to insert a spot instance, removing the spot request', async () => {
     // We only delete a spot request if the instance has a corresponding spot request
     defaultInst.srid = defaultSR.id;
 
@@ -192,7 +192,7 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(1);
   });
 
-  it('should be able to upsert a spot instance, removing the spot request', async() => {
+  it('should be able to upsert a spot instance, removing the spot request', async () => {
     defaultInst.srid = defaultSR.id;
 
     await db.insertSpotRequest(defaultSR);
@@ -205,7 +205,7 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(1);
   });
 
-  it('should be able to update an instance', async() => {
+  it('should be able to update an instance', async () => {
     let firstState = 'pending';
     let secondState = 'running';
     defaultInst.state = firstState;
@@ -226,7 +226,7 @@ describe('State', () => {
     assume(instances[0]).has.property('state', secondState);
   });
 
-  it('should be able to update a spot request', async() => {
+  it('should be able to update a spot request', async () => {
     let firstState = 'open';
     let secondState = 'closed';
     defaultSR.state = firstState;
@@ -247,7 +247,7 @@ describe('State', () => {
     assume(spotRequests[0]).has.property('state', secondState);
   });
 
-  it('should be able to do a spot request upsert', async() => {
+  it('should be able to do a spot request upsert', async () => {
     let firstState = 'open';
     let secondState = 'closed';
     defaultSR.state = firstState;
@@ -264,7 +264,7 @@ describe('State', () => {
     assume(spotRequests[0]).has.property('state', secondState);
   });
 
-  it('should be able to report an AMI\'s usage', async() => {
+  it('should be able to report an AMI\'s usage', async () => {
     await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
     let amiUsage = await db.listAmiUsage(); 
     assume(amiUsage).has.length(1);
@@ -282,7 +282,7 @@ describe('State', () => {
     assume(lastUse < updatedUse).true();
   });
    
-  it('should have list worker types', async() => {
+  it('should have list worker types', async () => {
     // Insert some instances
     await db.insertInstance(Object.assign({}, defaultInst, {
       id: 'i-1',
@@ -320,7 +320,7 @@ describe('State', () => {
 
   });
 
-  it('should have valid instance counts', async() => {
+  it('should have valid instance counts', async () => {
     // Insert some instances
     await db.insertInstance(Object.assign({}, defaultInst, {
       id: 'i-1', region: 'us-east-1', instanceType: 'm3.medium', state: 'running',
@@ -376,7 +376,7 @@ describe('State', () => {
     assume(result.running).has.lengthOf(2);
   });
 
-  it('should list the pending spot requests', async() => {
+  it('should list the pending spot requests', async () => {
     // Insert some spot requests
     await db.insertSpotRequest(Object.assign({}, defaultSR, {id: 'r-1', state: 'open'}));
     await db.insertSpotRequest(Object.assign({}, defaultSR, {id: 'r-2', state: 'closed'}));
@@ -391,7 +391,7 @@ describe('State', () => {
     assume(result).deeply.equals(['r-1']);
   });
 
-  it('should be able to remove a spot request', async() => {
+  it('should be able to remove a spot request', async () => {
     await db.insertSpotRequest(defaultSR);
     assume(await db.listSpotRequests()).has.length(1);
     await db.removeSpotRequest({region: defaultSR.region, id: defaultSR.id});
@@ -399,14 +399,14 @@ describe('State', () => {
 
   });
 
-  it('should be able to remove an instance', async() => {
+  it('should be able to remove an instance', async () => {
     await db.insertInstance(defaultInst);
     assume(await db.listInstances()).has.length(1);
     await db.removeInstance({region: defaultInst.region, id: defaultInst.id});
     assume(await db.listInstances()).has.length(0);
   });
 
-  it('should be able to list all instance ids and spot requests of a worker type', async() => {
+  it('should be able to list all instance ids and spot requests of a worker type', async () => {
     // Insert some instances
     await db.insertInstance(Object.assign({}, defaultInst, {
       id: 'i-1',
@@ -445,7 +445,7 @@ describe('State', () => {
     assume(expected).deeply.equals(actual);
   });
 
-  it('should log cloud watch events (with generated time)', async() => {
+  it('should log cloud watch events (with generated time)', async () => {
     let time = new Date();
     await db.logCloudWatchEvent({
       region: defaultInst.region,
@@ -464,7 +464,7 @@ describe('State', () => {
     assume(row.generated).deeply.equals(time);
   });
 
-  it('should clear table each time new data is inserted', async() => {
+  it('should clear table each time new data is inserted', async () => {
     await db.reportEbsUsage([{
       region: defaultSR.region, 
       volumetype: 'gp2',
@@ -502,7 +502,7 @@ describe('State', () => {
     assume(lastTouched < updatedTouched).true();
   });
 
-  it('should do nothing if no row data is given', async() => {
+  it('should do nothing if no row data is given', async () => {
     await db.reportEbsUsage([{
       region: defaultSR.region, 
       volumetype: 'gp2',
@@ -522,7 +522,7 @@ describe('State', () => {
     assume(updatedEbsUsage[0]).deeply.equals(ebsUsage[0]);
   });
 
-  it('should be able to add multiple rows at once', async() => {
+  it('should be able to add multiple rows at once', async () => {
     await db.reportEbsUsage([
       {
         region: defaultSR.region, 

@@ -75,7 +75,7 @@ describe('Pricing', () => {
 
   });
 
-  it('should be able to do a full poll', async() => {
+  it('should be able to do a full poll', async () => {
     let poller = new PricingPoller({
       ec2: {},
       regions: [region],

@@ -39,7 +39,7 @@ describe('Cloud Watch Event Listener', () => {
   let listener;
   let tagger;
 
-  before(async() => {
+  before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
 
@@ -59,13 +59,13 @@ describe('Cloud Watch Event Listener', () => {
     listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, keyPrefix: cfg.app.keyPrefix, tagger});
   });
 
-  after(async() => {
+  after(async () => {
     await state._runScript('drop-db.sql');
   });
 
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
-  beforeEach(async() => {
+  beforeEach(async () => {
     await state._runScript('clear-db.sql');
     sandbox.stub(tagger, 'runaws');
   });
@@ -74,7 +74,7 @@ describe('Cloud Watch Event Listener', () => {
     sandbox.restore();
   });
 
-  it('should handle pending, deleting spot request', async() => {
+  it('should handle pending, deleting spot request', async () => {
     await state.insertSpotRequest({
       workerType: 'workertype',
       region,
@@ -116,7 +116,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(requests).lengthOf(0);
   });
   
-  it('should handle running transition with the instance already in db in pending state', async() => {
+  it('should handle running transition with the instance already in db in pending state', async () => {
     let pendingTimestamp = new Date();
     let runningTimestamp = new Date(pendingTimestamp);
     runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
@@ -160,7 +160,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });  
 
-  it('should handle out of order delivery', async() => {
+  it('should handle out of order delivery', async () => {
     let pendingTimestamp = new Date();
     let runningTimestamp = new Date(pendingTimestamp);
     runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
@@ -204,7 +204,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });
 
-  it('should skip a pending message for a different manager', async() => {
+  it('should skip a pending message for a different manager', async () => {
     let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
@@ -228,7 +228,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(requests).lengthOf(0);
   });
 
-  it('should handle shutting-down, deleting spot request', async() => {
+  it('should handle shutting-down, deleting spot request', async () => {
     await state.insertSpotRequest({
       workerType: 'workertype',
       region,
