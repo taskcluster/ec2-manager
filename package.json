@@ -18,7 +18,7 @@
     "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js"
   },
   "dependencies": {
-    "aws-sdk": "^2.86.0",
+    "aws-sdk": "^2.172.0",
     "bluebird": "^3.5.0",
     "lodash": "^4.17.4",
     "pg": "^7.0.1",

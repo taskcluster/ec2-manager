@@ -230,7 +230,7 @@ asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
 
-aws-sdk@^2.142.0:
+aws-sdk@^2.142.0, aws-sdk@^2.172.0:
   version "2.172.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.172.0.tgz#47dfb79907976ebbd538562ea5a25835b5b3f35d"
   dependencies:
@@ -245,7 +245,7 @@ aws-sdk@^2.142.0:
     xml2js "0.4.17"
     xmlbuilder "4.2.1"
 
-aws-sdk@^2.2.28, aws-sdk@^2.2.38, aws-sdk@^2.30.0, aws-sdk@^2.5.3, aws-sdk@^2.86.0:
+aws-sdk@^2.2.28, aws-sdk@^2.2.38, aws-sdk@^2.30.0, aws-sdk@^2.5.3:
   version "2.88.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.88.0.tgz#1bb0bc3d8c8dec62dd020c8f2056b2df7a5ed696"
   dependencies:
