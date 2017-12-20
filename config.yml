@@ -33,8 +33,7 @@ defaults:
     databaseUrl: !env DATABASE_URL
   server:
     port: 5555
-    publicUrl: localhost:5555
-    baseUrl: 'http://localhost:5555/v1'
+    publicUrl: 'http://localhost:5555'
     env: development
     forceSSL: false
     trustProxy: false
@@ -56,7 +55,7 @@ production:
     env: production
     forceSSL: true
     trustProxy: true
-    baseUrl: 'https://ec2-manager.herokuapp.com/v1'
+    publicUrl: 'https://ec2-manager.herokuapp.com'
   app:
     keyPrefix: 'aws-provisioner-v1-managed:'
     publishMetadata: true
@@ -71,7 +70,7 @@ staging:
     env: production
     forceSSL: true
     trustProxy: true
-    baseUrl: 'https://ec2-manager-staging.herokuapp.com/v1'
+    publicUrl: 'https://ec2-manager-staging.herokuapp.com'
   app:
     keyPrefix: 'ec2-manager-staging:'
     publishMetadata: false
