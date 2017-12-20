@@ -7,7 +7,7 @@
   "license": "MPL-2.0",
   "engines": {
     "node": ">=8.1.4",
-    "yarn": ">=0.24.5"
+    "yarn": "^1.0.0"
   },
   "scripts": {
     "start": "node lib/main.js start",
