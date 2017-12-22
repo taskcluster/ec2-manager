@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "aws-sdk": "^2.172.0",
-    "bluebird": "^3.5.1",
     "lodash": "^4.17.4",
     "pg": "^7.4.0",
     "pg-pool": "^2.0.3",
