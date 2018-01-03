@@ -1,0 +1,69 @@
+$schema:  http://json-schema.org/draft-04/schema#
+title: "Request an on-demand instance"
+description: |
+  Presented here are the fields that are absolutely 100% required to make an
+  on-demand request.  The `LaunchSpecification` property is an opaque datastructure
+  from EC2, however the fields which we know are absolutely required are
+  described.
+type: object
+properties:
+  ClientToken:
+    type: string
+    description: |
+      A ClientToken string per the implementation requirements of the EC2 api.
+      This string must be no more than 64 characters of ASCII.  We restrict the
+      client tokens further to alphanumeric ASCII with the addition of the `-`
+      and `_` characters
+    minLength: 1
+    maxLength: 64
+    pattern: "^[a-zA-Z0-0_-]{1,64}"
+  Region:
+    type: string
+    description: |
+      The EC2 region in which this spot request is to be made.  This should be
+      the lower case api-identifier.  For example `us-east-1`
+  LaunchSpecification:
+    type: object
+    description: |
+      This is a LaunchSpecification as specified by the EC2 API.  We do
+      validate a few of the fields which are absolutely critical to the
+      functioning of the EC2-Manager.  Other fields are valid and passed
+      directly to the EC2 API verbatim.  None of these values are changed by
+      the EC2-Manager
+    properties:
+      KeyName:
+        type: string
+        description: |
+          A valid EC2 KeyPair name.  The KeyPair must already exist
+      InstanceType:
+        type: string
+        description: |
+          The instance type to use for this spot request
+      ImageId:
+        type: string
+        description: |
+          This is the AMI Identifier for this spot request.  This image must
+          already exist and must be in the region of the request.  Note that
+          AMI images are per-region, so you must copy or regenerate the image
+          for each region.
+      SecurityGroups:
+        type: array
+        description: |
+          This is a list of the security groups this image will use.  These
+          groups must already exist in the region.
+        items:
+          type: string
+    requiredProperties:
+      - KeyName
+      - InstanceType
+      - ImageId
+      - SecurityGroups
+    # NOTE: We might want in future to block out certain keys from being
+    # allowed like Placement and instead move that to a property one level up
+    # and do that substitution in the EC2-Manager rather than in the
+    # provisioner to avoid a little more ec2-knowledge there.
+additionalProperties: false
+requiredProperties:
+  - ClientToken
+  - Region
+  - LaunchSpecification
