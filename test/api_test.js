@@ -77,16 +77,16 @@ describe('Api', () => {
       imageId,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({
-      id: 'r-1',
+    await state.insertInstance({
+      id: 'i-2',
       workerType: 'w-2',
       region,
       instanceType,
-      state: 'open',
-      status,
+      state: 'pending',
       az,
-      created,
+      launched,
       imageId,
+      lastevent: new Date(),
     });
     let result = await client.listWorkerTypes();
     assume(result).deeply.equals(['w-1', 'w-2']);
@@ -260,20 +260,19 @@ describe('Api', () => {
       let result = await client.terminateWorkerType(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
-      assume(runaws.args).has.property('length', 6);
+      assume(runaws.args).has.property('length', 3);
       for (let call of runaws.args) {
         let region = call[0].config.region;
         let endpoint = call[1];
         let obj = call[2];
+        assume(endpoint).equals('terminateInstances');
 
-        if (endpoint === 'terminateInstances') {
-          if (region === 'us-east-1') {
-            assume(obj.InstanceIds).deeply.equals(['i-1']);
-          } else if (region === 'us-west-1') {
-            assume(obj.InstanceIds).deeply.equals(['i-2']);
-          } else if (region === 'us-west-2') {
-            assume(obj.InstanceIds).deeply.equals(['i-3']);
-          }
+        if (region === 'us-east-1') {
+          assume(obj.InstanceIds).deeply.equals(['i-1']);
+        } else if (region === 'us-west-1') {
+          assume(obj.InstanceIds).deeply.equals(['i-2']);
+        } else if (region === 'us-west-2') {
+          assume(obj.InstanceIds).deeply.equals(['i-3']);
         }
       }
       

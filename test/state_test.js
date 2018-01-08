@@ -236,7 +236,7 @@ describe('State', () => {
   });
 
   it('should have valid instance counts', async() => {
-    // Insert some instances
+    // Insert some instances.  NOTE that we're only counting things in us-east-1
     await db.insertInstance(Object.assign({}, defaultInst, {
       id: 'i-1', region: 'us-east-1', instanceType: 'm3.medium', state: 'running',
     }));
@@ -264,7 +264,7 @@ describe('State', () => {
 
     assume(result).has.property('pending');
     assume(result).has.property('running');
-    assume(result.pending).has.lengthOf(3);
+    assume(result.pending).has.lengthOf(2);
     assume(result.running).has.lengthOf(2);
   });
 
