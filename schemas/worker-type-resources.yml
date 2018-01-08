@@ -17,7 +17,6 @@ properties:
           type: string
           enum: 
             - 'instance'
-            - 'spot-request'
   running:
     type: array
     item:
