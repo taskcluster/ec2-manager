@@ -11,7 +11,6 @@ describe('Api', () => {
   let instanceType = 'c3.xlarge';
   let workerType = 'apiTest';
   let az = 'us-west-2a';
-  let created = new Date();
   let launched = new Date();
   let imageId = 'ami-1';
   let client;
@@ -131,7 +130,7 @@ describe('Api', () => {
     });
   });
 
-  describe.skip('requesting resources', () => {
+  describe('requesting resources', () => {
     // TODO: Rewrite this set of tests for runInstance
     let ClientToken;
     let Region;
@@ -141,9 +140,8 @@ describe('Api', () => {
     beforeEach(() => {
       ClientToken = 'client-token';
       Region = region;
-      SpotPrice = 1.66;
 
-      LaunchSpecification = {
+      LaunchInfo = {
         KeyName: `ec2-manager-test:${workerType}:ffe27db`,
         ImageId: 'ami-1',
         InstanceType: instanceType,
@@ -154,67 +152,165 @@ describe('Api', () => {
       };
 
       runaws.returns({
-        SpotInstanceRequests: [{
-          SpotInstanceRequestId: 'r-1',
-          LaunchSpecification,
+        Instances: [{
+          InstanceId: 'i-1',
+          Placement: {
+            AvailabilityZone: az,
+          },
           InstanceType: instanceType,
-          State: 'open',
-          CreateTime: created.toString(),
-          Status: {
-            Code: 'pending-evaluation',
+          LaunchTime: launched.toString(),
+          ImageId: imageId,
+          InstanceState: {
+            Name: 'pending',
           },
         }],
       });
     });
 
-    // NOTE: The idempotency assertions are a combination of trusting Postgres
-    // to return the primary key conflict, a check that the worker type
-    // argument is the same as that in the LaunchSpecification and that EC2
-    // idempotency works
-    it('should request a spot instance (idempotent)', async() => {
-      await client.requestSpotInstance(workerType, {
-        ClientToken, 
-        Region,
-        SpotPrice,
-        LaunchSpecification,
-      });
-
-      let requests = await state.listSpotRequests();
-      assume(requests).has.lengthOf(1);
-      assume(runaws.callCount).equals(2);
-      assume(runaws.args[0][1]).equals('requestSpotInstances');
-      assume(runaws.args[1][1]).equals('createTags');
-      let amiUsage = await state.listAmiUsage();
-      assume(amiUsage).has.length(1);
-      assume(amiUsage[0]).has.property('region', region);
-      assume(amiUsage[0]).has.property('id', imageId);
-      let call = runaws.firstCall.args;
-      assume(call[0].config.region).equals(region);
-      assume(call[1]).equals('requestSpotInstances');
-      assume(call[2]).deeply.equals({
+    it('should be able to request an on-demand instance', async() => {
+      await client.runInstance(workerType, {
         ClientToken,
-        SpotPrice: SpotPrice.toString(),
-        InstanceCount: 1,
-        Type: 'one-time',
-        LaunchSpecification,
-      });
-      runaws.resetHistory();
-
-      await client.requestSpotInstance(workerType, {
-        ClientToken, 
         Region,
-        SpotPrice,
-        LaunchSpecification,
+        RequestType: 'on-demand',
+        LaunchInfo,
       });
-      requests = await state.listSpotRequests();
-      assume(requests).has.lengthOf(1);
-      assume(runaws.callCount).equals(2);
-      assume(runaws.args[0][1]).equals('requestSpotInstances');
-      assume(runaws.args[1][1]).equals('createTags');
-      amiUsage = await state.listAmiUsage();
-      assume(amiUsage).has.length(1);
-      assume(amiUsage[0]).has.property('region', region);
-      assume(amiUsage[0]).has.property('id', imageId);
+
+      assume(runaws.callCount).equals(1);
+      assume(runaws.firstCall.args[0].config.region).equals(region);
+      assume(runaws.firstCall.args[1]).equals('runInstances');
+      assume(runaws.firstCall.args[2]).deeply.equals({
+        ClientToken,
+        MaxCount: 1,
+        MinCount: 1,
+        TagSpecifications: [
+          {
+            ResourceType: 'instance', Tags: [
+              {Key: 'Name', Value: 'apiTest'},
+              {Key: 'Owner', Value: 'ec2-manager-test'},
+              {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
+            ],
+          },
+          {
+            ResourceType: 'volume', Tags: [
+              {Key: 'Name', Value: 'apiTest'},
+              {Key: 'Owner', Value: 'ec2-manager-test'},
+              {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
+            ],
+          },
+        ],
+        KeyName: `ec2-manager-test:${workerType}:ffe27db`,
+        ImageId: 'ami-1',
+        InstanceType: instanceType,
+        SecurityGroups: [],
+        Placement: {
+          AvailabilityZone: az,
+        },
+      });
+
+      let instances = await state.listInstances();
+      assume(instances).has.lengthOf(1);
+    });
+    
+    it('should be able to request a spot request at default price', async() => {
+      await client.runInstance(workerType, {
+        ClientToken,
+        Region,
+        RequestType: 'spot',
+        LaunchInfo,
+      });
+
+      assume(runaws.callCount).equals(1);
+      assume(runaws.firstCall.args[0].config.region).equals(region);
+      assume(runaws.firstCall.args[1]).equals('runInstances');
+      assume(runaws.firstCall.args[2]).deeply.equals({
+        ClientToken,
+        MaxCount: 1,
+        MinCount: 1,
+        InstanceMarketOptions: {
+          MarketType: 'spot',
+          SpotOptions: {
+            SpotInstanceType: 'one-time',
+          },
+        },
+        TagSpecifications: [
+          {
+            ResourceType: 'instance', Tags: [
+              {Key: 'Name', Value: 'apiTest'},
+              {Key: 'Owner', Value: 'ec2-manager-test'},
+              {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
+            ],
+          },
+          {
+            ResourceType: 'volume', Tags: [
+              {Key: 'Name', Value: 'apiTest'},
+              {Key: 'Owner', Value: 'ec2-manager-test'},
+              {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
+            ],
+          },
+        ],
+        KeyName: `ec2-manager-test:${workerType}:ffe27db`,
+        ImageId: 'ami-1',
+        InstanceType: instanceType,
+        SecurityGroups: [],
+        Placement: {
+          AvailabilityZone: az,
+        },
+      });
+
+      let instances = await state.listInstances();
+      assume(instances).has.lengthOf(1);
+    });
+
+    it('should be able to request a spot request at a specific price', async() => {
+      await client.runInstance(workerType, {
+        ClientToken,
+        Region,
+        RequestType: 'spot',
+        SpotPrice: 0.5,
+        LaunchInfo,
+      });
+
+      assume(runaws.callCount).equals(1);
+      assume(runaws.firstCall.args[0].config.region).equals(region);
+      assume(runaws.firstCall.args[1]).equals('runInstances');
+      assume(runaws.firstCall.args[2]).deeply.equals({
+        ClientToken,
+        MaxCount: 1,
+        MinCount: 1,
+        InstanceMarketOptions: {
+          MarketType: 'spot',
+          SpotOptions: {
+            SpotInstanceType: 'one-time',
+            MaxPrice: '0.5',
+          },
+        },
+        TagSpecifications: [
+          {
+            ResourceType: 'instance', Tags: [
+              {Key: 'Name', Value: 'apiTest'},
+              {Key: 'Owner', Value: 'ec2-manager-test'},
+              {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
+            ],
+          },
+          {
+            ResourceType: 'volume', Tags: [
+              {Key: 'Name', Value: 'apiTest'},
+              {Key: 'Owner', Value: 'ec2-manager-test'},
+              {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
+            ],
+          },
+        ],
+        KeyName: `ec2-manager-test:${workerType}:ffe27db`,
+        ImageId: 'ami-1',
+        InstanceType: instanceType,
+        SecurityGroups: [],
+        Placement: {
+          AvailabilityZone: az,
+        },
+      });
+
+      let instances = await state.listInstances();
+      assume(instances).has.lengthOf(1);
     });
   });
 
