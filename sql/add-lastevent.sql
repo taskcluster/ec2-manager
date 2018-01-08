@@ -1,8 +1,0 @@
-BEGIN;
-
-ALTER TABLE instances ADD COLUMN lastevent TIMESTAMPTZ;
-UPDATE instances SET lastevent = TIMESTAMPTZ '1970-1-1 1:0:0';
-ALTER TABLE instances ALTER COLUMN lastevent SET NOT NULL;
-
-COMMIT;
-
