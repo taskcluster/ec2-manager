@@ -74,7 +74,8 @@ describe('Cloud Watch Event Listener', () => {
     sandbox.restore();
   });
 
-  it('should handle pending, deleting spot request', async() => {
+  it.skip('should handle pending, deleting spot request', async() => {
+    // TODO possibly rewrite this so that we are testing runInstance based calls
     await state.insertSpotRequest({
       workerType: 'workertype',
       region,
@@ -223,24 +224,10 @@ describe('Cloud Watch Event Listener', () => {
     }));
 
     let instances = await state.listInstances();
-    let requests = await state.listSpotRequests();
     assume(instances).lengthOf(0);
-    assume(requests).lengthOf(0);
   });
 
   it('should handle shutting-down, deleting spot request', async() => {
-    await state.insertSpotRequest({
-      workerType: 'workertype',
-      region,
-      instanceType,
-      id: 'r-1234',
-      state: 'open',
-      status: 'pending-fulfillment',
-      az,
-      imageId,
-      created: new Date(),
-    });
-
     let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({
@@ -259,15 +246,11 @@ describe('Cloud Watch Event Listener', () => {
     }));
 
     let instances = await state.listInstances();
-    let requests = await state.listSpotRequests();
     assume(instances).lengthOf(0);
-    assume(requests).lengthOf(1);
     let pendingMsg = _.defaultsDeep({}, baseExampleMsg, {detail: {state: 'shutting-down'}});
     await listener.__handler(JSON.stringify(pendingMsg));
     instances = await state.listInstances();
-    requests = await state.listSpotRequests();
     assume(instances).lengthOf(1);
-    assume(requests).lengthOf(0);
   });
 
 });
