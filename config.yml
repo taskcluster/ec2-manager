@@ -20,7 +20,7 @@ defaults:
     pricingPollDelay: 900 # (seconds) 15 minutes
     pricingTimePeriod: 30 # (seconds)
   ec2:
-    apiVersion: 2014-01-01
+    apiVersion: 2016-11-15
   sqs:
     apiVersion: 2012-11-05
   cwe:
@@ -78,7 +78,7 @@ staging:
   postgres:
     maxClients: 10
   monitor:
-    project: ec2-mgr-stg
+    project: ec2-manager-staging
     mock: false
 test:
   app:
