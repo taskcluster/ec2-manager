@@ -13,7 +13,8 @@
     "start": "node lib/main.js start",
     "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
     "_test": "NODE_ENV=test nyc --reporter=html mocha",
-    "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js"
+    "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js",
+    "purgequeues": "node lib/main.js purgequeues"
   },
   "dependencies": {
     "aws-sdk": "^2.86.0",
