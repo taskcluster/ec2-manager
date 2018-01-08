@@ -19,7 +19,6 @@ describe('House Keeper', () => {
   let launched = new Date();
   let sandbox = sinon.sandbox.create();
   let describeInstancesStub;
-  let describeSpotInstanceRequestsStub;
   let describeVolumesStub;
   let terminateInstancesStub;
   let createTagsStub;
@@ -45,7 +44,6 @@ describe('House Keeper', () => {
     await state._runScript('clear-db.sql');
 
     describeInstancesStub = sandbox.stub();
-    describeSpotInstanceRequestsStub = sandbox.stub();
     describeVolumesStub = sandbox.stub();
     terminateInstancesStub = sandbox.stub();
     createTagsStub = sandbox.stub();
@@ -59,10 +57,6 @@ describe('House Keeper', () => {
         ],
       }],
     });
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [
-      ],
-    });
     describeVolumesStub.returns({
       Volumes: [
       ],
@@ -72,8 +66,6 @@ describe('House Keeper', () => {
     async function runaws(service, method, params) {
       if (method === 'describeInstances') {
         return describeInstancesStub(service, method, params);
-      } else if (method === 'describeSpotInstanceRequests') {
-        return describeSpotInstanceRequestsStub(service, method, params);
       } else if (method === 'describeVolumes') {
         return describeVolumesStub(service, method, params);
       } else if (method === 'terminateInstances') {
@@ -109,7 +101,7 @@ describe('House Keeper', () => {
     sandbox.restore();
   });
 
-  it('should remove instances and requests not in api state', async() => {
+  it('should remove instances not in api state', async() => {
     let status = 'pending-fulfillment';
     await state.insertInstance({
       id: 'i-1',
@@ -133,49 +125,22 @@ describe('House Keeper', () => {
       launched,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({
-      id: 'r-1',
-      workerType,
-      region,
-      instanceType,
-      state: 'open',
-      status,
-      az,
-      imageId,
-      created,
-    });
-    await state.insertSpotRequest({
-      id: 'r-2',
-      workerType,
-      region,
-      instanceType,
-      state: 'open',
-      status,
-      az,
-      imageId,
-      created,
-    });
 
     assume(await state.listInstances()).has.lengthOf(2);
-    assume(await state.listSpotRequests()).has.lengthOf(2);
 
     let outcome = await houseKeeper.sweep();
     assume(await state.listInstances()).has.lengthOf(0);
-    assume(await state.listSpotRequests()).has.lengthOf(0);
     assume(outcome[region]).deeply.equals({
       state: {
-        missingRequests: 0,
         missingInstances: 0,
-        extraneousRequests: 2,
         extraneousInstances: 2,
       },
       zombies: [],
     });
   });
 
-  it('should add instances and requests not in local state', async() => {
+  it('should add instances not in local state', async() => {
     assume(await state.listInstances()).has.lengthOf(0);
-    assume(await state.listSpotRequests()).has.lengthOf(0);
 
     describeInstancesStub.returns({
       Reservations: [{
@@ -188,30 +153,10 @@ describe('House Keeper', () => {
           State: {
             Name: 'running',
           },
-          SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           Placement: {
             AvailabilityZone: az,
           },
         }],
-      }],
-    });
-
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [{
-        SpotInstanceRequestId: 'r-1',
-        CreateTime: new Date().toString(),
-        LaunchSpecification: {
-          KeyName: keyPrefix + workerType,
-          InstanceType: instanceType,
-          ImageId: 'ami-1',
-          Placement: {
-            AvailabilityZone: az,
-          },
-        },
-        State: 'open',
-        Status: {
-          Code: 'pending-evaluation',
-        },
       }],
     });
 
@@ -219,21 +164,17 @@ describe('House Keeper', () => {
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
     assume(await state.listInstances()).has.lengthOf(regions.length);
-    assume(await state.listSpotRequests()).has.lengthOf(regions.length);
     assume(outcome[region]).deeply.equals({
       state: {
-        missingRequests: 1,
         missingInstances: 1,
-        extraneousRequests: 0,
         extraneousInstances: 0,
       },
       zombies: [],
     });
   });
 
-  it('should tag instances and requests which arent tagged', async() => {
+  it('should tag instances which arent tagged', async() => {
     assume(await state.listInstances()).has.lengthOf(0);
-    assume(await state.listSpotRequests()).has.lengthOf(0);
 
     describeInstancesStub.returns({
       Reservations: [{
@@ -245,31 +186,11 @@ describe('House Keeper', () => {
           State: {
             Name: 'running',
           },
-          SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           ImageId: 'ami-1',
           Placement: {
             AvailabilityZone: az,
           },
         }],
-      }],
-    });
-
-    describeSpotInstanceRequestsStub.returns({
-      SpotInstanceRequests: [{
-        SpotInstanceRequestId: 'r-1',
-        CreateTime: new Date().toString(),
-        LaunchSpecification: {
-          KeyName: keyPrefix + workerType,
-          InstanceType: instanceType,
-          ImageId: 'ami-1',
-          Placement: {
-            AvailabilityZone: az,
-          },
-        },
-        State: 'open',
-        Status: {
-          Code: 'pending-evaluation',
-        },
       }],
     });
 
@@ -284,7 +205,6 @@ describe('House Keeper', () => {
 
   it('should zombie kill', async() => {
     assume(await state.listInstances()).has.lengthOf(0);
-    assume(await state.listSpotRequests()).has.lengthOf(0);
 
     // We want to have one zombie in internal state and one not in internal state
     // but we want to kill both and delete the one in state
@@ -313,7 +233,6 @@ describe('House Keeper', () => {
           State: {
             Name: 'running',
           },
-          SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           ImageId: 'ami-1',
           Placement: {
             AvailabilityZone: az,
@@ -326,7 +245,6 @@ describe('House Keeper', () => {
           State: {
             Name: 'running',
           },
-          SpotInstanceRequestId: 'r-10', // So that we don't delete the spot request
           ImageId: 'ami-1',
           Placement: {
             AvailabilityZone: az,
@@ -339,12 +257,9 @@ describe('House Keeper', () => {
     // Because we're returning the same thing for all regions, we need to check
     // that we've got one for each region
     assume(await state.listInstances()).has.lengthOf(0);
-    assume(await state.listSpotRequests()).has.lengthOf(0);
     assume(outcome[region]).deeply.equals({
       state: {
-        missingRequests: 0,
         missingInstances: 0,
-        extraneousRequests: 0,
         extraneousInstances: 0,
       },
       zombies: ['i-1', 'i-2'],

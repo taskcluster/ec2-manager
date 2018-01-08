@@ -116,27 +116,12 @@ describe('Api', () => {
       imageId,
       lastevent: new Date(),
     });
-    await state.insertSpotRequest({
-      id: 'r-1',
-      workerType: 'w-1',
-      region,
-      instanceType,
-      state: 'open',
-      status,
-      az,
-      created,
-      imageId,
-    });
     let result = await client.workerTypeStats('w-1');
     assume(result).deeply.equals({
       pending: [{
         instanceType,
         count: 1,
         type: 'instance',
-      }, {
-        instanceType,
-        count: 1,
-        type: 'spot-request',
       }],
       running: [{
         instanceType,
@@ -146,7 +131,8 @@ describe('Api', () => {
     });
   });
 
-  describe('requesting resources', () => {
+  describe.skip('requesting resources', () => {
+    // TODO: Rewrite this set of tests for runInstance
     let ClientToken;
     let Region;
     let SpotPrice;
@@ -263,34 +249,10 @@ describe('Api', () => {
         region: 'us-west-2',
         instanceType,
         state: 'pending',
-        srid: 'r-3',
         az,
         imageId,
         launched,
         lastevent: new Date(),
-      });
-      // Insert some spot requests
-      await state.insertSpotRequest({
-        id: 'r-1',
-        workerType,
-        region: 'us-east-1',
-        instanceType,
-        state: 'open',
-        status,
-        az,
-        imageId,
-        created,
-      });
-      await state.insertSpotRequest({
-        id: 'r-2',
-        workerType,
-        region: 'us-west-1',
-        instanceType,
-        state: 'open',
-        status,
-        az,
-        imageId,
-        created,
       });
     });
 
@@ -304,15 +266,7 @@ describe('Api', () => {
         let endpoint = call[1];
         let obj = call[2];
 
-        if (endpoint === 'cancelSpotInstanceRequests') {
-          if (region === 'us-east-1') {
-            assume(obj.SpotInstanceRequestIds).deeply.equals(['r-1']);
-          } else if (region === 'us-west-1') {
-            assume(obj.SpotInstanceRequestIds).deeply.equals(['r-2']);
-          } else if (region === 'us-west-2') {
-            assume(obj.SpotInstanceRequestIds).deeply.equals(['r-3']);
-          }
-        } else if (endpoint === 'terminateInstances') {
+        if (endpoint === 'terminateInstances') {
           if (region === 'us-east-1') {
             assume(obj.InstanceIds).deeply.equals(['i-1']);
           } else if (region === 'us-west-1') {
@@ -324,9 +278,7 @@ describe('Api', () => {
       }
       
       let instances = await state.listInstances();
-      let requests = await state.listSpotRequests();
       assume(instances).has.lengthOf(0);
-      assume(requests).has.lengthOf(0);
     });
 
     it('should be able to kill a single instance', async() => {
@@ -344,18 +296,6 @@ describe('Api', () => {
       assume(instances).has.lengthOf(0);
     });
     
-    it('should be able to cancel a single spot instance request', async() => {
-      runaws.returns({
-        CancelledSpotInstanceRequests: [{
-          State: 'closed',
-        }],
-      });
-      let result = await client.cancelSpotInstanceRequest('us-east-1', 'r-1');
-      assume(runaws.callCount).equals(1);
-      assume(result).has.property('current', 'closed');
-      let requests = await state.listSpotRequests({id: 'r-1'});
-      assume(requests).has.lengthOf(0);
-    });
   });
 
   describe('managing key pairs', () => {
@@ -415,25 +355,6 @@ describe('Api', () => {
       assume(result.regions).deeply.equals(regions.sort());
     });
 
-    it('should list spot requests to poll', async() => {
-      await state.insertSpotRequest({
-        workerType: 'abcd',
-        region,
-        instanceType,
-        id: 'r-1234',
-        state: 'open',
-        status: 'pending-fulfillment',
-        az,
-        imageId,
-        created,
-      });
-      let result = await client.spotRequestsToPoll();
-      assume(result).has.lengthOf(regions.length);
-      let usw2 = result.filter(x => x.region === 'us-west-2')[0];
-      assume(usw2.values).has.lengthOf(1);
-      assume(usw2.values[0]).equals('r-1234');
-    });
-  
     it('should list AMI usage', async() => {
       await state.reportAmiUsage({
         region: region,
