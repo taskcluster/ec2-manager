@@ -114,7 +114,7 @@ describe('Cloud Watch Event Listener', () => {
       az,
       launched: pendingTimestamp,
       imageId,
-      lastevent: pendingTimestamp,
+      lastEvent: pendingTimestamp,
     });
 
     let mock = sandbox.stub(listener, 'runaws');
@@ -123,8 +123,8 @@ describe('Cloud Watch Event Listener', () => {
 
     let instances = await state.listInstances();
     assume(instances).lengthOf(1);
-    assume(instances[0]).has.property('lastevent');
-    assume(instances[0].lastevent.getTime()).equals(pendingTimestamp.getTime());
+    assume(instances[0]).has.property('lastEvent');
+    assume(instances[0].lastEvent.getTime()).equals(pendingTimestamp.getTime());
     let pendingMsg = Object.assign({}, baseExampleMsg, {
       detail: {
         'instance-id': 'i-1',
@@ -137,8 +137,8 @@ describe('Cloud Watch Event Listener', () => {
 
     instances = await state.listInstances();
     assume(instances).lengthOf(1);
-    assume(instances[0]).has.property('lastevent');
-    assume(instances[0].lastevent.getTime()).equals(runningTimestamp.getTime());
+    assume(instances[0]).has.property('lastEvent');
+    assume(instances[0].lastEvent.getTime()).equals(runningTimestamp.getTime());
     assume(instances[0].state).equals('running');
 
     assume(instances).lengthOf(1);
@@ -158,7 +158,7 @@ describe('Cloud Watch Event Listener', () => {
       az,
       launched: runningTimestamp,
       imageId,
-      lastevent: runningTimestamp,
+      lastEvent: runningTimestamp,
     });
 
     let mock = sandbox.stub(listener, 'runaws');
@@ -167,8 +167,8 @@ describe('Cloud Watch Event Listener', () => {
 
     let instances = await state.listInstances();
     assume(instances).lengthOf(1);
-    assume(instances[0]).has.property('lastevent');
-    assume(instances[0].lastevent.getTime()).deeply.equals(runningTimestamp.getTime());
+    assume(instances[0]).has.property('lastEvent');
+    assume(instances[0].lastEvent.getTime()).deeply.equals(runningTimestamp.getTime());
     let pendingMsg = Object.assign({}, baseExampleMsg, {
       detail: {
         'instance-id': 'i-1',
@@ -181,8 +181,8 @@ describe('Cloud Watch Event Listener', () => {
 
     instances = await state.listInstances();
     assume(instances).lengthOf(1);
-    assume(instances[0]).has.property('lastevent');
-    assume(instances[0].lastevent.getTime()).equals(runningTimestamp.getTime());
+    assume(instances[0]).has.property('lastEvent');
+    assume(instances[0].lastEvent.getTime()).equals(runningTimestamp.getTime());
     assume(instances[0].state).equals('running');
 
     assume(instances).lengthOf(1);
@@ -210,7 +210,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(0);
   });
 
-  it('should handle shutting-down, deleting spot request', async() => {
+  it('should handle shutting-down', async() => {
     let mock = sandbox.stub(listener, 'runaws');
 
     mock.onFirstCall().returns(Promise.resolve({

@@ -74,7 +74,7 @@ describe('Api', () => {
       az,
       launched,
       imageId,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
     await state.insertInstance({
       id: 'i-2',
@@ -85,7 +85,7 @@ describe('Api', () => {
       az,
       launched,
       imageId,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
     let result = await client.listWorkerTypes();
     assume(result).deeply.equals(['w-1', 'w-2']);
@@ -102,7 +102,7 @@ describe('Api', () => {
       az,
       launched,
       imageId,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
     await state.insertInstance({
       id: 'i-2',
@@ -113,7 +113,7 @@ describe('Api', () => {
       az,
       launched,
       imageId,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
     let result = await client.workerTypeStats('w-1');
     assume(result).deeply.equals({
@@ -326,7 +326,7 @@ describe('Api', () => {
         az,
         imageId,
         launched,
-        lastevent: new Date(),
+        lastEvent: new Date(),
       });
       await state.insertInstance({
         id: 'i-2',
@@ -337,7 +337,7 @@ describe('Api', () => {
         az,
         imageId,
         launched,
-        lastevent: new Date(),
+        lastEvent: new Date(),
       });
       await state.insertInstance({
         id: 'i-3',
@@ -348,7 +348,7 @@ describe('Api', () => {
         az,
         imageId,
         launched,
-        lastevent: new Date(),
+        lastEvent: new Date(),
       });
     });
 

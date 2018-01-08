@@ -30,7 +30,7 @@ describe('State', () => {
       instanceType: 'm1.medium',
       state: 'pending',
       launched: new Date(),
-      lastevent: new Date(),
+      lastEvent: new Date(),
     };
     defaultSR = {
       id: 'r-1',
@@ -79,7 +79,7 @@ describe('State', () => {
 
     it('one flat condition', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk.a = $1;',
+        text: 'SELECT * FROM junk WHERE junk."a" = $1;',
         values: ['aye'],
       };
       let actual = db._generateTableListQuery(table, {a: 'aye'});
@@ -88,7 +88,7 @@ describe('State', () => {
 
     it('two flat conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk.a = $1 AND junk.b = $2;',
+        text: 'SELECT * FROM junk WHERE junk."a" = $1 AND junk."b" = $2;',
         values: ['aye', 'bee'],
       };
       let actual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
@@ -97,7 +97,7 @@ describe('State', () => {
 
     it('one list condition', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk.a = $1 OR junk.a = $2 OR junk.a = $3;',
+        text: 'SELECT * FROM junk WHERE junk."a" = $1 OR junk."a" = $2 OR junk."a" = $3;',
         values: ['a', 'b', 'c'],
       };
       let actual = db._generateTableListQuery(table, {a: ['a', 'b', 'c']});
@@ -106,7 +106,7 @@ describe('State', () => {
 
     it('two list conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE (junk.a = $1 OR junk.a = $2) AND (junk.b = $3 OR junk.b = $4);',
+        text: 'SELECT * FROM junk WHERE (junk."a" = $1 OR junk."a" = $2) AND (junk."b" = $3 OR junk."b" = $4);',
         values: ['a', 'b', 'c', 'd'],
       };
       let actual = db._generateTableListQuery(table, {a: ['a', 'b'], b: ['c', 'd']});
@@ -115,7 +115,7 @@ describe('State', () => {
 
     it('mixed type flat-list-flat conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk.a = $1 AND (junk.b = $2 OR junk.b = $3) AND junk.c = $4;',
+        text: 'SELECT * FROM junk WHERE junk."a" = $1 AND (junk."b" = $2 OR junk."b" = $3) AND junk."c" = $4;',
         values: ['a', 'b', 'c', 'd'],
       };
       let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'});
@@ -166,7 +166,7 @@ describe('State', () => {
       region: defaultInst.region,
       id: defaultInst.id,
       state: secondState,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
     instances = await db.listInstances(); 
     assume(instances).has.length(1);
@@ -179,14 +179,14 @@ describe('State', () => {
     assume(amiUsage).has.length(1);
     assume(amiUsage[0]).has.property('region', defaultSR.region);
     assume(amiUsage[0]).has.property('id', defaultSR.imageId);
-    let lastUse = amiUsage[0].lastused;
+    let lastUse = amiUsage[0].lastUsed;
     
     await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
     let updatedAmiUsage = await db.listAmiUsage();
     assume(amiUsage).has.length(1);
     assume(amiUsage[0]).has.property('region', defaultSR.region);
     assume(amiUsage[0]).has.property('id', defaultSR.imageId);
-    let updatedUse = updatedAmiUsage[0].lastused;
+    let updatedUse = updatedAmiUsage[0].lastUsed;
     
     assume(lastUse < updatedUse).true();
   });

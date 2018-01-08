@@ -112,7 +112,7 @@ describe('House Keeper', () => {
       az,
       imageId,
       launched,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
     await state.insertInstance({
       id: 'i-2',
@@ -123,7 +123,7 @@ describe('House Keeper', () => {
       az,
       imageId,
       launched,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
 
     assume(await state.listInstances()).has.lengthOf(2);
@@ -217,7 +217,7 @@ describe('House Keeper', () => {
       az,
       imageId,
       launched,
-      lastevent: new Date(),
+      lastEvent: new Date(),
     });
 
     let oldAsMud = new Date();
