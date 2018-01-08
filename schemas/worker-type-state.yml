@@ -6,9 +6,6 @@ type: object
 properties:
   instances:
     type: array
-  requests:
-    type: array
 additionalProperties: false
 requiredProperties:
   - instances
-  - requests
