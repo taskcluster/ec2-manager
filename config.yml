@@ -2,7 +2,6 @@ defaults:
   app:
     keyPrefix: 'ec2-manager:'
     instancePubKey: !env AWS_INSTANCE_PUBKEY
-    spotPollDelay: 25 # (seconds)
     houseKeepingPollDelay: 3600 # (seconds) 1 hour
     maxInstanceLifeHours: 96 # (hours)
     regions:
@@ -84,4 +83,3 @@ test:
   app:
     keyPrefix: 'ec2-manager-test:'
     instancePubKey: 'ssh-rsa pubkeydata'
-    spotPollDelay: 200
