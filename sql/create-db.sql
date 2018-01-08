@@ -63,3 +63,4 @@ CREATE TABLE IF NOT EXISTS amiusage (
   "lastUsed" TIMESTAMPTZ NOT NULL, -- most recent usage
   PRIMARY KEY(id, region)
 );
+

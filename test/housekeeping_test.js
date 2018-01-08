@@ -19,7 +19,6 @@ describe('House Keeper', () => {
   let launched = new Date();
   let sandbox = sinon.sandbox.create();
   let describeInstancesStub;
-  let describeVolumesStub;
   let terminateInstancesStub;
   let createTagsStub;
   let keyPrefix;
@@ -44,7 +43,6 @@ describe('House Keeper', () => {
     await state._runScript('clear-db.sql');
 
     describeInstancesStub = sandbox.stub();
-    describeVolumesStub = sandbox.stub();
     terminateInstancesStub = sandbox.stub();
     createTagsStub = sandbox.stub();
 
@@ -57,17 +55,10 @@ describe('House Keeper', () => {
         ],
       }],
     });
-    describeVolumesStub.returns({
-      Volumes: [
-      ],
-      NextToken: null,
-    });
 
     async function runaws(service, method, params) {
       if (method === 'describeInstances') {
         return describeInstancesStub(service, method, params);
-      } else if (method === 'describeVolumes') {
-        return describeVolumesStub(service, method, params);
       } else if (method === 'terminateInstances') {
         return terminateInstancesStub(service, method, params);
       } else if (method === 'createTags') {
@@ -89,7 +80,6 @@ describe('House Keeper', () => {
       tagger,
     });
     
-    calculateTotalVolumesSpy = sandbox.spy(houseKeeper, '_calculateVolumeTotals'); 
     houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
@@ -272,237 +262,5 @@ describe('House Keeper', () => {
         InstanceIds: ['i-1', 'i-2'],
       });
     }
-  });
-
-  it('should call handleVolumeData exactly once', async() => {
-    houseKeeperMock.expects('_handleVolumeData').once();
-    await houseKeeper.sweep();
-    houseKeeperMock.verify();
-  });
-
-  it.skip('should call describeVolumes endpoint exactly once per region if no NextToken is provided', async() => {
-    await houseKeeper.sweep();
-    assume(describeVolumesStub.callCount).equals(regions.length);
-  });
-
-  it.skip('should call describeVolumes endpoint again if NextToken is provided', async() => {
-    describeVolumesStub.withArgs(sinon.match(value => {
-      return value === ec2['us-west-2']; 
-    })).onFirstCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: 'snap-1234567890abcdef0', 
-        State: 'in-use', 
-        VolumeId: 'vol-049df61146c4d7901', 
-        VolumeType: 'standard',
-      }],
-      NextToken: '1', 
-    }).onSecondCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: 'snap-1234567890abcdef9', 
-        State: 'in-use', 
-        VolumeId: 'vol-049df61146c4d7902', 
-        VolumeType: 'standard',
-      }],
-      NextToken: null,
-    });
-
-    await houseKeeper.sweep();
-    assume(describeVolumesStub.callCount).equals(regions.length + 1);
-  });
-  
-  it('should return no total volume size and counts when there are no volumes', async() => {
-    let expectedTotals = {};
-    await houseKeeper.sweep();
-    sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
-  });
-  
-  it.skip('should return total size and count of volumes when volumes are of same type and region', async() => {
-    describeVolumesStub.withArgs(sinon.match(value => {
-      return value === ec2['us-west-2']; 
-    })).onFirstCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: 'snap-1234567890abcdef0', 
-        State: 'in-use', 
-        VolumeId: 'vol-049df61146c4d7900', 
-        VolumeType: 'standard',
-      }],
-      NextToken: '1', 
-    }).onSecondCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 4, 
-        SnapshotId: 'snap-1234567890abcdef1', 
-        State: 'in-use', 
-        VolumeId: 'vol-049df61146c4d7901', 
-        VolumeType: 'standard',
-      }],
-      NextToken: '2',
-    }).onThirdCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: 'snap-1234567890abcdef2', 
-        State: 'available', 
-        VolumeId: 'vol-049df61146c4d7902', 
-        VolumeType: 'standard',
-      }],
-      NextToken: null,
-    });
-    
-    let expectedTotals = {
-      'us-west-2': {
-        standard: {
-          active: {
-            gb: 12,
-            count: 2,
-          },
-          unused: {
-            gb: 8,
-            count: 1,
-          },
-        },
-      },
-    };
-    
-    await houseKeeper.sweep();
-    sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
-  });
-  
-  it.skip('should return total size and counts of all volumes when the volumes are of different types', async() => {
-    describeVolumesStub.withArgs(sinon.match(value => {
-      return value === ec2['us-west-2']; 
-    })).onFirstCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: 'snap-1234567890abcdef0', 
-        State: 'available', 
-        VolumeId: 'vol-049df61146c4d7900', 
-        VolumeType: 'standard',
-      }],
-      NextToken: '1', 
-    }).onSecondCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 4, 
-        SnapshotId: 'snap-1234567890abcdef1', 
-        State: 'in-use', 
-        VolumeId: 'vol-049df61146c4d7901', 
-        VolumeType: 'gp2',
-      }],
-      NextToken: null,
-    });
-    
-    let expectedTotals = {
-      'us-west-2': {
-        standard: {
-          active: {
-            gb: 0,
-            count: 0,
-          },
-          unused: {
-            gb: 8,
-            count: 1,
-          },
-        },
-        gp2: {
-          active: {
-            gb: 4,
-            count: 1,
-          },
-          unused: {
-            gb: 0,
-            count: 0,
-          },
-        },
-      },
-    };
-    
-    await houseKeeper.sweep();
-    sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
-  });
-  
-  it.skip('should return total size and counts of all volumes when the volumes are of different regions', async() => {
-    describeVolumesStub.withArgs(sinon.match(value => {
-      return value === ec2['us-east-2']; 
-    })).onFirstCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-east-2', 
-        CreateTime: new Date().toString(), 
-        Size: 8, 
-        SnapshotId: 'snap-1234567890abcdef0', 
-        State: 'available', 
-        VolumeId: 'vol-049df61146c4d7900', 
-        VolumeType: 'standard',
-      }],
-      NextToken: '1', 
-    });
-    
-    describeVolumesStub.withArgs(sinon.match(value => {
-      return value === ec2['us-west-2']; 
-    })).onFirstCall().returns({
-      Volumes: [{
-        Attachments: [],
-        AvailabilityZone: 'us-west-2', 
-        CreateTime: new Date().toString(), 
-        Size: 4, 
-        SnapshotId: 'snap-1234567890abcdef1', 
-        State: 'in-use', 
-        VolumeId: 'vol-049df61146c4d7901', 
-        VolumeType: 'standard',
-      }],
-      NextToken: null,
-    });
-    
-    let expectedTotals = {
-      'us-east-2': {
-        standard: {
-          active: {
-            gb: 0,
-            count: 0,
-          },
-          unused: {
-            gb: 8,
-            count: 1,
-          },
-        },
-      },
-      'us-west-2': {
-        standard: {
-          active: {
-            gb: 4,
-            count: 1,
-          },
-          unused: {
-            gb: 0,
-            count: 0,
-          },
-        },
-      },
-    };
-    
-    await houseKeeper.sweep();
-    sinon.assert.match(calculateTotalVolumesSpy.firstCall.returnValue, expectedTotals);
   });
 });
