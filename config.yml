@@ -48,6 +48,8 @@ defaults:
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
 development:
   app:
+    regions:
+      - us-west-2
     keyPrefix: 'aws-provisioner-dev:'
 production:
   server:
