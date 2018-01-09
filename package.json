@@ -10,14 +10,14 @@
     "yarn": ">=0.24.5"
   },
   "scripts": {
-    "start": "node lib/main.js start",
+    "start": "LOG_LEVEL=*:debug node lib/main.js start",
     "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
     "_test": "NODE_ENV=test nyc --reporter=html mocha",
     "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js",
     "purgequeues": "node lib/main.js purgequeues"
   },
   "dependencies": {
-    "aws-sdk": "^2.86.0",
+    "aws-sdk": "^2.178.0",
     "babel-compile": "^2.0.0",
     "babel-preset-taskcluster": "^3.0.0",
     "bluebird": "^3.5.0",

@@ -160,7 +160,7 @@ describe('Api', () => {
           InstanceType: instanceType,
           LaunchTime: launched.toString(),
           ImageId: imageId,
-          InstanceState: {
+          State: {
             Name: 'pending',
           },
         }],
