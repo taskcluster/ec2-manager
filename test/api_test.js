@@ -20,7 +20,7 @@ describe('Api', () => {
   let runaws;
   let regions;
 
-  before(async() => {
+  before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     await state._runScript('drop-db.sql');
@@ -43,7 +43,7 @@ describe('Api', () => {
     });
   });
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     await state._runScript('clear-db.sql');
     runaws = sandbox.stub();
     server = await main('server', {profile: 'test', process: 'test', runaws});
@@ -59,12 +59,12 @@ describe('Api', () => {
     sandbox.restore();
   });
 
-  it('api comes up', async() => {
+  it('api comes up', async () => {
     let result = await client.ping();
     assume(result).has.property('alive', true);
   });
 
-  it('should list worker types', async() => {
+  it('should list worker types', async () => {
     let status = 'pending-evaluation';
     await state.insertInstance({
       id: 'i-1',
@@ -92,7 +92,7 @@ describe('Api', () => {
     assume(result).deeply.equals(['w-1', 'w-2']);
   });
 
-  it('should show instance counts', async() => {
+  it('should show instance counts', async () => {
     let status = 'pending-evaluation';
     await state.insertInstance({
       id: 'i-1',
@@ -185,7 +185,7 @@ describe('Api', () => {
     // to return the primary key conflict, a check that the worker type
     // argument is the same as that in the LaunchSpecification and that EC2
     // idempotency works
-    it('should request a spot instance (idempotent)', async() => {
+    it('should request a spot instance (idempotent)', async () => {
       await client.requestSpotInstance(workerType, {
         ClientToken, 
         Region,
@@ -233,7 +233,7 @@ describe('Api', () => {
   });
 
   describe('managing resources', () => {
-    beforeEach(async() => {
+    beforeEach(async () => {
       let status = 'pending-fulfillment';
       await state.insertInstance({
         id: 'i-1',
@@ -294,7 +294,7 @@ describe('Api', () => {
       });
     });
 
-    it('should be able to kill all of a worker type', async() => {
+    it('should be able to kill all of a worker type', async () => {
       let result = await client.terminateWorkerType(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
@@ -329,7 +329,7 @@ describe('Api', () => {
       assume(requests).has.lengthOf(0);
     });
 
-    it('should be able to kill a single instance', async() => {
+    it('should be able to kill a single instance', async () => {
       runaws.returns({
         TerminatingInstances: [{
           PreviousState: {Name: 'pending'},
@@ -344,7 +344,7 @@ describe('Api', () => {
       assume(instances).has.lengthOf(0);
     });
     
-    it('should be able to cancel a single spot instance request', async() => {
+    it('should be able to cancel a single spot instance request', async () => {
       runaws.returns({
         CancelledSpotInstanceRequests: [{
           State: 'closed',
@@ -359,7 +359,7 @@ describe('Api', () => {
   });
 
   describe('managing key pairs', () => {
-    it('should create and delete keypairs idempotently', async() => {
+    it('should create and delete keypairs idempotently', async () => {
       // We want the following cases covered:
       // 1. nothing exists in internal cache or ec2 --> create
       // 2. it exists in internal cache --> short circuit return
@@ -409,13 +409,13 @@ describe('Api', () => {
   // These are functions which are supposed to be used for debugging and
   // troubleshooting primarily.  Maybe some ui stuff?
   describe('internal api', () => {
-    it('should list regions', async() => {
+    it('should list regions', async () => {
       let result = await client.regions();
       result.regions.sort();
       assume(result.regions).deeply.equals(regions.sort());
     });
 
-    it('should list spot requests to poll', async() => {
+    it('should list spot requests to poll', async () => {
       await state.insertSpotRequest({
         workerType: 'abcd',
         region,
@@ -434,7 +434,7 @@ describe('Api', () => {
       assume(usw2.values[0]).equals('r-1234');
     });
   
-    it('should list AMI usage', async() => {
+    it('should list AMI usage', async () => {
       await state.reportAmiUsage({
         region: region,
         id: imageId,
@@ -445,7 +445,7 @@ describe('Api', () => {
       assume(result[0]).has.property('id', imageId);
     });
     
-    it('should list EBS usage', async() => {
+    it('should list EBS usage', async () => {
       await state.reportEbsUsage([{
         region: region,
         volumetype: 'standard',

@@ -5,7 +5,7 @@ requests.  The application understands EC2 regions, instances and pools of
 instances.  It does not understand Taskcluster Provisioning specifics like
 Capacity or Utility factors.
 
-## Architecture EC2-Manager is comprised of X major subsystems:
+## Architecture EC2-Manager is comprised of 5 major subsystems:
 
 1. State Database
 1. CloudWatch Event listener
@@ -60,15 +60,37 @@ The API provided by EC2 Manager can be used manage EC2 instances.  Of paricular
 note is that the endpoint for submitting spot requests requires a fully formed
 and valid `LaunchSpecification`.
 
+## Database
+
+EC2-Manager uses a Postgres database backend.
+It is tested with, and runs in production against, Postgres version 9.6.
+It requires a `DATABASE_URL` variable of the form `postgres://postgres@localhost:5432/testing`.
+
 ## Hacking
+
+Set up your development environment:
+
 ```
 git clone https://github.com/taskcluster/ec2-manager
 cd ec2-manager
 yarn
+```
+
+Start a Postgres database using Docker (or whatever means of installing and running postgres you prefer):
+
+```
+docker run -d --rm -p 5432:5432 postgres:9.6
+export DATABASE_URL=postgres://postgres@localhost:5432/postgres
+```
+
+Run the tests
+
+```
 yarn test
 ```
 
 ## Deployment notes
+
 When deploying, keep in mind the following:
 
 1. SSH Pubkey used in the LaunchSpecification must match the one configured in
