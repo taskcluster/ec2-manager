@@ -10,7 +10,7 @@
     "yarn": ">=0.24.5"
   },
   "scripts": {
-    "start": "LOG_LEVEL=*:debug node lib/main.js start",
+    "start": "LOG_LEVEL=*:info node lib/main.js start",
     "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
     "_test": "NODE_ENV=test nyc --reporter=html mocha",
     "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js",
