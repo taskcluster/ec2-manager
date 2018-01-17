@@ -4,4 +4,5 @@ DROP TRIGGER IF EXISTS update_instances_touched ON instances;
 DROP TABLE IF EXISTS instances;
 DROP TABLE IF EXISTS cloudwatchlog;
 DROP TABLE IF EXISTS amiusage;
+DROP TABLE IF EXISTS terminations;
 DROP FUNCTION IF EXISTS update_touched();

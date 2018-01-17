@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS terminations (
   region VARCHAR(128) NOT NULL, -- ec2 region
   az VARCHAR(128) NOT NULL, -- availability zone
   "instanceType" VARCHAR(128) NOT NULL, -- ec2 instance type
+  "imageId" VARCHAR(128) NOT NULL, -- AMI/ImageId value
   code VARCHAR(128), -- the State Reason's code
   reason VARCHAR(128), -- the State Reason's string message
   launched TIMESTAMPTZ NOT NULL, -- Time instance launched
@@ -54,8 +55,6 @@ CREATE TABLE IF NOT EXISTS terminations (
   "lastEvent" TIMESTAMPTZ NOT NULL, -- Time that the last event happened in the api. Used
                                     -- to ensure that we have correct ordering of cloud watch
                                     -- events
-  price NUMERIC, -- maximum price paid for unit.  For spot this is the SpotPrice value
-                 -- and for on-demand, it might be the on-demand price when the instance launched
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );

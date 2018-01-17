@@ -5,7 +5,7 @@ const assume = require('assume');
 describe('State', () => {
   let db;
   let defaultInst;
-  let defaultSR;
+  let defaultTerm;
 
   before(async() => {
     db = await main('state', {profile: 'test', process: 'test'});
@@ -32,16 +32,17 @@ describe('State', () => {
       launched: new Date(),
       lastEvent: new Date(),
     };
-    defaultSR = {
-      id: 'r-1',
+    defaultTerm = {
+      id: 'i-1',
       workerType: 'example-workertype',
       region: 'us-west-1',
       az: 'us-west-1z',
       imageId: 'ami-1',
       instanceType: 'm1.medium',
-      state: 'open',
-      status: 'pending-fulfillment',
-      created: new Date(),
+      code: 'Client.InstanceInitiatedShutdown',
+      reason: 'Client.InstanceInitiatedShutdown: Instance initiated shutdown',
+      launched: new Date(),
+      lastEvent: new Date(),
     };
   });
 
@@ -132,10 +133,10 @@ describe('State', () => {
   });
 
   it('should be able to filter AMI usages', async() => {
-    let result = await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.id});
-    result = await db.listAmiUsage({region: 'us-east-1', id: 'r-1'});
+    let result = await db.listAmiUsage();
     assume(result).has.length(0);
-    result = await db.listAmiUsage({region: 'us-west-1', id: 'r-1'});
+    await db.reportAmiUsage({region: defaultInst.region, id: defaultInst.imageId});
+    result = await db.listAmiUsage();
     assume(result).has.length(1);
   });
 
@@ -173,19 +174,75 @@ describe('State', () => {
     assume(instances[0]).has.property('state', secondState);
   });
 
+  it('should be able to insert a complete termination', async() => {
+    delete defaultTerm.code;
+    delete defaultTerm.reason;
+    delete defaultTerm.termination;
+
+    await db.insertTermination(defaultTerm);
+    let terminations = await db.listTerminations();
+    assume(terminations).has.length(1);
+    assume(terminations[0]).has.property('id', defaultTerm.id);
+  });
+
+  it('should be able to insert a termination without code, reason or terminated', async() => {
+    await db.insertTermination(defaultTerm);
+    let terminations = await db.listTerminations();
+    assume(terminations).has.length(1);
+    assume(terminations[0]).has.property('id', defaultTerm.id);
+  });
+
+  it('should be able to upsert an termination', async() => {
+    assume(await db.listTerminations()).has.length(0);
+    await db.upsertTermination(defaultTerm);
+    assume(await db.listTerminations()).has.length(1);
+  });
+
+  it('should be able to update an termination', async() => {
+    let secondCode = 'code';
+    delete defaultTerm.code;
+    let secondReason = 'reason';
+    delete defaultTerm.reason;
+    let secondTermination = new Date();
+    delete defaultTerm.termination;
+
+    await db.insertTermination(defaultTerm);
+    let terminations = await db.listTerminations(); 
+    assume(terminations).has.length(1);
+
+    await db.updateTerminationState({
+      region: defaultTerm.region,
+      id: defaultTerm.id,
+      code: secondCode,
+      reason: secondReason,
+      terminated: secondTermination,
+      lastEvent: new Date(),
+    });
+
+    terminations = await db.listTerminations(); 
+    defaultTerm.code = secondCode;
+    defaultTerm.reason = secondReason;
+    defaultTerm.termination = secondTermination;
+
+    assume(terminations).has.length(1);
+    assume(terminations[0]).has.property('code', secondCode);
+    assume(terminations[0]).has.property('reason', secondReason);
+    assume(terminations[0].terminated.getTime()).equals(secondTermination.getTime());
+  });
+
   it('should be able to report an AMI\'s usage', async() => {
-    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
+    await db.reportAmiUsage({region: defaultInst.region, id: defaultInst.imageId});
     let amiUsage = await db.listAmiUsage(); 
     assume(amiUsage).has.length(1);
-    assume(amiUsage[0]).has.property('region', defaultSR.region);
-    assume(amiUsage[0]).has.property('id', defaultSR.imageId);
+    assume(amiUsage[0]).has.property('region', defaultInst.region);
+    assume(amiUsage[0]).has.property('id', defaultInst.imageId);
     let lastUse = amiUsage[0].lastUsed;
     
-    await db.reportAmiUsage({region: defaultSR.region, id: defaultSR.imageId});
+    await db.reportAmiUsage({region: defaultInst.region, id: defaultInst.imageId});
     let updatedAmiUsage = await db.listAmiUsage();
     assume(amiUsage).has.length(1);
-    assume(amiUsage[0]).has.property('region', defaultSR.region);
-    assume(amiUsage[0]).has.property('id', defaultSR.imageId);
+    assume(amiUsage[0]).has.property('region', defaultInst.region);
+    assume(amiUsage[0]).has.property('id', defaultInst.imageId);
     let updatedUse = updatedAmiUsage[0].lastUsed;
     
     assume(lastUse < updatedUse).true();

@@ -2,3 +2,4 @@
 DELETE FROM instances;
 DELETE FROM cloudwatchlog;
 DELETE FROM amiusage;
+DELETE FROM terminations;
