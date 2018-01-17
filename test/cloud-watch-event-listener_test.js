@@ -186,7 +186,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });
 
-  it('should handle shutting-down', async() => {
+  it('should handle terminated event', async() => {
     let mock = sandbox.stub(listener, 'runaws');
     mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 
@@ -204,13 +204,17 @@ describe('Cloud Watch Event Listener', () => {
 
     let instances = await state.listInstances();
     assume(instances).lengthOf(1);
+    let terminations = await state.listTerminations();
+    assume(terminations).lengthOf(0);
     let pendingMsg = _.defaultsDeep({}, baseExampleMsg);
     // Not sure why, but _.defaultsDeep wasn't working here
     pendingMsg.detail['instance-id'] = 'i-1';
-    pendingMsg.detail.state = 'shutting-down';
+    pendingMsg.detail.state = 'terminated';
     await listener.__handler(JSON.stringify(pendingMsg));
     instances = await state.listInstances();
     assume(instances).lengthOf(0);
+    terminations = await state.listTerminations();
+    assume(terminations).lengthOf(1);
   });
 
 });
