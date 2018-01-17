@@ -76,25 +76,25 @@ describe('Cloud Watch Event Listener', () => {
 
   it('should handle pending message', async() => {
     let mock = sandbox.stub(listener, 'runaws');
+    mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 
-    mock.onFirstCall().returns(Promise.resolve({
-      Reservations: [{
-        Instances: [{
-          KeyName: 'ec2-manager-test:workertype:hash',
-          InstanceType: 'c3.xlarge',
-          SpotInstanceRequestId: 'r-1234',
-          LaunchTime: new Date(),
-          ImageId: imageId,
-          Placement: {
-            AvailabilityZone: az,
-          },
-        }],
-      }],
-    }));
+    let pendingTimestamp = new Date();
+
+    await state.insertInstance({
+      workerType: 'workertype',
+      region,
+      instanceType,
+      id: 'i-1',
+      state: 'pending',
+      az,
+      launched: pendingTimestamp,
+      imageId,
+      lastEvent: pendingTimestamp,
+    });
 
     let instances = await state.listInstances();
-    assume(instances).lengthOf(0);
-    let pendingMsg = _.defaultsDeep({}, baseExampleMsg, {detail: {state: 'pending'}});
+    assume(instances).lengthOf(1);
+    let pendingMsg = _.defaultsDeep({}, baseExampleMsg, {detail: {'instance-id': 'i-1', state: 'pending'}});
     await listener.__handler(JSON.stringify(pendingMsg));
     instances = await state.listInstances();
     assume(instances).lengthOf(1);
@@ -118,7 +118,6 @@ describe('Cloud Watch Event Listener', () => {
     });
 
     let mock = sandbox.stub(listener, 'runaws');
-
     mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 
     let instances = await state.listInstances();
@@ -145,6 +144,9 @@ describe('Cloud Watch Event Listener', () => {
   });  
 
   it('should handle out of order delivery', async() => {
+    let mock = sandbox.stub(listener, 'runaws');
+    mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
+
     let pendingTimestamp = new Date();
     let runningTimestamp = new Date(pendingTimestamp);
     runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
@@ -160,10 +162,6 @@ describe('Cloud Watch Event Listener', () => {
       imageId,
       lastEvent: runningTimestamp,
     });
-
-    let mock = sandbox.stub(listener, 'runaws');
-
-    mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 
     let instances = await state.listInstances();
     assume(instances).lengthOf(1);
@@ -188,52 +186,31 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });
 
-  it('should skip a pending message for a different manager', async() => {
-    let mock = sandbox.stub(listener, 'runaws');
-
-    mock.onFirstCall().returns(Promise.resolve({
-      Reservations: [{
-        Instances: [{
-          KeyName: 'other-manager:workertype:hash',
-          InstanceType: 'c3.xlarge',
-          SpotInstanceRequestId: 'r-1234',
-          ImageId: imageId,
-          LaunchTime: new Date(),
-          Placement: {
-            AvailabilityZone: az,
-          },
-        }],
-      }],
-    }));
-
-    let instances = await state.listInstances();
-    assume(instances).lengthOf(0);
-  });
-
   it('should handle shutting-down', async() => {
     let mock = sandbox.stub(listener, 'runaws');
+    mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 
-    mock.onFirstCall().returns(Promise.resolve({
-      Reservations: [{
-        Instances: [{
-          KeyName: 'ec2-manager-test:workertype:hash',
-          InstanceType: 'c3.xlarge',
-          SpotInstanceRequestId: 'r-1234',
-          ImageId: imageId,
-          LaunchTime: new Date(),
-          Placement: {
-            AvailabilityZone: az,
-          },
-        }],
-      }],
-    }));
+    await state.insertInstance({
+      workerType: 'workertype',
+      region,
+      instanceType,
+      id: 'i-1',
+      state: 'pending',
+      az,
+      launched: new Date(),
+      imageId,
+      lastEvent: new Date(0),
+    });
 
     let instances = await state.listInstances();
-    assume(instances).lengthOf(0);
-    let pendingMsg = _.defaultsDeep({}, baseExampleMsg, {detail: {state: 'shutting-down'}});
+    assume(instances).lengthOf(1);
+    let pendingMsg = _.defaultsDeep({}, baseExampleMsg);
+    // Not sure why, but _.defaultsDeep wasn't working here
+    pendingMsg.detail['instance-id'] = 'i-1';
+    pendingMsg.detail.state = 'shutting-down';
     await listener.__handler(JSON.stringify(pendingMsg));
     instances = await state.listInstances();
-    assume(instances).lengthOf(1);
+    assume(instances).lengthOf(0);
   });
 
 });

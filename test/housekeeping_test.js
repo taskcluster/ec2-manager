@@ -163,36 +163,6 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should tag instances which arent tagged', async() => {
-    assume(await state.listInstances()).has.lengthOf(0);
-
-    describeInstancesStub.returns({
-      Reservations: [{
-        Instances: [{
-          InstanceId: 'i-1',
-          LaunchTime: new Date().toString(),
-          KeyName: keyPrefix + workerType,
-          InstanceType: instanceType,
-          State: {
-            Name: 'running',
-          },
-          ImageId: 'ami-1',
-          Placement: {
-            AvailabilityZone: az,
-          },
-        }],
-      }],
-    });
-
-    let outcome = await houseKeeper.sweep();
-    assume(createTagsStub.args[0][2].Resources).deeply.equals(['i-1']);
-    assume(createTagsStub.args[0][2].Tags).deeply.equals([
-      {Key: 'Name', Value: 'apiTest'},
-      {Key: 'Owner', Value: 'ec2-manager-test'},
-      {Key: 'WorkerType', Value: 'ec2-manager-test/apiTest'},
-    ]);
-  });
-
   it('should zombie kill', async() => {
     assume(await state.listInstances()).has.lengthOf(0);
 
