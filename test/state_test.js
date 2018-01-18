@@ -131,6 +131,16 @@ describe('State', () => {
       let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'}, undefined, 1);
       assume(expected).deeply.equals(actual);
     });
+
+    it('null conditions', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE junk."a" IS NULL AND (junk."b" IS NULL);',
+        values: [],
+      };
+      let actual = db._generateTableListQuery(table, {a: null, b: [null]});
+      assume(expected).deeply.equals(actual);
+    });
+
   });
 
   it('should be empty at start of tests', async() => {
