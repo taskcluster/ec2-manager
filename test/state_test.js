@@ -398,83 +398,48 @@ describe('State', () => {
     assume(row.generated).deeply.equals(time);
   });
 
-  it('should clear table each time new data is inserted', async() => {
-    await db.reportEbsUsage([{
-      region: defaultSR.region, 
-      volumetype: 'gp2',
-      state: 'active',
-      totalcount: 1,
-      totalgb: 8,
-    }]);
+  it('should find terminations which need polling', async() => {
+    let termTime = new Date();
+    let launched = new Date(termTime);
+    launched.setMinutes(launched.getMinutes() - 15);
+    let x = 10;
+    for (let i = 0 ; i < x ; i++) {
+      await db.insertTermination({
+        id: 'i-' + i,
+        workerType: 'workertype',
+        region: 'us-east-' + i,
+        az: 'us-east-' + i + 'a',
+        instanceType: 'm3.large',
+        imageId: 'ami-' + i,
+        terminated: termTime,
+        launched: launched,
+        lastEvent: termTime,
+      });
+    }
 
-    let ebsUsage = await db.listEbsUsage();
-    assume(ebsUsage).has.length(1);
-    assume(ebsUsage[0]).has.property('region', defaultSR.region);
-    assume(ebsUsage[0]).has.property('volumetype', 'gp2');
-    assume(ebsUsage[0]).has.property('state', 'active');
-    assume(ebsUsage[0]).has.property('totalcount', 1);
-    assume(ebsUsage[0]).has.property('totalgb', 8);
-    let lastTouched = ebsUsage[0].touched;
+    let actual = await db.findTerminationsToPoll(1);
+    assume(actual).has.lengthOf(1);
+    assume(actual[0]).has.property('id', 'i-0');
+    assume(actual[0]).has.property('code', null);
+    assume(actual[0]).has.property('reason', null);
+    assume(actual[0]).has.property('terminated');
+    assume(actual[0].terminated.getTime()).equals(termTime.getTime());
 
-    await db.reportEbsUsage([{
-      region: defaultSR.region, 
-      volumetype: 'gp2',
-      state: 'active',
-      totalcount: 10,
-      totalgb: 96,
-    }]); 
+    await db.updateTerminationState({
+      region: 'us-east-0',
+      id: 'i-0',
+      code: 'Code',
+      reason: 'Reason',
+      lastEvent: new Date(),
+    });
 
-    let updatedEbsUsage = await db.listEbsUsage();
-    assume(updatedEbsUsage).has.length(1);
-    assume(updatedEbsUsage[0]).has.property('region', defaultSR.region);
-    assume(updatedEbsUsage[0]).has.property('volumetype', 'gp2');
-    assume(updatedEbsUsage[0]).has.property('state', 'active');
-    assume(updatedEbsUsage[0]).has.property('totalcount', 10);
-    assume(updatedEbsUsage[0]).has.property('totalgb', 96);
-    let updatedTouched = updatedEbsUsage[0].touched;
+    actual = await db.listTerminations({
+      region: 'us-east-0',
+      id: 'i-0',
+    });
 
-    assume(lastTouched < updatedTouched).true();
-  });
-
-  it('should do nothing if no row data is given', async() => {
-    await db.reportEbsUsage([{
-      region: defaultSR.region, 
-      volumetype: 'gp2',
-      state: 'active',
-      totalcount: 1,
-      totalgb: 8,
-    }]);
-
-    let ebsUsage = await db.listEbsUsage();
-    assume(ebsUsage).has.length(1);
-
-    let rowData = [];
-
-    await db.reportEbsUsage(rowData);
-    let updatedEbsUsage = await db.listEbsUsage();
-    assume(updatedEbsUsage).has.length(1);
-    assume(updatedEbsUsage[0]).deeply.equals(ebsUsage[0]);
-  });
-
-  it('should be able to add multiple rows at once', async() => {
-    await db.reportEbsUsage([
-      {
-        region: defaultSR.region, 
-        volumetype: 'gp2',
-        state: 'active',
-        totalcount: 1,
-        totalgb: 8,
-      },
-      {
-        region: defaultSR.region,
-        volumetype: 'gp2',
-        state: 'unused',
-        totalcount: 2,
-        totalgb: 12,
-      },
-    ]);
-
-    let ebsUsage = await db.listEbsUsage();
-    assume(ebsUsage).has.length(2);
+    console.dir(actual);
+    assume(actual[0]).has.property('code', 'Code');
+    assume(actual[0]).has.property('reason', 'Reason');
   });
 });
