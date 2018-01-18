@@ -123,6 +123,14 @@ describe('State', () => {
       assume(expected).deeply.equals(actual);
     });
 
+    it('limits', () => {
+      let expected = {
+        text: 'SELECT * FROM junk WHERE junk."a" = $1 AND (junk."b" = $2 OR junk."b" = $3) AND junk."c" = $4 LIMIT 1;',
+        values: ['a', 'b', 'c', 'd'],
+      };
+      let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'}, undefined, 1);
+      assume(expected).deeply.equals(actual);
+    });
   });
 
   it('should be empty at start of tests', async() => {
