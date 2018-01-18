@@ -61,10 +61,49 @@ note is that the endpoint for submitting spot requests requires a fully formed
 and valid `LaunchSpecification`.
 
 ## Hacking
+
 ```
 git clone https://github.com/taskcluster/ec2-manager
 cd ec2-manager
-yarn
+yarn install --frozen-lockfile --ignore-optional
+yarn test
+```
+
+Tests require a working PostgreSQL server initialized with the
+schema of this project.
+
+To use Docker to start a PostgreSQL server:
+
+```
+docker run --rm -p 5432:5432 postgres:9.6
+```
+
+This will pull down and run a PostgreSQL server in the local terminal.
+It will map port 5432 in the container (the PostgreSQL server) to port
+5432 on the Docker host. The container will run in the foreground and take
+over the terminal. You can also use `docker run -d` to detach from the
+current terminal.
+
+Once the PostgreSQL server is running, create database schemas
+necessary to run the tests:
+
+```
+psql -h localhost -p 5432 -U postgres -f sql/create-db.sql
+```
+
+(The exact hostname - -h argument - may vary from machine to machine.)
+
+Tests will need the `DATABASE_URL` environment variable pointing to
+this PostgreSQL server. Set it to something like:
+
+```
+export DATABASE_URL=postgres://postgres@localhost:5432/postgres
+```
+
+Once `DATABASE_URL` is set to a valid PostgreSQL server, you can run
+the tests:
+
+```
 yarn test
 ```
 
