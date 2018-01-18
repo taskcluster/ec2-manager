@@ -382,4 +382,49 @@ describe('State', () => {
     assume(row.generated).deeply.equals(time);
   });
 
+  it('should find terminations which need polling', async() => {
+    let termTime = new Date();
+    let launched = new Date(termTime);
+    launched.setMinutes(launched.getMinutes() - 15);
+    let x = 10;
+    for (let i = 0 ; i < x ; i++) {
+      await db.insertTermination({
+        id: 'i-' + i,
+        workerType: 'workertype',
+        region: 'us-east-' + i,
+        az: 'us-east-' + i + 'a',
+        instanceType: 'm3.large',
+        imageId: 'ami-' + i,
+        terminated: termTime,
+        launched: launched,
+        lastEvent: termTime,
+      });
+    }
+
+    let actual = await db.findTerminationsToPoll(1);
+    assume(actual).has.lengthOf(1);
+    assume(actual[0]).has.property('id', 'i-0');
+    assume(actual[0]).has.property('code', null);
+    assume(actual[0]).has.property('reason', null);
+    assume(actual[0]).has.property('terminated');
+    assume(actual[0].terminated.getTime()).equals(termTime.getTime());
+
+    await db.updateTerminationState({
+      region: 'us-east-0',
+      id: 'i-0',
+      code: 'Code',
+      reason: 'Reason',
+      lastEvent: new Date(),
+    });
+
+    actual = await db.listTerminations({
+      region: 'us-east-0',
+      id: 'i-0',
+    });
+
+    console.dir(actual);
+    assume(actual[0]).has.property('code', 'Code');
+    assume(actual[0]).has.property('reason', 'Reason');
+  });
+
 });
