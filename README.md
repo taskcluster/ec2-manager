@@ -5,7 +5,9 @@ requests.  The application understands EC2 regions, instances and pools of
 instances.  It does not understand Taskcluster Provisioning specifics like
 Capacity or Utility factors.
 
-## Architecture EC2-Manager is comprised of X major subsystems:
+## Architecture
+
+EC2-Manager is comprised of X major subsystems:
 
 1. State Database
 1. CloudWatch Event listener
