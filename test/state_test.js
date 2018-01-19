@@ -438,7 +438,6 @@ describe('State', () => {
       id: 'i-0',
     });
 
-    console.dir(actual);
     assume(actual[0]).has.property('code', 'Code');
     assume(actual[0]).has.property('reason', 'Reason');
   });
