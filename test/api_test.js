@@ -371,9 +371,6 @@ describe('Api', () => {
           assume(obj.InstanceIds).deeply.equals(['i-3']);
         }
       }
-      
-      let instances = await state.listInstances();
-      assume(instances).has.lengthOf(0);
     });
 
     it('should be able to kill a single instance', async() => {
@@ -387,8 +384,6 @@ describe('Api', () => {
       assume(result).has.property('current', 'shutting-down');
       assume(result).has.property('previous', 'pending');
       assume(runaws.callCount).equals(1);
-      let instances = await state.listInstances({id: 'i-1'});
-      assume(instances).has.lengthOf(0);
     });
     
   });
