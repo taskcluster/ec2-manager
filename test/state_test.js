@@ -32,6 +32,7 @@ describe('State', () => {
       state: 'pending',
       launched: new Date(),
       lastEvent: new Date(),
+      hasClaimedCredentials: false,
     };
     defaultTerm = {
       id: 'i-1',
@@ -515,6 +516,14 @@ describe('State', () => {
       imageId: null,
     }]));
 
+  });
+
+  it('should be able to claim credentials', async () => {
+    defaultInst.state = 'running';
+    await db.insertInstance(defaultInst);
+    assume(await db.canClaimCredentials(defaultInst)).to.be.true();
+    await db.claimCredentials(defaultInst);
+    assume(await db.canClaimCredentials(defaultInst)).to.be.false();
   });
 
   it('should log aws requests with errors', async () => {

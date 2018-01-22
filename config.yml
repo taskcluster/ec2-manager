@@ -47,6 +47,9 @@ defaults:
     credentials:
       clientId: !env TASKCLUSTER_CLIENT_ID
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
+    issuedCredRootCred:
+      clientId: !env ROOT_TASKCLUSTER_CLIENT_ID
+      accessToken: !env ROOT_TASKCLUSTER_ACCESS_TOKEN
 development:
   app:
     id: 'ec2-manager-development'
