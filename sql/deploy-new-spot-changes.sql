@@ -1,7 +1,9 @@
 -- We no longer have a spot requests table, drop it and its
 -- touched column trigger
 DROP TRIGGER IF EXISTS update_spotrequests_touched ON spotrequests;
+DROP TRIGGER IF EXISTS update_spotrequests_touched ON spotrequests;
 DROP TABLE IF EXISTS spotrequests;
+DROP TABLE IF EXISTS ebsusage;
 
 -- We no longer track the SRID, drop it
 ALTER TABLE instances DROP IF EXISTS srid CASCADE;

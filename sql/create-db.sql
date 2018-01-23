@@ -39,6 +39,11 @@ CREATE TABLE IF NOT EXISTS instances (
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
+-- Automatically keep instances touched parameter up to date
+CREATE TRIGGER update_instances_touched
+BEFORE UPDATE ON instances
+FOR EACH ROW EXECUTE PROCEDURE update_touched();
+
 
 -- termination reasons
 CREATE TABLE IF NOT EXISTS terminations (
@@ -59,8 +64,8 @@ CREATE TABLE IF NOT EXISTS terminations (
   PRIMARY KEY(id, region)
 );
 -- Automatically keep instances touched parameter up to date
-CREATE TRIGGER update_instances_touched
-BEFORE UPDATE ON instances
+CREATE TRIGGER update_terminations_touched
+BEFORE UPDATE ON terminations
 FOR EACH ROW EXECUTE PROCEDURE update_touched();
 
 -- Cloudwatch Events Log
