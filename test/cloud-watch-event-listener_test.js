@@ -56,7 +56,7 @@ describe('Cloud Watch Event Listener', () => {
     await state._runScript('drop-db.sql');
     await state._runScript('create-db.sql');
 
-    listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, keyPrefix: cfg.app.keyPrefix, tagger});
+    listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, tagger});
   });
 
   after(async() => {

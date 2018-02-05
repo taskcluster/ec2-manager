@@ -1,7 +1,6 @@
 defaults:
   app:
-    keyPrefix: 'ec2-manager:'
-    instancePubKey: !env AWS_INSTANCE_PUBKEY
+    id: 'ec2-manager'
     houseKeepingPollDelay: 3600 # (seconds) 1 hour
     maxInstanceLifeHours: 96 # (hours)
     regions:
@@ -48,9 +47,9 @@ defaults:
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
 development:
   app:
+    id: 'ec2-manager-development'
     regions:
       - us-west-2
-    keyPrefix: 'aws-provisioner-dev:'
 production:
   server:
     port: !env:number PORT
@@ -59,7 +58,7 @@ production:
     trustProxy: true
     baseUrl: 'https://ec2-manager.herokuapp.com/v1'
   app:
-    keyPrefix: 'aws-provisioner-v1-managed:'
+    id: 'ec2-manager-production'
     publishMetadata: true
   postgres:
     maxClients: 110
@@ -74,7 +73,7 @@ staging:
     trustProxy: true
     baseUrl: 'https://ec2-manager-staging.herokuapp.com/v1'
   app:
-    keyPrefix: 'ec2-manager-staging:'
+    id: 'ec2-manager-staging'
     publishMetadata: false
   postgres:
     maxClients: 10
@@ -83,5 +82,4 @@ staging:
     mock: false
 test:
   app:
-    keyPrefix: 'ec2-manager-test:'
-    instancePubKey: 'ssh-rsa pubkeydata'
+    id: 'ec2-manager-test'

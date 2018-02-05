@@ -21,21 +21,21 @@ describe('House Keeper', () => {
   let describeInstancesStub;
   let terminateInstancesStub;
   let createTagsStub;
-  let keyPrefix;
   let regions;
   let houseKeeper;
   let tagger;
   let houseKeeperMock;
+  let managerId;
 
   before(async() => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     ec2 = await main('ec2', {profile: 'test', process: 'test'});
     let cfg = await main('cfg', {profile: 'test', process: 'test'});
-    keyPrefix = cfg.app.keyPrefix;
     await state._runScript('drop-db.sql');
     await state._runScript('create-db.sql');
     regions = cfg.app.regions;
+    managerId = cfg.app.id;
   });
 
   beforeEach(async() => {
@@ -74,9 +74,9 @@ describe('House Keeper', () => {
       ec2,
       state,
       regions,
-      keyPrefix,
       monitor,
       runaws,
+      managerId,
       tagger,
     });
     
@@ -137,7 +137,7 @@ describe('House Keeper', () => {
         Instances: [{
           InstanceId: 'i-1',
           LaunchTime: new Date().toString(),
-          KeyName: keyPrefix + workerType,
+          KeyName: 'keyname',
           InstanceType: instanceType,
           ImageId: 'ami-1',
           State: {
@@ -146,6 +146,10 @@ describe('House Keeper', () => {
           Placement: {
             AvailabilityZone: az,
           },
+          Tags: [
+            {Key: 'Owner', Value: 'ec2-manager-test'},
+            {Key: 'Name', Value: workerType},
+          ],
         }],
       }],
     });
@@ -188,7 +192,7 @@ describe('House Keeper', () => {
         Instances: [{
           InstanceId: 'i-1',
           LaunchTime: oldAsMud.toString(),
-          KeyName: keyPrefix + workerType,
+          KeyName: 'keyname',
           InstanceType: instanceType,
           State: {
             Name: 'running',
@@ -197,10 +201,14 @@ describe('House Keeper', () => {
           Placement: {
             AvailabilityZone: az,
           },
+          Tags: [
+            {Key: 'Owner', Value: 'ec2-manager-test'},
+            {Key: 'Name', Value: workerType},
+          ],
         }, {
           InstanceId: 'i-2',
           LaunchTime: oldAsMud.toString(),
-          KeyName: keyPrefix + workerType,
+          KeyName: 'keyname',
           InstanceType: instanceType,
           State: {
             Name: 'running',
@@ -209,6 +217,10 @@ describe('House Keeper', () => {
           Placement: {
             AvailabilityZone: az,
           },
+          Tags: [
+            {Key: 'Owner', Value: 'ec2-manager-test'},
+            {Key: 'Name', Value: workerType},
+          ],
         }],
       }],
     });
