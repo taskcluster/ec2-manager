@@ -1,0 +1,13 @@
+$schema: http://json-schema.org/draft-04/schema#
+title: "ssh public key"
+type: object
+properties:
+  value:
+    type: string
+    description: |
+      An OpenSSH format Public Key as described by tools.ietf.org/html/rfc4253#section-6.6
+    pattern: '^(ssh-\w+)\s+(\w*)\s*\w*$'
+additionalProperties: false
+requiredProperties:
+  - value
+
