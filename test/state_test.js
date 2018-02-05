@@ -1,6 +1,7 @@
 
 const main = require('../lib/main');
 const assume = require('assume');
+const uuid = require('uuid');
 
 describe('State', () => {
   let db;
@@ -354,6 +355,166 @@ describe('State', () => {
     };
     let actual = await db.listIdsOfWorkerType({workerType: defaultInst.workerType});
     assume(expected).deeply.equals(actual);
+  });
+  
+  it('should log aws requests without optional fields', async() => {
+    let called = new Date();
+    let rid = uuid.v4();
+
+    await db.logAWSRequest({
+      region: 'us-east-1',
+      requestId: rid, 
+      duration: 1000, // Remember this is us not ms
+      method: 'funky',
+      service: 'dunky',
+      error: false,
+      called,
+    });
+
+    let result = await db.listAWSRequests();
+
+    assume(result).has.lengthOf(1);
+
+    // serializing to json because it turns out that it's a pain to do date
+    // comparisons
+    assume(JSON.stringify(result)).equals(JSON.stringify([{
+      region: 'us-east-1',
+      requestId: rid,
+      duration: {milliseconds: 1},
+      method: 'funky',
+      service: 'dunky',
+      error: false,
+      called,
+      code: null,
+      message: null,
+      workerType: null,
+      az: null,
+      instanceType: null,
+      imageId: null,
+    }]));
+
+  });
+
+  it('should log aws requests with errors', async() => {
+    let called = new Date();
+    let rid = uuid.v4();
+
+    await db.logAWSRequest({
+      region: 'us-east-1',
+      requestId: rid, 
+      duration: 1000, // Remember this is us not ms
+      method: 'funky',
+      service: 'dunky',
+      error: true,
+      code: 'code',
+      message: 'message',
+      called,
+    });
+
+    let result = await db.listAWSRequests();
+
+    assume(result).has.lengthOf(1);
+
+    // serializing to json because it turns out that it's a pain to do date
+    // comparisons
+    assume(JSON.stringify(result)).equals(JSON.stringify([{
+      region: 'us-east-1',
+      requestId: rid,
+      duration: {milliseconds: 1},
+      method: 'funky',
+      service: 'dunky',
+      error: true,
+      called,
+      code: 'code',
+      message: 'message',
+      workerType: null,
+      az: null,
+      instanceType: null,
+      imageId: null,
+    }]));
+
+  });
+
+  describe('aws request logging with malformed errors', () => {
+    it('should when error is false and code and message are given', async() => {
+      try {
+        await db.logAWSRequest({
+          region: 'us-east-1',
+          requestId: uuid.v4(), 
+          duration: 1000, // Remember this is us not ms
+          method: 'funky',
+          service: 'dunky',
+          error: false,
+          code: 'code',
+          message: 'message',
+          called: new Date(),
+        });
+        return Promise.reject(new Error('shouldnt pass'));
+      } catch (err) {
+        return Promise.resolve();
+      }
+    });
+    
+    it('should when error is true and code and message are not given', async() => {
+      try {
+        await db.logAWSRequest({
+          region: 'us-east-1',
+          requestId: uuid.v4(), 
+          duration: 1000, // Remember this is us not ms
+          method: 'funky',
+          service: 'dunky',
+          error: true,
+          //code: 'code',
+          //message: 'message',
+          called: new Date(),
+        });
+        return Promise.reject(new Error('shouldnt pass'));
+      } catch (err) {
+        return Promise.resolve();
+      }
+    });
+  });
+
+  it('should log aws requests with optional fields', async() => {
+    let called = new Date();
+    let rid = uuid.v4();
+
+    await db.logAWSRequest({
+      region: 'us-east-1',
+      requestId: rid, 
+      duration: 1000, // Remember this is us not ms
+      method: 'funky',
+      service: 'dunky',
+      error: false,
+      called,
+      workerType: 'wt',
+      az: 'az',
+      instanceType: 'it',
+      imageId: 'ami',
+    });
+
+    let result = await db.listAWSRequests();
+
+    assume(result).has.lengthOf(1);
+
+    // serializing to json because it turns out that it's a pain to do date
+    // comparisons
+    assume(JSON.stringify(result)).equals(JSON.stringify([{
+      region: 'us-east-1',
+      requestId: rid,
+      duration: {milliseconds: 1},
+      method: 'funky',
+      service: 'dunky',
+      error: false,
+      called,
+      code: null,
+      message: null,
+      workerType: 'wt',
+      az: 'az',
+      instanceType: 'it',
+      imageId: 'ami',
+    }]));
+
   });
 
   it('should log cloud watch events (with generated time)', async() => {

@@ -44,7 +44,6 @@ CREATE TRIGGER update_instances_touched
 BEFORE UPDATE ON instances
 FOR EACH ROW EXECUTE PROCEDURE update_touched();
 
-
 -- termination reasons
 CREATE TABLE IF NOT EXISTS terminations (
   id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
@@ -63,10 +62,37 @@ CREATE TABLE IF NOT EXISTS terminations (
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
+
 -- Automatically keep instances touched parameter up to date
 CREATE TRIGGER update_terminations_touched
 BEFORE UPDATE ON terminations
 FOR EACH ROW EXECUTE PROCEDURE update_touched();
+
+-- We want to track the calls to runinstances and
+-- store the error code if one exists
+CREATE TABLE IF NOT EXISTS awsrequests (
+  -- Mandatory fields
+  region VARCHAR(128) NOT NULL, -- aws region
+  "requestId" VARCHAR(128) NOT NULL, -- aws request id
+  duration INTERVAL NOT NULL, -- time in ms that the request took
+  method VARCHAR(128) NOT NULL, -- the api method run, e.g. runInstances
+  service VARCHAR(128) NOT NULL, -- the service the method was run against, e.g. ec2
+  error BOOLEAN NOT NULL, -- true if the request resulted in an error
+  called TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- when the API call was initiated
+
+  -- EC2 error data
+  code VARCHAR(128), -- EC2 api error code
+  message VARCHAR(128), -- EC2 Api error message
+
+  -- The following are values which can optionally be added where
+  -- appropriate
+  "workerType" VARCHAR(128), -- taskcluster worker type
+  az VARCHAR(128), -- availability zone
+  "instanceType" VARCHAR(128), -- ec2 instance type
+  "imageId" VARCHAR(128), -- AMI/ImageId value
+
+  PRIMARY KEY(region, "requestId")
+);
 
 -- Cloudwatch Events Log
 -- We want to keep a log of when every cloud watch event was generated
