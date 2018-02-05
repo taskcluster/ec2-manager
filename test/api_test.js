@@ -390,49 +390,38 @@ describe('Api', () => {
 
   describe('managing key pairs', () => {
     it('should create and delete keypairs idempotently', async() => {
-      // We want the following cases covered:
-      // 1. nothing exists in internal cache or ec2 --> create
-      // 2. it exists in internal cache --> short circuit return
-      // 3. it exists in ec2, not internal --> only describe call
-      // 4. it deletes properly if key exists in ec2
-      // 5. it deletes properly if key does not exist in ec2
 
-      // Case 1
-      runaws.returns({
+      // Let's create a key pair
+      runaws.returns(Promise.resolve({
         KeyPairs: [],
-      });
-      await client.ensureKeyPair(workerType);
+      }));
+      await client.ensureKeyPair('test', {value: 'ssh-rsa fakekey'});
       assume(runaws.callCount).equals(regions.length * 2);
       runaws.reset();
 
-      // Case 2
-      await client.ensureKeyPair(workerType);
-      assume(runaws.callCount).equals(0);
+      // Let's create a key pair, but find there's already one there
+      runaws.returns(Promise.resolve({
+        KeyPairs: ['test'],
+      }));
+      await client.ensureKeyPair('test', {value: 'ssh-rsa fakekey'});
+      assume(runaws.callCount).equals(regions.length);
       runaws.reset();
 
-      // Case 4
+      // Now let's remove it
       runaws.returns({
-        KeyPairs: ['placeholder'],
+        KeyPairs: ['test'],
       });
-      await client.removeKeyPair(workerType);
+      await client.removeKeyPair('test');
       assume(runaws.callCount).equals(regions.length * 2);
       runaws.reset();
 
-      // Case 5
+      // Now let's remove it, but find it's already gone
       runaws.returns({
         KeyPairs: [],
       });
-      await client.removeKeyPair(workerType);
+      await client.removeKeyPair('test');
       assume(runaws.callCount).equals(regions.length);
       runaws.reset();
-
-      // Case 3 (we do this here so it was deleted from internal cache in
-      // remove* calls above
-      runaws.returns({
-        KeyPairs: ['placeholder'],
-      });
-      await client.ensureKeyPair(workerType);
-      assume(runaws.callCount).equals(regions.length);
     });
   });
 
