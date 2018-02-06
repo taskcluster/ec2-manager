@@ -6,7 +6,7 @@ properties:
     type: string
     description: |
       An OpenSSH format Public Key as described by tools.ietf.org/html/rfc4253#section-6.6
-    pattern: '^(ssh-\w+)\s+(\w*)\s*\w*$'
+    pattern: '^(ssh-\S*)\s*(\S*)\s*(.*)$'
 additionalProperties: false
 requiredProperties:
   - value
