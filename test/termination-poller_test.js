@@ -68,7 +68,7 @@ describe('TerminationPoller', () => {
   });
 
   after(async() => {
-    //await state._runScript('drop-db.sql');
+    await state._runScript('drop-db.sql');
   });
 
   afterEach(() => {
