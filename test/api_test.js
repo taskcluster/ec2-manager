@@ -399,7 +399,8 @@ describe('Api', () => {
       assume(runaws.callCount).equals(regions.length * 2);
       runaws.reset();
 
-      // Let's create a key pair, but find there's already one there
+      // Let's create a key pair when there's already a keypair
+      // present with that name
       runaws.returns(Promise.resolve({
         KeyPairs: ['test'],
       }));
