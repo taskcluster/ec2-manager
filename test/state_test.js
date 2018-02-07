@@ -42,6 +42,7 @@ describe('State', () => {
       instanceType: 'm1.medium',
       code: 'Client.InstanceInitiatedShutdown',
       reason: 'Client.InstanceInitiatedShutdown: Instance initiated shutdown',
+      terminated: new Date(),
       launched: new Date(),
       lastEvent: new Date(),
     };
@@ -575,5 +576,128 @@ describe('State', () => {
 
     assume(actual[0]).has.property('code', 'Code');
     assume(actual[0]).has.property('reason', 'Reason');
+  });
+
+  describe('determining health of ec2 account', () => {
+
+    it('should work with empty state', async() => {
+      let result = await db.getHealth();
+      assume(result).has.property('requestHealth');
+      assume(result).has.property('terminationHealth');
+      assume(result).has.property('running');
+    });
+
+    it('should show running instances stats', async() => {
+      await db.insertInstance(defaultInst);
+      let result = await db.getHealth();
+      assume(result).has.property('running');
+      assume(result.running).has.lengthOf(1);
+      assume(result.running[0]).has.property('region', defaultInst.region);
+      assume(result.running[0]).has.property('az', defaultInst.az);
+      assume(result.running[0]).has.property('instanceType', defaultInst.instanceType);
+      assume(result.running[0]).has.property('running', 1);
+    });
+
+    it('should show terminations stats', async() => {
+      let codesToTest = [
+        'Client.InstanceInitiatedShutdown',
+        'Server.SpotInstanceTermination',
+        'Server.InsufficientInstanceCapacity',
+        'Client.VolumeLimitExceeded',
+        'Client.InvalidSnapshot.NotFound',
+        'Server.InternalError',
+        'Ooogie.Boogie',
+      ];
+
+      let i = 1;
+      for (let code of codesToTest) {
+        let thisTerm = Object.assign({}, defaultTerm, {id: 'i-' + i});
+        await db.insertTermination(thisTerm);
+        await db.updateTerminationState({
+          region: defaultTerm.region,
+          id: 'i-' + i,
+          code: code,
+          reason: code + ': reason',
+          terminated: new Date(),
+          lastEvent: new Date(),
+        });
+        i++;
+      }
+
+      let thisTerm = Object.assign({}, defaultTerm, {id: 'i-' + i, terminated: new Date()});
+      delete thisTerm.code;
+      delete thisTerm.reason;
+      await db.insertTermination(thisTerm);
+
+      let result = await db.getHealth();
+      assume(result.terminationHealth).has.lengthOf(1);
+      assume(result.terminationHealth[0]).deeply.equals({
+        region: defaultTerm.region,
+        az: defaultTerm.az,
+        instanceType: defaultTerm.instanceType,
+        clean_shutdown: 1,
+        spot_kill: 1,
+        insufficient_capacity: 1,
+        volume_limit_exceeded: 1,
+        missing_ami: 1,
+        startup_failed: 1,
+        unknown_codes: 1,
+        no_code: 1,
+      });
+    });
+
+    it('should show runInstances failure stats', async() => {
+      let codesToTest = [
+        'RequestLimitExceeded',
+        'InvalidParameter',
+        'InsufficientCapacity',
+        'HostLimitExceeded',
+      ];
+      await db.logAWSRequest({
+        region: 'us-east-1',
+        requestId: uuid.v4(),
+        duration: 100,
+        method: 'runInstances',
+        service: 'ec2',
+        error: false,
+        called: new Date(),
+        workerType: 'example-worker',
+        az: 'us-east-1a',
+        instanceType: 'm3.xlarge',
+        imageId: 'ami-1',
+      });
+
+      for (let code of codesToTest) {
+        await db.logAWSRequest({
+          region: 'us-east-1',
+          requestId: uuid.v4(),
+          duration: 100,
+          method: 'runInstances',
+          service: 'ec2',
+          error: true,
+          code,
+          message: code + ': An error!',
+          called: new Date(),
+          workerType: 'example-worker',
+          az: 'us-east-1a',
+          instanceType: 'm3.xlarge',
+          imageId: 'ami-1',         
+        });
+      }
+
+      let result = await db.getHealth();
+      assume(result.requestHealth).has.lengthOf(1);
+      assume(result.requestHealth[0]).deeply.equals({
+        region: 'us-east-1',
+        az: 'us-east-1a',
+        instanceType: 'm3.xlarge',
+        successful: 1,
+        failed: 4,
+        configuration_issue: 1,
+        throttled_calls: 1,
+        insufficient_capacity: 1,
+        limit_exceeded: 1,
+      });
+    });
   });
 });

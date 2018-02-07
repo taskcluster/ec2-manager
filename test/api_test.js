@@ -4,6 +4,7 @@ const assume = require('assume');
 const main = require('../lib/main');
 const {api} = require('../lib/api');
 const sinon = require('sinon');
+const uuid = require('uuid');
 
 describe('Api', () => {
   let state;
@@ -386,6 +387,56 @@ describe('Api', () => {
       assume(runaws.callCount).equals(1);
     });
     
+  });
+
+  describe('health', () => {
+    it('should give a valid report when theres no state', async() => {
+      let result = await client.getHealth();
+    });
+
+    it('should give a valid report with state', async() => {
+      await state.insertInstance({
+        id: 'i-1',
+        workerType: 'example-workertype',
+        region: 'us-west-1',
+        az: 'us-west-1z',
+        imageId: 'ami-1',
+        instanceType: 'm1.medium',
+        state: 'pending',
+        launched: new Date(),
+        lastEvent: new Date(),
+      });
+
+      await state.insertTermination({
+        id: 'i-2',
+        workerType: 'example-workertype',
+        region: 'us-west-1',
+        az: 'us-west-1z',
+        imageId: 'ami-1',
+        instanceType: 'm1.medium',
+        code: 'Client.InstanceInitiatedShutdown',
+        reason: 'Client.InstanceInitiatedShutdown: Instance initiated shutdown',
+        terminated: new Date(),
+        launched: new Date(),
+        lastEvent: new Date(),
+      });
+
+      await state.logAWSRequest({
+        region: 'us-east-1',
+        requestId: uuid.v4(),
+        duration: 100,
+        method: 'runInstances',
+        service: 'ec2',
+        error: false,
+        called: new Date(),
+        workerType: 'example-workertype',
+        az: 'us-east-1z',
+        instanceType: 'm1.medium',
+        imageId: 'ami-1',
+      });
+ 
+      let result = await client.getHealth();
+    });
   });
 
   describe('managing key pairs', () => {
