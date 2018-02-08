@@ -79,7 +79,7 @@ staging:
     maxClients: 10
   monitor:
     project: ec2-manager-staging
-    mock: false
+    mock: true
 test:
   app:
     id: 'ec2-manager-test'
