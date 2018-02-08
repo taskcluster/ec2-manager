@@ -25,13 +25,13 @@ $$ language 'plpgsql';
 -- instances table contains minimal information on
 -- any instances owned by this ec2 manager
 CREATE TABLE IF NOT EXISTS instances (
-  id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
-  "workerType" VARCHAR(128) NOT NULL, -- taskcluster worker type
-  region VARCHAR(128) NOT NULL, -- ec2 region
-  az VARCHAR(128) NOT NULL, -- availability zone
-  "instanceType" VARCHAR(128) NOT NULL, -- ec2 instance type
-  state VARCHAR(128) NOT NULL, -- e.g. running, pending, terminated
-  "imageId" VARCHAR(128) NOT NULL, -- AMI/ImageId value
+  id TEXT NOT NULL, -- opaque ID per Amazon
+  "workerType" TEXT NOT NULL, -- taskcluster worker type
+  region TEXT NOT NULL, -- ec2 region
+  az TEXT NOT NULL, -- availability zone
+  "instanceType" TEXT NOT NULL, -- ec2 instance type
+  state TEXT NOT NULL, -- e.g. running, pending, terminated
+  "imageId" TEXT NOT NULL, -- AMI/ImageId value
   launched TIMESTAMPTZ NOT NULL, -- Time instance launched
   "lastEvent" TIMESTAMPTZ NOT NULL, -- Time that the last event happened in the api. Used
                                     -- to ensure that we have correct ordering of cloud watch
@@ -46,14 +46,14 @@ FOR EACH ROW EXECUTE PROCEDURE update_touched();
 
 -- termination reasons
 CREATE TABLE IF NOT EXISTS terminations (
-  id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
-  "workerType" VARCHAR(128) NOT NULL, -- taskcluster worker type
-  region VARCHAR(128) NOT NULL, -- ec2 region
-  az VARCHAR(128) NOT NULL, -- availability zone
-  "instanceType" VARCHAR(128) NOT NULL, -- ec2 instance type
-  "imageId" VARCHAR(128) NOT NULL, -- AMI/ImageId value
-  code VARCHAR(128), -- the State Reason's code
-  reason VARCHAR(128), -- the State Reason's string message
+  id TEXT NOT NULL, -- opaque ID per Amazon
+  "workerType" TEXT NOT NULL, -- taskcluster worker type
+  region TEXT NOT NULL, -- ec2 region
+  az TEXT NOT NULL, -- availability zone
+  "instanceType" TEXT NOT NULL, -- ec2 instance type
+  "imageId" TEXT NOT NULL, -- AMI/ImageId value
+  code TEXT, -- the State Reason's code
+  reason TEXT, -- the State Reason's string message
   launched TIMESTAMPTZ NOT NULL, -- Time instance launched
   terminated TIMESTAMPTZ, -- Time the instance shut down
   "lastEvent" TIMESTAMPTZ NOT NULL, -- Time that the last event happened in the api. Used
@@ -72,24 +72,24 @@ FOR EACH ROW EXECUTE PROCEDURE update_touched();
 -- store the error code if one exists
 CREATE TABLE IF NOT EXISTS awsrequests (
   -- Mandatory fields
-  region VARCHAR(128) NOT NULL, -- aws region
-  "requestId" VARCHAR(128) NOT NULL, -- aws request id
+  region TEXT NOT NULL, -- aws region
+  "requestId" TEXT NOT NULL, -- aws request id
   duration INTERVAL NOT NULL, -- time in ms that the request took
-  method VARCHAR(128) NOT NULL, -- the api method run, e.g. runInstances
-  service VARCHAR(128) NOT NULL, -- the service the method was run against, e.g. ec2
+  method TEXT NOT NULL, -- the api method run, e.g. runInstances
+  service TEXT NOT NULL, -- the service the method was run against, e.g. ec2
   error BOOLEAN NOT NULL, -- true if the request resulted in an error
   called TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- when the API call was initiated
 
   -- EC2 error data
-  code VARCHAR(128), -- EC2 api error code
-  message VARCHAR(128), -- EC2 Api error message
+  code TEXT, -- EC2 api error code
+  message TEXT, -- EC2 Api error message
 
   -- The following are values which can optionally be added where
   -- appropriate
-  "workerType" VARCHAR(128), -- taskcluster worker type
-  az VARCHAR(128), -- availability zone
-  "instanceType" VARCHAR(128), -- ec2 instance type
-  "imageId" VARCHAR(128), -- AMI/ImageId value
+  "workerType" TEXT, -- taskcluster worker type
+  az TEXT, -- availability zone
+  "instanceType" TEXT, -- ec2 instance type
+  "imageId" TEXT, -- AMI/ImageId value
 
   PRIMARY KEY(region, "requestId")
 );
@@ -97,9 +97,9 @@ CREATE TABLE IF NOT EXISTS awsrequests (
 -- Cloudwatch Events Log
 -- We want to keep a log of when every cloud watch event was generated
 CREATE TABLE IF NOT EXISTS cloudwatchlog (
-  region VARCHAR(128), -- ec2 region
-  id VARCHAR(128), -- opaque ID per amazon
-  state VARCHAR(128), -- state from message
+  region TEXT, -- ec2 region
+  id TEXT, -- opaque ID per amazon
+  state TEXT, -- state from message
   generated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   received TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (id, region, state, generated)
@@ -107,8 +107,8 @@ CREATE TABLE IF NOT EXISTS cloudwatchlog (
 
 -- Amazon Machine Image (ami) usage
 CREATE TABLE IF NOT EXISTS amiusage (
-  region VARCHAR(128) NOT NULL, -- ec2 region
-  id VARCHAR(128) NOT NULL, -- opaque ID per Amazon
+  region TEXT NOT NULL, -- ec2 region
+  id TEXT NOT NULL, -- opaque ID per Amazon
   "lastUsed" TIMESTAMPTZ NOT NULL, -- most recent usage
   PRIMARY KEY(id, region)
 );
