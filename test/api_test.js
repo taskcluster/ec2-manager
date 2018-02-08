@@ -395,7 +395,7 @@ describe('Api', () => {
       runaws.returns(Promise.resolve({
         KeyPairs: [],
       }));
-      await client.ensureKeyPair('test', {value: 'ssh-rsa fakekey'});
+      await client.ensureKeyPair('test', {pubkey: 'ssh-rsa fakekey'});
       assume(runaws.callCount).equals(regions.length * 2);
       runaws.reset();
 
@@ -404,7 +404,7 @@ describe('Api', () => {
       runaws.returns(Promise.resolve({
         KeyPairs: ['test'],
       }));
-      await client.ensureKeyPair('test', {value: 'ssh-rsa fakekey'});
+      await client.ensureKeyPair('test', {pubkey: 'ssh-rsa fakekey'});
       assume(runaws.callCount).equals(regions.length);
       runaws.reset();
 
