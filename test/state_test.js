@@ -558,10 +558,7 @@ describe('State', () => {
     let actual = await db.findTerminationsToPoll(1);
     assume(actual).has.lengthOf(1);
     assume(actual[0]).has.property('id', 'i-0');
-    assume(actual[0]).has.property('code', null);
-    assume(actual[0]).has.property('reason', null);
-    assume(actual[0]).has.property('terminated');
-    assume(actual[0].terminated.getTime()).equals(termTime.getTime());
+    assume(actual[0]).has.property('region', 'us-east-0');
 
     await db.updateTerminationState({
       region: 'us-east-0',
