@@ -394,8 +394,8 @@ describe('Api', () => {
       let result = await client.getHealth();
     });
 
-    it('should give a valid report with state', async() => {
-      await state.insertInstance({
+    async function insertThings(instOW, termOW, reqOW) {
+      await state.insertInstance(Object.assign({}, {
         id: 'i-1',
         workerType: 'example-workertype',
         region: 'us-west-1',
@@ -405,9 +405,9 @@ describe('Api', () => {
         state: 'pending',
         launched: new Date(),
         lastEvent: new Date(),
-      });
+      }, instOW));
 
-      await state.insertTermination({
+      await state.insertTermination(Object.assign({}, {
         id: 'i-2',
         workerType: 'example-workertype',
         region: 'us-west-1',
@@ -419,9 +419,9 @@ describe('Api', () => {
         terminated: new Date(),
         launched: new Date(),
         lastEvent: new Date(),
-      });
+      }, termOW));
 
-      await state.logAWSRequest({
+      await state.logAWSRequest(Object.assign({}, {
         region: 'us-east-1',
         requestId: uuid.v4(),
         duration: 100,
@@ -433,9 +433,37 @@ describe('Api', () => {
         az: 'us-east-1z',
         instanceType: 'm1.medium',
         imageId: 'ami-1',
-      });
- 
+      }, reqOW));
+      
+    }
+
+    it('should give a valid report with state', async() => {
+      await insertThings({}, {}, {}); 
       let result = await client.getHealth();
+    });
+   
+    it('should give a valid report with state for a specific worker type', async() => {
+      let ow = {workerType: 'has-stuff'};
+      await insertThings(ow, ow, ow); 
+      let result = await client.workerTypeHealth('has-stuff');
+      assume(result).has.property('requestHealth');
+      assume(result).has.property('terminationHealth');
+      assume(result).has.property('running');
+      assume(result.requestHealth).has.lengthOf(1);
+      assume(result.terminationHealth).has.lengthOf(1);
+      assume(result.running).has.lengthOf(1);
+    }); 
+
+    it('should give a valid report without confusing worker types', async() => {
+      let ow = {workerType: 'has-stuff'};
+      await insertThings(ow, ow, ow); 
+      let result = await client.workerTypeHealth('has-no-stuff');
+      assume(result).has.property('requestHealth');
+      assume(result).has.property('terminationHealth');
+      assume(result).has.property('running');
+      assume(result.requestHealth).has.lengthOf(0);
+      assume(result.terminationHealth).has.lengthOf(0);
+      assume(result.running).has.lengthOf(0);
     });
   });
 
