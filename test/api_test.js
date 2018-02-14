@@ -389,7 +389,7 @@ describe('Api', () => {
     
   });
 
-  describe('health', () => {
+  describe('health and error reporting', () => {
     it('should give a valid report when theres no state', async() => {
       let result = await client.getHealth();
     });
@@ -437,9 +437,57 @@ describe('Api', () => {
       
     }
 
-    it('should give a valid report with state', async() => {
-      await insertThings({}, {}, {}); 
+    it('should report global health with empty state', async() => {
+      await insertThings({}, {}, {});
       let result = await client.getHealth();
+    });
+
+    it('should report recent errors', async() => {
+      let termOW = {
+        code: 'Server.InternalError',
+        reason: 'reason',
+      };
+      let errorOW = {
+        error: true,
+        code: 'code',
+        message: 'msg',
+      };
+      await insertThings({}, termOW, errorOW); 
+      let result = await client.getRecentErrors();
+      assume(result.errors).has.lengthOf(2);
+      assume(result.errors[0]).has.property('type');
+      assume(result.errors[0]).has.property('code');
+      assume(result.errors[0]).has.property('time');
+      assume(result.errors[0]).has.property('region');
+      assume(result.errors[0]).has.property('az');
+      assume(result.errors[0]).has.property('instanceType');
+      assume(result.errors[0]).has.property('workerType');
+      assume(result.errors[0]).does.not.have.property('msg');
+
+    });
+    
+    it('should report recent errors of a specific worker type', async() => {
+      let termOW = {
+        code: 'Server.InternalError',
+        reason: 'reason',
+      };
+      let errorOW = {
+        error: true,
+        code: 'code',
+        message: 'msg',
+      };
+      await insertThings({}, termOW, errorOW); 
+      let result = await client.workerTypeErrors('example-workertype');
+      assume(result.errors).has.lengthOf(2);
+      assume(result.errors[0]).has.property('type');
+      assume(result.errors[0]).has.property('code');
+      assume(result.errors[0]).has.property('time');
+      assume(result.errors[0]).has.property('region');
+      assume(result.errors[0]).has.property('az');
+      assume(result.errors[0]).has.property('instanceType');
+      assume(result.errors[0]).has.property('workerType');
+      assume(result.errors[0]).does.not.have.property('msg');
+
     });
    
     it('should give a valid report with state for a specific worker type', async() => {
@@ -465,6 +513,7 @@ describe('Api', () => {
       assume(result.terminationHealth).has.lengthOf(0);
       assume(result.running).has.lengthOf(0);
     });
+
   });
 
   describe('managing key pairs', () => {

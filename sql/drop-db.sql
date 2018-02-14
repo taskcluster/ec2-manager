@@ -5,5 +5,5 @@ DROP TABLE IF EXISTS instances;
 DROP TABLE IF EXISTS cloudwatchlog;
 DROP TABLE IF EXISTS amiusage;
 DROP TABLE IF EXISTS terminations;
-DROP TABLE IF EXISTS ec2requests;
+DROP TABLE IF EXISTS awsrequests;
 DROP FUNCTION IF EXISTS update_touched();

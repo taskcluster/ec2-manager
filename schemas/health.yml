@@ -5,12 +5,12 @@ description: |
   Values for the overall account are provided, broken down by Region, Availability
   Zone and Instance Type.
 type: object
-items:
-  type: object
-  properties: 
-    running:
-      description: |
-        An overview of currently running instances
+properties: 
+  running:
+    description: |
+      An overview of currently running instances
+    type: array
+    items:
       type: object
       properties:
         region:
@@ -29,7 +29,9 @@ items:
         - az
         - instanceType
         - running
-    terminationHealth:
+  terminationHealth:
+    type: array
+    items:
       type: object
       description: |
         This is a list of summaries of instances which have terminated
@@ -100,7 +102,9 @@ items:
         - startup_failed
         - unknown_codes
         - no_code
-    requestHealth:
+  requestHealth:
+    type: array
+    items:
       type: object
       description: |
         This is a list of outcomes for a specific region, availability zone and
@@ -163,9 +167,9 @@ items:
         - throttled_calls
         - insufficient_capacity
         - limit_exceeded
-  additionalProperties: false
-  requiredProperties:
-    - running
-    - terminationHealth
-    - requestHealth
+additionalProperties: false
+requiredProperties:
+  - running
+  - terminationHealth
+  - requestHealth
 

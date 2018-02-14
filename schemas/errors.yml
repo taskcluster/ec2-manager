@@ -1,0 +1,48 @@
+
+$schema: http://json-schema.org/draft-04/schema#
+title: "Errors"
+description: |
+  This method returns a list of errors.  It currently gives the error code only
+  because we're not sure of the security implications of exposing the full
+  message.  We do store complete error messages, but are figuring out how to
+  best expose them
+type: object
+properties:
+  errors:
+    type: array
+    items:
+      type: object
+      properties: 
+        code:
+          type: string
+        type:
+          type: string
+          enum:
+            - instance-request
+            - termination
+        region:
+          type: string
+        az:
+          type: string
+        instanceType:
+          type: string
+        workerType:
+          type: string
+        time:
+          type: string
+          format: date-time
+        message:
+          type: string
+      additionalProperties: false
+      requiredProperties:
+        - code
+        - type
+        - region
+        - az
+        - instanceType
+        - workerType
+        - time
+        - message
+additionalProperties: false
+requiredProperties:
+  - errors
