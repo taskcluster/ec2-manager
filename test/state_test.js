@@ -166,6 +166,15 @@ describe('State', () => {
     assume(await db.listInstances()).has.length(1);
   });
 
+  it('should upsert an instance and only change the state if the new state is newer', async() => {
+    await db.insertInstance(Object.assign({}, defaultInst, {lastEvent: new Date(3600 * 1000), state: 'running'}));
+    assume(await db.listInstances()).has.length(1);
+    await db.upsertInstance(Object.assign({}, defaultInst, {lastEvent: new Date(0), state: 'pending'}));
+    let instances = await db.listInstances();
+    assume(instances).has.lengthOf(1);
+    assume(instances[0]).has.property('state', 'running');
+  });
+
   it('should be able to update an instance', async() => {
     let firstState = 'pending';
     let secondState = 'running';
