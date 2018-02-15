@@ -1,4 +1,3 @@
-
 const main = require('../lib/main');
 const assume = require('assume');
 const uuid = require('uuid');
@@ -75,14 +74,14 @@ describe('State', () => {
     let table = 'junk';
 
     it('no conditions', () => {
-      let expected = {text: 'SELECT * FROM junk;', values: []};
+      let expected = {query: 'SELECT * FROM junk;', values: []};
       let actual = db._generateTableListQuery(table);
       assume(expected).deeply.equals(actual);
     });
 
     it('one flat condition', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk."a" = $1;',
+        query: 'SELECT * FROM junk WHERE junk."a" = $1;',
         values: ['aye'],
       };
       let actual = db._generateTableListQuery(table, {a: 'aye'});
@@ -91,7 +90,7 @@ describe('State', () => {
 
     it('two flat conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk."a" = $1 AND junk."b" = $2;',
+        query: 'SELECT * FROM junk WHERE junk."a" = $1 AND junk."b" = $2;',
         values: ['aye', 'bee'],
       };
       let actual = db._generateTableListQuery(table, {a: 'aye', b: 'bee'});
@@ -100,7 +99,7 @@ describe('State', () => {
 
     it('one list condition', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk."a" = $1 OR junk."a" = $2 OR junk."a" = $3;',
+        query: 'SELECT * FROM junk WHERE junk."a" = $1 OR junk."a" = $2 OR junk."a" = $3;',
         values: ['a', 'b', 'c'],
       };
       let actual = db._generateTableListQuery(table, {a: ['a', 'b', 'c']});
@@ -109,7 +108,7 @@ describe('State', () => {
 
     it('two list conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE (junk."a" = $1 OR junk."a" = $2) AND (junk."b" = $3 OR junk."b" = $4);',
+        query: 'SELECT * FROM junk WHERE (junk."a" = $1 OR junk."a" = $2) AND (junk."b" = $3 OR junk."b" = $4);',
         values: ['a', 'b', 'c', 'd'],
       };
       let actual = db._generateTableListQuery(table, {a: ['a', 'b'], b: ['c', 'd']});
@@ -118,7 +117,7 @@ describe('State', () => {
 
     it('mixed type flat-list-flat conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk."a" = $1 AND (junk."b" = $2 OR junk."b" = $3) AND junk."c" = $4;',
+        query: 'SELECT * FROM junk WHERE junk."a" = $1 AND (junk."b" = $2 OR junk."b" = $3) AND junk."c" = $4;',
         values: ['a', 'b', 'c', 'd'],
       };
       let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'});
@@ -127,7 +126,7 @@ describe('State', () => {
 
     it('limits', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk."a" = $1 AND (junk."b" = $2 OR junk."b" = $3) AND junk."c" = $4 LIMIT 1;',
+        query: 'SELECT * FROM junk WHERE junk."a" = $1 AND (junk."b" = $2 OR junk."b" = $3) AND junk."c" = $4 LIMIT 1;',
         values: ['a', 'b', 'c', 'd'],
       };
       let actual = db._generateTableListQuery(table, {a: 'a', b: ['b', 'c'], c: 'd'}, undefined, 1);
@@ -136,7 +135,7 @@ describe('State', () => {
 
     it('null conditions', () => {
       let expected = {
-        text: 'SELECT * FROM junk WHERE junk."a" IS NULL AND (junk."b" IS NULL);',
+        query: 'SELECT * FROM junk WHERE junk."a" IS NULL AND (junk."b" IS NULL);',
         values: [],
       };
       let actual = db._generateTableListQuery(table, {a: null, b: [null]});
@@ -146,6 +145,7 @@ describe('State', () => {
   });
 
   it('should be able to filter AMI usages', async() => {
+    debugger;
     let result = await db.listAmiUsage();
     assume(result).has.length(0);
     await db.reportAmiUsage({region: defaultInst.region, id: defaultInst.imageId});
