@@ -26,7 +26,11 @@ defaults:
   aws:
     accessKeyId: !env AWS_ACCESS_KEY_ID
     secretAccessKey: !env AWS_SECRET_ACCESS_KEY
-    maxRetries: 10
+    maxRetries: 3
+    sslEnabled: true
+    httpOptions:
+      timeout: 10000
+      connect: 2000
   postgres:
     databaseUrl: !env DATABASE_URL
   server:
