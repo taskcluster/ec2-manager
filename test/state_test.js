@@ -196,6 +196,20 @@ describe('State', () => {
     assume(instances[0]).has.property('state', secondState);
   });
 
+  it('should update instance state and only change the state if the new state is newer', async() => {
+    await db.insertInstance(Object.assign({}, defaultInst, {lastEvent: new Date(3600 * 1000), state: 'running'}));
+    assume(await db.listInstances()).has.length(1);
+    await db.updateInstanceState({
+      region: defaultInst.region,
+      id: defaultInst.id,
+      state: 'pending',
+      lastEvent: new Date(0),
+    });
+    let instances = await db.listInstances();
+    assume(instances).has.lengthOf(1);
+    assume(instances[0]).has.property('state', 'running');
+  });
+
   it('should be able to insert a complete termination', async() => {
     delete defaultTerm.code;
     delete defaultTerm.reason;
