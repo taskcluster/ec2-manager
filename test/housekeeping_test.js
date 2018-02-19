@@ -39,6 +39,7 @@ describe('House Keeper', () => {
   });
 
   beforeEach(async() => {
+    state = await main('state', {profile: 'test', process: 'test'});
     monitor = await main('monitor', {profile: 'test', process: 'test'});
     await state._runScript('clear-db.sql');
 

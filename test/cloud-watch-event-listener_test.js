@@ -67,6 +67,7 @@ describe('Cloud Watch Event Listener', () => {
   // rather not have that be so easy to call by mistake in real code
   beforeEach(async() => {
     await state._runScript('clear-db.sql');
+    state = await main('state', {profile: 'test', process: 'test'});
     sandbox.stub(tagger, 'runaws');
   });
 
