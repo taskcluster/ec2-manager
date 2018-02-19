@@ -55,6 +55,7 @@ describe('Api', () => {
   });
 
   afterEach(() => {
+    assume(state._pgpool.waitingCount).equals(0);
     server.terminate();
     sandbox.restore();
   });

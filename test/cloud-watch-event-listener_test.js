@@ -72,6 +72,7 @@ describe('Cloud Watch Event Listener', () => {
 
   afterEach(() => {
     sandbox.restore();
+    assume(state._pgpool.waitingCount).equals(0);
   });
 
   it('should handle pending message', async() => {
