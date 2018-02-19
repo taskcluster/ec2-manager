@@ -88,6 +88,20 @@ describe('House Keeper', () => {
   });
 
   afterEach(() => {
+    // Make sure we're not dropping client references
+    for (let client of state._pgpool._clients) {
+      try {
+        client.release();
+        let lastQuery = (client._activeQuery || {}).text;
+        let err = new Error('Leaked a client that last executed: ' + lastQuery);
+        err.client = client;
+        throw err;
+      } catch (err) {
+        if (!/Release called on client which has already been released to the pool/.exec(err.message)) {
+          throw err;
+        }
+      }
+    }
     sandbox.restore();
   });
 
