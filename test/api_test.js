@@ -44,6 +44,7 @@ describe('Api', () => {
   });
 
   beforeEach(async() => {
+    state = await main('state', {profile: 'test', process: 'test'});
     await state._runScript('clear-db.sql');
     runaws = sandbox.stub();
     server = await main('server', {profile: 'test', process: 'test', runaws});

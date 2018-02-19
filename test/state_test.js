@@ -20,6 +20,7 @@ describe('State', () => {
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
   beforeEach(async() => {
+    db = await main('state', {profile: 'test', process: 'test'});
     await db._runScript('clear-db.sql');
     defaultInst = {
       id: 'i-1',
@@ -65,7 +66,20 @@ describe('State', () => {
 
   });
 
-  describe('running queries', () => {
+  // NOTE that the afterEach hook here that checks for leaked clients is
+  // critical!
+  describe.only('running queries', () => {
+
+    beforeEach(async () => {
+      await db.runQuery({query: 'CREATE TABLE a (b TEXT PRIMARY KEY)'});
+      await db.runQuery({query: 'INSERT INTO a VALUES (\'hi\')'});
+    });
+
+    afterEach(async () => {
+      await db.runQuery({query: 'DROP TABLE a;'});
+    });
+
+
     it('should work', async() => {
       let result = await db.runQuery({query: 'SELECT now();'});
     });
@@ -73,11 +87,20 @@ describe('State', () => {
     it('should work with parameterized queries', async() => {
       let result = await db.runQuery({query: 'SELECT now() where now() < $1', values: [new Date()]});
     });
-  
+
     it('should work with transaction', async() => {
       let tx = await db.beginTransaction();
       let result = await db.runQuery({query: 'SELECT now();', client: tx});
       await db.commitTransaction(tx);
+    });
+
+    it('should be able to handle multiple concurrent transactions', async() => {
+      await Promise.all([...Array(1000).keys()].map(async () => {
+        let tx = await db.beginTransaction();
+        await db.runQuery({query: 'SELECT * FROM a FOR UPDATE', client: tx});
+        await db.runQuery({query: 'INSERT INTO a VALUES ($1)', values: [uuid.v4()], client: tx});
+        await db.commitTransaction(tx);
+      }));
     });
 
     it('should work with parameterized queries with a transaction', async() => {
@@ -88,6 +111,39 @@ describe('State', () => {
         client: tx,
       });
       await db.commitTransaction(tx);
+    });
+
+    it('should rollback transaction on error', async() => {
+      let tx = await db.beginTransaction();
+      try {
+        let result = await db.runQuery({
+          query: 'SKLDFJL LKDSFJLKDJF;',
+          client: tx,
+        });
+        return Promise.reject(new Error('should not reach here'));
+      } catch (err) {
+        if (!/syntax error at or near "SKLDFJL"/.exec(err.message)) {
+          throw err;
+        }
+      }
+    });
+
+    it('should not rollback transaction on error if requested to', async() => {
+      let tx = await db.beginTransaction();
+      try {
+        let result = await db.runQuery({
+          query: 'SKLDFJL LKDSFJLKDJF;',
+          client: tx,
+          rollbackOnError: false,
+        });
+        return Promise.reject(new Error('should not reach here'));
+      } catch (err) {
+        if (!/syntax error at or near "SKLDFJL"/.exec(err.message)) {
+          throw err;
+        }
+      }
+
+      tx.release();
     });
   });
 
