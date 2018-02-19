@@ -49,7 +49,46 @@ describe('State', () => {
 
   afterEach(() => {
     // Make sure we're not dropping client references
-    assume(db._pgpool.waitingCount).equals(0);
+    for (let client of db._pgpool._clients) {
+      try {
+        client.release();
+        let lastQuery = (client._activeQuery || {}).text;
+        let err = new Error('Leaked a client that last executed: ' + lastQuery);
+        err.client = client;
+        throw err;
+      } catch (err) {
+        if (!/Release called on client which has already been released to the pool/.exec(err.message)) {
+          throw err;
+        }
+      }
+    }
+
+  });
+
+  describe('running queries', () => {
+    it('should work', async() => {
+      let result = await db.runQuery({query: 'SELECT now();'});
+    });
+
+    it('should work with parameterized queries', async() => {
+      let result = await db.runQuery({query: 'SELECT now() where now() < $1', values: [new Date()]});
+    });
+  
+    it('should work with transaction', async() => {
+      let tx = await db.beginTransaction();
+      let result = await db.runQuery({query: 'SELECT now();', client: tx});
+      await db.commitTransaction(tx);
+    });
+
+    it('should work with parameterized queries with a transaction', async() => {
+      let tx = await db.beginTransaction();
+      let result = await db.runQuery({
+        query: 'SELECT now() where now() < $1',
+        values: [new Date()],
+        client: tx,
+      });
+      await db.commitTransaction(tx);
+    });
   });
 
   describe('type parsers', () => {
@@ -74,7 +113,6 @@ describe('State', () => {
       assume(d.getTime()).equals(a.getTime());
     });
   });
-
   describe('query generation', () => {
     let table = 'junk';
 
@@ -554,8 +592,9 @@ describe('State', () => {
       state: 'pending',
       generated: time,
     });
-    let client = await db.getClient();
-    let result = await client.query('select * from cloudwatchlog');
+
+    let result = await db.runQuery({query: 'SELECT * FROM cloudwatchlog'});
+
     assume(result.rows).has.lengthOf(1);
     let row = result.rows[0];
     assume(row).has.property('region', defaultInst.region);
