@@ -47,6 +47,11 @@ describe('State', () => {
     };
   });
 
+  afterEach(() => {
+    // Make sure we're not dropping client references
+    assume(db._pgpool.waitingCount).equals(0);
+  });
+
   describe('type parsers', () => {
     it('should parse ints (20) to js ints', async() => {
       let result = await db._pgpool.query('SELECT count(id) FROM instances;');
