@@ -63,6 +63,7 @@ describe('TerminationPoller', () => {
       state,
       runaws: describeInstancesStub,
       regions: cfg.app.regions,
+      monitor,
     });
 
   });
