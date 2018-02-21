@@ -77,7 +77,7 @@ describe('State', () => {
     });
 
     afterEach(async() => {
-      await db.runQuery({query: 'DROP TABLE IF EXISTS a;'});
+      await db.runQuery({query: 'DROP TABLE a;'});
     });
 
     it('should work', async() => {
@@ -94,7 +94,7 @@ describe('State', () => {
       await db.commitTransaction(tx);
     });
 
-    it.skip('should be able to handle multiple concurrent transactions', async() => {
+    it('should be able to handle multiple concurrent transactions', async() => {
       await Promise.all([...Array(1000).keys()].map(async() => {
         let tx = await db.beginTransaction();
         await db.runQuery({query: 'SELECT * FROM a FOR UPDATE', client: tx});

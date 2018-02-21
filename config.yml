@@ -85,5 +85,7 @@ staging:
     project: ec2-manager-staging
     mock: true
 test:
+  postgres:
+    maxClients: 5
   app:
     id: 'ec2-manager-test'
