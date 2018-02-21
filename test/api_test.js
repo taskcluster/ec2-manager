@@ -477,7 +477,7 @@ describe('Api', () => {
       assume(result.errors[0]).has.property('az');
       assume(result.errors[0]).has.property('instanceType');
       assume(result.errors[0]).has.property('workerType');
-      assume(result.errors[0]).does.not.have.property('msg');
+      assume(result.errors[0]).has.property('message', '----- HIDDEN -----');
 
     });
     
@@ -501,7 +501,7 @@ describe('Api', () => {
       assume(result.errors[0]).has.property('az');
       assume(result.errors[0]).has.property('instanceType');
       assume(result.errors[0]).has.property('workerType');
-      assume(result.errors[0]).does.not.have.property('msg');
+      assume(result.errors[0]).has.property('message', '----- HIDDEN -----');
 
     });
    
