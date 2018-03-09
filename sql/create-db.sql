@@ -1,10 +1,6 @@
 -- Set up a PostgreSQL Database for use as the backing
 -- data store for the EC2 Manager component
 
--- Here's the SQL to drop your things
---   DROP TABLE IF EXISTS instances;
---   DROP FUNCTION IF EXISTS update_touched();
-
 -- This function updates the 'touched' column on the table
 -- it is tied to to ensure that any time we update the entry
 -- we automatically update the touched column
@@ -39,6 +35,11 @@ CREATE TABLE IF NOT EXISTS instances (
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
+
+-- We frequently do queries based on instanceType and state
+CREATE INDEX ON instances (state);
+CREATE INDEX ON instances ("instanceType");
+
 -- Automatically keep instances touched parameter up to date
 CREATE TRIGGER update_instances_touched
 BEFORE UPDATE ON instances
@@ -62,6 +63,12 @@ CREATE TABLE IF NOT EXISTS terminations (
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY(id, region)
 );
+
+-- We do a query that looks for terminations based on their code, reason and
+-- terminated timestamp.  These indexes ensure that we're getting fast queries
+CREATE INDEX on terminations (code NULLS FIRST);
+CREATE INDEX on terminations (reason NULLS FIRST);
+CREATE INDEX on terminations (terminated);
 
 -- Automatically keep instances touched parameter up to date
 CREATE TRIGGER update_terminations_touched
