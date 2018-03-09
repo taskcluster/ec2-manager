@@ -673,9 +673,9 @@ describe('State', () => {
         az: 'us-east-' + i + 'a',
         instanceType: 'm3.large',
         imageId: 'ami-' + i,
-        terminated: termTime,
-        launched: launched,
-        lastEvent: termTime,
+        terminated: new Date(termTime.getTime() + i),
+        launched: new Date(launched.getTime() + i),
+        lastEvent: new Date(termTime.getTime() + i),
       });
     }
 
