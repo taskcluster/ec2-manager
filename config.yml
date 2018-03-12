@@ -65,7 +65,7 @@ production:
     id: 'ec2-manager-production'
     publishMetadata: true
   postgres:
-    maxClients: 110
+    maxClients: 90
   monitor:
     project: ec2-manager
     mock: false
