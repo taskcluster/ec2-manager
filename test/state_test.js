@@ -758,14 +758,14 @@ describe('State', () => {
         region: defaultTerm.region,
         az: defaultTerm.az,
         instanceType: defaultTerm.instanceType,
-        clean_shutdown: 1,
-        spot_kill: 1,
-        insufficient_capacity: 1,
-        volume_limit_exceeded: 1,
-        missing_ami: 1,
-        startup_failed: 1,
-        unknown_codes: 1,
-        no_code: 1,
+        cleanShutdown: 1,
+        spotKill: 1,
+        insufficientCapacity: 1,
+        volumeLimitExceeded: 1,
+        missingAmi: 1,
+        startupFailed: 1,
+        unknownCodes: 1,
+        noCode: 1,
       });
     });
 
@@ -816,10 +816,10 @@ describe('State', () => {
         instanceType: 'm3.xlarge',
         successful: 1,
         failed: 4,
-        configuration_issue: 1,
-        throttled_calls: 1,
-        insufficient_capacity: 1,
-        limit_exceeded: 1,
+        configurationIssue: 1,
+        throttledCalls: 1,
+        insufficientCapacity: 1,
+        limitExceeded: 1,
       });
     });
   });
