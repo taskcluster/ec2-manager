@@ -40,9 +40,9 @@ defaults:
     env: development
     forceSSL: false
     trustProxy: false
-  monitor:
-    project: ec2-manager
-    mock: true
+  monitoring:
+    project: !env MONITORING_PROJECT
+    enable: !env:bool MONITORING_ENABLE
   taskcluster:
     authBaseUrl: https://auth.taskcluster.net/v1
     queueBaseUrl: https://queue.taskcluster.net/v1
@@ -66,9 +66,6 @@ production:
     publishMetadata: true
   postgres:
     maxClients: 90
-  monitor:
-    project: ec2-manager
-    mock: false
 staging:
   server:
     port: !env:number PORT
@@ -81,11 +78,10 @@ staging:
     publishMetadata: false
   postgres:
     maxClients: 10
-  monitor:
-    project: ec2-manager-staging
-    mock: true
 test:
   postgres:
     maxClients: 5
+  monitoring:
+    enable: false
   app:
     id: 'ec2-manager-test'

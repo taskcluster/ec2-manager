@@ -10,6 +10,7 @@
     "yarn": ">=0.24.5"
   },
   "scripts": {
+    "heroku-prebuild": "echo $SOURCE_VERSION > .git-revision",
     "start": "LOG_LEVEL=*:info node lib/main.js start",
     "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
     "_test": "NODE_ENV=test nyc --reporter=html mocha",
@@ -34,7 +35,7 @@
     "taskcluster-lib-iterate": "^1.0.2",
     "taskcluster-lib-loader": "^1.1.0",
     "taskcluster-lib-log": "^1.0.3",
-    "taskcluster-lib-monitor": "^4.6.3",
+    "taskcluster-lib-monitor": "^5.4.0",
     "taskcluster-lib-testing": "^1.0.4",
     "taskcluster-lib-validate": "^2.1.0",
     "typed-env-config": "^1.1.1",
