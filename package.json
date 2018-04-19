@@ -10,7 +10,7 @@
     "yarn": ">=0.24.5"
   },
   "scripts": {
-    "heroku-prebuild": "echo $SOURCE_VERSION > .git-revision",
+    "heroku-prebuild": "echo $SOURCE_VERSION > .git-version",
     "start": "LOG_LEVEL=*:info node lib/main.js start",
     "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
     "_test": "NODE_ENV=test nyc --reporter=html mocha",
