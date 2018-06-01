@@ -6,8 +6,8 @@
   "author": "John Ford <john@johnford.org>",
   "license": "MPL-2.0",
   "engines": {
-    "node": ">=8.1.4",
-    "yarn": ">=0.24.5"
+    "node": "^9.11.1",
+    "yarn": "^1.0.0"
   },
   "scripts": {
     "heroku-prebuild": "echo $SOURCE_VERSION > .git-version",
