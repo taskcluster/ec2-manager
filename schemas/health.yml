@@ -42,7 +42,7 @@ properties:
           type: string
         instanceType:
           type: string
-        clean_shutdown:
+        cleanShutdown:
           type: integer
           description: |
             A count of the instances which were shutdown cleanty.  For the
@@ -50,38 +50,38 @@ properties:
             by us.  This includes API shutdowns or workers ending themselves.
             It does not mean the actual workload ran successfully, rather that
             we chose to terminate it
-        spot_kill:
+        spotKill:
           type: integer
           description: |
             The number of instances which were killed by the spot service
-        insufficient_capacity: 
+        insufficientCapacity: 
           type: integer
           description: |
             The number of instances which were terminated due to a lack of
             capacity.  More than likely, this will always be zero because the
             new spot service is now synchronous, so runInstances calls should
             fail
-        volume_limit_exceeded:
+        volumeLimitExceeded:
           type: integer
           description: |
             The number of instances which were terminated due to exceeding the
             limit for number of ebs volumes
-        missing_ami:
+        missingAmi:
           type: integer
           description: |
             The number of instances which were terminated due to not being able
             to find the AMI
-        startup_failed:
+        startupFailed:
           type: integer
           description: |
             The number of instances which failed to start, either because of an
             error on our side or on the EC2 side
-        unknown_code:
+        unknownCode:
           type: integer
           description: |
             The number of terminations which have a code which this code does
             not recognize
-        no_code:
+        noCode:
           type: integer
           description: |
             The number of terminations which we cannot find a code.  This means
@@ -94,14 +94,14 @@ properties:
         - region
         - az
         - instanceType
-        - clean_shutdown
-        - spot_kill
-        - insufficient_capacity
-        - volume_limit_exceeded
-        - missing_ami
-        - startup_failed
-        - unknown_codes
-        - no_code
+        - cleanShutdown
+        - spotKill
+        - insufficientCapacity
+        - volumeLimitExceeded
+        - missingAmi
+        - startupFailed
+        - unknownCodes
+        - noCode
   requestHealth:
     type: array
     items:
@@ -126,7 +126,7 @@ properties:
           type: integer
           description:
             The total number of calls which failed, inrespective of why
-        configuration_issue:
+        configurationIssue:
           type: integer
           description:
             The number of calls failed due to a misconfiguration of the worker
@@ -136,17 +136,17 @@ properties:
             from
             https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html
             It is not categorized by which field was invalid in this response
-        throttled_calls: 
+        throttledCalls: 
           type: integer
           description: |
             Number of calls which have been throttled in this region.  These
             are errors with the code RequestLimitExceeded.
-        insufficient_capacity:
+        insufficientCapacity:
           type: integer
           description: |
             Number of runInstances calls which have failed because there aren't
             enough hosts for the resources to be allocated.
-        limit_exceeded:
+        limitExceeded:
           type: integer
           description: |
             The number of calls which failed due to a limit being exceeded.
@@ -163,10 +163,10 @@ properties:
         - instanceType
         - successful
         - failed
-        - configuration_issue
-        - throttled_calls
-        - insufficient_capacity
-        - limit_exceeded
+        - configurationIssue
+        - throttledCalls
+        - insufficientCapacity
+        - limitExceeded
 additionalProperties: false
 requiredProperties:
   - running
