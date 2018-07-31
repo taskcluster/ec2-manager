@@ -14,7 +14,7 @@
     "heroku-prebuild": "echo $SOURCE_VERSION > .git-version",
     "start": "LOG_LEVEL=*:info node lib/main.js start",
     "test": "LOG_LEVEL=*:warn DEBUG= yarn run _test",
-    "_test": "NODE_ENV=test nyc --reporter=html mocha",
+    "_test": "NODE_ENV=test nyc --reporter=html mocha --exit",
     "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js",
     "purgequeues": "node lib/main.js purgequeues"
   },
@@ -47,7 +47,7 @@
     "eslint": "^5.2.0",
     "eslint-config-taskcluster": "^3.1.0",
     "eslint-plugin-taskcluster": "^1.0.2",
-    "mocha": "^3.5.3",
-    "mocha-eslint": "^3.0.1"
+    "mocha": "^5.2.0",
+    "mocha-eslint": "^4.1.0"
   }
 }
