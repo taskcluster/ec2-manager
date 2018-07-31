@@ -20,6 +20,8 @@ describe('Api', () => {
   let runaws;
   let regions;
 
+  let dbWorks = false;
+
   before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
@@ -151,7 +153,7 @@ describe('Api', () => {
     });
   });
 
-  describe('requesting resources', () => {
+  describe('requesting resources (mock)', () => {
     // TODO: Rewrite this set of tests for runInstance
     let ClientToken;
     let Region;
@@ -188,7 +190,7 @@ describe('Api', () => {
       });
     });
 
-    it('should be able to request an on-demand instance', async () => {
+    it('should be able to request an on-demand instance (mock)', async () => {
       await client.runInstance(workerType, {
         ClientToken,
         Region,
@@ -232,7 +234,7 @@ describe('Api', () => {
       assume(instances).has.lengthOf(1);
     });
     
-    it('should be able to request a spot request at default price', async () => {
+    it('should be able to request a spot request at default price (mock)', async () => {
       await client.runInstance(workerType, {
         ClientToken,
         Region,
@@ -282,7 +284,7 @@ describe('Api', () => {
       assume(instances).has.lengthOf(1);
     });
 
-    it('should be able to request a spot request at a specific price', async () => {
+    it('should be able to request a spot request at a specific price (mock)', async () => {
       await client.runInstance(workerType, {
         ClientToken,
         Region,
@@ -373,7 +375,7 @@ describe('Api', () => {
       });
     });
 
-    it('should be able to kill all of a worker type', async () => {
+    it('should be able to kill all of a worker type (mock)', async () => {
       let result = await client.terminateWorkerType(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
@@ -394,7 +396,7 @@ describe('Api', () => {
       }
     });
 
-    it('should be able to kill a single instance', async () => {
+    it('should be able to kill a single instance (mock)', async () => {
       runaws.returns({
         TerminatingInstances: [{
           PreviousState: {Name: 'pending'},
@@ -537,7 +539,7 @@ describe('Api', () => {
   });
 
   describe('managing key pairs', () => {
-    it('should create and delete keypairs idempotently', async () => {
+    it('should create and delete keypairs idempotently (mock)', async () => {
 
       // Let's create a key pair
       runaws.returns(Promise.resolve({
