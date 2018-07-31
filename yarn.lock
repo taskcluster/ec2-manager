@@ -183,7 +183,7 @@ assertion-error@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/assertion-error/-/assertion-error-1.0.2.tgz#13ca515d86206da0bac66e834dd397d87581094c"
 
-assume@^1.3.1, assume@^1.5.1:
+assume@^1.3.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/assume/-/assume-1.5.1.tgz#9c241668526be1fac4be5207776e8e8fe89358cb"
   dependencies:
@@ -192,6 +192,17 @@ assume@^1.3.1, assume@^1.5.1:
     object-inspect "1.0.x"
     pathval "0.1.x"
     pruddy-error "1.0.x"
+
+assume@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/assume/-/assume-2.1.0.tgz#16939464de8a4bfdfe3d5ab5256c5ae08a1ddf62"
+  dependencies:
+    deep-eql "^3.0.1"
+    fn.name "^1.0.1"
+    is-buffer "^2.0.0"
+    object-inspect "^1.5.0"
+    propget "^1.1.0"
+    pruddy-error "^2.0.2"
 
 async@*:
   version "2.5.0"
@@ -1354,6 +1365,12 @@ deep-eql@0.1.x, deep-eql@^0.1.3:
   dependencies:
     type-detect "0.1.1"
 
+deep-eql@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/deep-eql/-/deep-eql-3.0.1.tgz#dfc9404400ad1c8fe023e7da1df1c147c4b444df"
+  dependencies:
+    type-detect "^4.0.0"
+
 deep-equal@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/deep-equal/-/deep-equal-1.0.1.tgz#f5d260292b660e084eff4cdbc9f08ad3247448b5"
@@ -1939,6 +1956,10 @@ fn.name@1.0.x:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/fn.name/-/fn.name-1.0.1.tgz#8015ad149c1011a116cdb89eba4cc11d9039add8"
 
+fn.name@^1.0.1:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/fn.name/-/fn.name-1.1.0.tgz#26cad8017967aea8731bc42961d04a3d5988accc"
+
 for-in@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/for-in/-/for-in-1.0.2.tgz#81068d295a8142ec0ac726c6e2200c30fb6d5e80"
@@ -2424,6 +2445,10 @@ is-buffer@^1.1.5:
   version "1.1.5"
   resolved "https://registry.yarnpkg.com/is-buffer/-/is-buffer-1.1.5.tgz#1f3b26ef613b214b88cbca23cc6c01d87961eecc"
 
+is-buffer@^2.0.0:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/is-buffer/-/is-buffer-2.0.3.tgz#4ecf3fcf749cbd1e472689e109ac66261a25e725"
+
 is-buffer@~1.1.1:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/is-buffer/-/is-buffer-1.1.6.tgz#efaa2ea9daa0d7ab2ea13a97b2b8ad51fefbe8be"
@@ -2482,6 +2507,10 @@ is-my-json-valid@^2.10.0:
     generate-object-property "^1.1.0"
     jsonpointer "^4.0.0"
     xtend "^4.0.0"
+
+is-node@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/is-node/-/is-node-1.0.2.tgz#d7d002745ef7debbb7477e988956ab0a4fccb653"
 
 is-number@^2.1.0:
   version "2.1.0"
@@ -2760,6 +2789,10 @@ lcid@^1.0.0:
   resolved "https://registry.yarnpkg.com/lcid/-/lcid-1.0.0.tgz#308accafa0bc483a3867b4b6f2b9506251d1b835"
   dependencies:
     invert-kv "^1.0.0"
+
+left-pad@^1.2.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/left-pad/-/left-pad-1.3.0.tgz#5b8a3a7765dfe001261dde915589e782f8c94d1e"
 
 levn@^0.3.0, levn@~0.3.0:
   version "0.3.0"
@@ -3192,6 +3225,10 @@ object-inspect@1.0.x:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.0.2.tgz#a97885b553e575eb4009ebc09bdda9b1cd21979a"
 
+object-inspect@^1.5.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.6.0.tgz#c70b6cbf72f274aab4c34c0c82f5167bf82cf15b"
+
 object.omit@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/object.omit/-/object.omit-2.0.1.tgz#1a9c744829f39dbb858c76ca3579ae2a54ebd1fa"
@@ -3526,6 +3563,10 @@ propagate@0.3.x:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/propagate/-/propagate-0.3.1.tgz#e3a84404a7ece820dd6bbea9f6d924e3135ae09c"
 
+propget@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/propget/-/propget-1.1.0.tgz#6c1c7ac9a09c05bdb5c967f0cd8e1c09409fef6b"
+
 proxy-addr@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/proxy-addr/-/proxy-addr-1.0.1.tgz#c7c566d5eb4e3fad67eeb9c77c5558ccc39b88a8"
@@ -3535,6 +3576,13 @@ proxy-addr@1.0.1:
 pruddy-error@1.0.x:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/pruddy-error/-/pruddy-error-1.0.2.tgz#b37ec1a38bf9107c0cdc5bc663d3d4e80354ae80"
+
+pruddy-error@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/pruddy-error/-/pruddy-error-2.0.2.tgz#0507d7a8ccc0ff7e497fa780201c9727b302181c"
+  dependencies:
+    is-node "^1.0.2"
+    left-pad "^1.2.0"
 
 pseudomap@^1.0.2:
   version "1.0.2"
