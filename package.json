@@ -19,7 +19,7 @@
     "purgequeues": "node lib/main.js purgequeues"
   },
   "dependencies": {
-    "aws-sdk": "^2.178.0",
+    "aws-sdk": "^2.283.1",
     "babel-compile": "^2.0.0",
     "babel-preset-taskcluster": "^3.0.0",
     "nyc": "^11.0.3",
