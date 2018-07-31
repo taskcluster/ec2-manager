@@ -6,9 +6,10 @@
   "author": "John Ford <john@johnford.org>",
   "license": "MPL-2.0",
   "engines": {
-    "node": "^9.11.1",
-    "yarn": "^1.0.0"
+    "node": "^9.11.2",
+    "yarn": "^1.9.2"
   },
+  "engineStrict": "true",
   "scripts": {
     "heroku-prebuild": "echo $SOURCE_VERSION > .git-version",
     "start": "LOG_LEVEL=*:info node lib/main.js start",
@@ -21,12 +22,9 @@
     "aws-sdk": "^2.178.0",
     "babel-compile": "^2.0.0",
     "babel-preset-taskcluster": "^3.0.0",
-    "bluebird": "^3.5.0",
-    "lodash": "^4.17.4",
     "nyc": "^11.0.3",
     "pg": "^7.4.0",
     "pg-pool": "^2.0.3",
-    "redis": "^2.7.1",
     "sinon": "^2.3.8",
     "sqs-simple": "^1.3.0",
     "taskcluster-client": "^2.5.0",
