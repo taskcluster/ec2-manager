@@ -1,4 +1,4 @@
-$schema: http://json-schema.org/draft-04/schema#
+$schema: http://json-schema.org/draft-06/schema#
 title: "Health of the EC2 account"
 description: |
   This method provides a summary of the health in the EC2 account being managed.

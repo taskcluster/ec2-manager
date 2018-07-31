@@ -1,4 +1,4 @@
-$schema:  http://json-schema.org/draft-04/schema#
+$schema:  http://json-schema.org/draft-06/schema#
 title: "Make a spot request"
 description: |
   Presented here are the fields that are absolutely 100% required to make a
