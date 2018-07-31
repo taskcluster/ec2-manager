@@ -80,7 +80,6 @@ describe('Api', () => {
   });
 
   it('api comes up', async () => {
-    console.dir(client);
     let result = await client.ping();
     assume(result).has.property('alive', true);
   });
