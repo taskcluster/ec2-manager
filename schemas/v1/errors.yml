@@ -1,5 +1,4 @@
-
-$schema: http://json-schema.org/draft-04/schema#
+$schema: http://json-schema.org/draft-06/schema#
 title: "Errors"
 description: |
   This method returns a list of errors.  It currently gives the error code only

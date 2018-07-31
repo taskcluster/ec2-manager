@@ -2,7 +2,7 @@ const testing = require('taskcluster-lib-testing');
 const taskcluster = require('taskcluster-client');
 const assume = require('assume');
 const main = require('../lib/main');
-const {api} = require('../lib/api');
+const {builder} = require('../lib/api');
 const sinon = require('sinon');
 const uuid = require('uuid');
 
@@ -30,12 +30,15 @@ describe('Api', () => {
 
     testing.fakeauth.start({
       hasauth: ['*'],
+    }, {
+      rootUrl: 'http://localhost:5555/',
     });
 
-    let apiRef = api.reference({baseUrl: 'http://localhost:5555/v1'});
+    let apiRef = builder.reference({baseUrl: 'http://localhost:5555/v1'});
     let EC2Manager = taskcluster.createClient(apiRef);
 
     client = new EC2Manager({
+      rootUrl: 'http://localhost:5555',
       credentials: {
         clientId: 'hasauth',
         accessToken: 'abcde',
@@ -70,11 +73,14 @@ describe('Api', () => {
         }
       }
     }
-    server.terminate();
+    if (server) {
+      server.terminate();
+    }
     sandbox.restore();
   });
 
   it('api comes up', async () => {
+    console.dir(client);
     let result = await client.ping();
     assume(result).has.property('alive', true);
   });
