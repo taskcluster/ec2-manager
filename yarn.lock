@@ -3034,7 +3034,7 @@ js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
 
-js-yaml@^3.11.0:
+js-yaml@^3.10.0, js-yaml@^3.11.0:
   version "3.12.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.12.0.tgz#eaed656ec8344f10f527c6bfa1b6e2244de167d1"
   dependencies:
@@ -3048,7 +3048,7 @@ js-yaml@^3.5.1, js-yaml@^3.9.1:
     argparse "^1.0.7"
     esprima "^4.0.0"
 
-js-yaml@^3.5.3, js-yaml@^3.6.1:
+js-yaml@^3.5.3:
   version "3.9.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.9.0.tgz#4ffbbf25c2ac963b8299dc74da7e3740de1c18ce"
   dependencies:
@@ -5360,13 +5360,13 @@ type-is@~1.5.1:
     media-typer "0.3.0"
     mime-types "~2.0.9"
 
-typed-env-config@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/typed-env-config/-/typed-env-config-1.1.1.tgz#debed355e08ef2e5f708d717862e43ed81bafe86"
+typed-env-config@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/typed-env-config/-/typed-env-config-2.0.0.tgz#b6e56257d620268d494585e59031bf5b5d25a17f"
   dependencies:
-    babel-runtime "^6.0.0"
-    debug "^2.2.0"
-    js-yaml "^3.6.1"
+    babel-runtime "^6.26.0"
+    debug "^3.1.0"
+    js-yaml "^3.10.0"
     lodash "^4.0.0"
 
 typedarray@^0.0.6:
