@@ -22,7 +22,7 @@
     "aws-sdk": "^2.283.1",
     "babel-compile": "^2.0.0",
     "babel-preset-taskcluster": "^3.0.0",
-    "nyc": "^11.0.3",
+    "nyc": "^12.0.2",
     "pg": "^7.4.0",
     "pg-pool": "^2.0.3",
     "sinon": "^2.3.8",
