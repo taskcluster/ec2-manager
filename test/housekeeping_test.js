@@ -144,7 +144,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should add instances not in local state', async () => {
+  it('should add instances not in local state (mock)', async () => {
     assume(await state.listInstances()).has.lengthOf(0);
 
     describeInstancesStub.returns({
@@ -182,7 +182,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should zombie kill', async () => {
+  it('should zombie kill (mock)', async () => {
     assume(await state.listInstances()).has.lengthOf(0);
 
     // We want to have one zombie in internal state and one not in internal state
