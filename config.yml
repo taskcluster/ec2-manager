@@ -35,8 +35,6 @@ defaults:
     databaseUrl: !env DATABASE_URL
   server:
     port: 5555
-    publicUrl: localhost:5555
-    baseUrl: 'http://localhost:5555/v1'
     env: development
     forceSSL: false
     trustProxy: false
@@ -44,8 +42,7 @@ defaults:
     project: !env MONITORING_PROJECT
     enable: !env:bool MONITORING_ENABLE
   taskcluster:
-    authBaseUrl: https://auth.taskcluster.net/v1
-    queueBaseUrl: https://queue.taskcluster.net/v1
+    //queueBaseUrl: https://queue.taskcluster.net/v1
     credentials:
       clientId: !env TASKCLUSTER_CLIENT_ID
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
@@ -60,8 +57,6 @@ production:
     env: production
     forceSSL: true
     trustProxy: true
-    publicUrl: 'https://ec2-manager.taskcluster.net'
-    baseUrl: 'https://ec2-manager.taskcluster.net/v1'
   app:
     id: 'ec2-manager-production'
     publishMetadata: true
@@ -73,7 +68,6 @@ staging:
     env: production
     forceSSL: true
     trustProxy: true
-    baseUrl: 'https://ec2-manager-staging.taskcluster.net/v1'
   app:
     id: 'ec2-manager-staging'
     publishMetadata: false
