@@ -1,22 +1,28 @@
 language: node_js
 dist: trusty
 sudo: false
+env:
+  global:
+    - TASKCLUSTER_ROOT_URL="http://localhost:5555"
 node_js:
-  - '8'
-  - '9'
+  - '10'
 services:
   - postgresql
 addons:
-  postgresql: "10.4"
+  postgresql: "10"
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
+      - postgresql-10
+      - postgresql-client-10
       - g++-4.8
+before_install:
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.9.4
+  - export PATH=$HOME/.yarn/bin:$PATH
 before_script:
   - psql -c "create database testing;" -U postgres
-before_install:
-  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.9.2
 env:
   global:
     - DATABASE_URL="postgres://postgres@localhost:5432/testing"
+    - PGPORT=5432

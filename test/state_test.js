@@ -244,7 +244,6 @@ describe('State', () => {
   });
 
   it('should be able to filter AMI usages', async () => {
-    debugger;
     let result = await db.listAmiUsage();
     assume(result).has.length(0);
     await db.reportAmiUsage({region: defaultInst.region, id: defaultInst.imageId});
