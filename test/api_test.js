@@ -5,7 +5,6 @@ const main = require('../lib/main');
 const {builder} = require('../lib/api');
 const sinon = require('sinon');
 const uuid = require('uuid');
-const promiseRetry = require('promise-retry');
 
 const pkcs7TestData = {
   signedData: `
@@ -636,14 +635,13 @@ describe('Api', () => {
 
   describe('credentials', () => {
     async function testErrorReturn(fn, doc) {
-      // When we run "yarn test" we sometimes get ECONNREFUSED for no clear reason
-      // Let's add a retry to avoid this
-      let code = await promiseRetry(retry =>
-        fn.apply(client, [{signature: pkcs7TestData.signedData, document: doc}]).catch(err =>
-          err.code === 'AuthorizationFailed' ? err.code : retry(err)
-        )
-      );
-      return assume(code).equals('AuthorizationFailed');
+      try {
+        await fn.apply(client, [{signature: pkcs7TestData.signedData, document: doc}]);
+      } catch (err) {
+        return err.code;
+      }
+
+      throw new Error(`Function ${fn} should have failed`);
     };
 
     let createTemporaryCredentials = taskcluster.createTemporaryCredentials;
@@ -666,11 +664,13 @@ describe('Api', () => {
     });
 
     it('invalid document', async() => {
-      await testErrorReturn(client.getCredentials, pkcs7TestData.invalidDoc);
+      const code = await testErrorReturn(client.getCredentials, pkcs7TestData.invalidDoc);
+      return assume(code).equals('AuthorizationFailed');
     });
 
     it('instance not in the database', async() => {
-      await testErrorReturn(client.getCredentials, pkcs7TestData.doc);
+      const code = await testErrorReturn(client.getCredentials, pkcs7TestData.doc);
+      return assume(code).equals('AuthorizationFailed');
     });
 
     it('instance is not running', async() => {
