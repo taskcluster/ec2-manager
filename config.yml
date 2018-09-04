@@ -1,5 +1,6 @@
 defaults:
   app:
+    rootUrl: !env TASKCLUSTER_ROOT_URL
     id: 'ec2-manager'
     houseKeepingPollDelay: 3600 # (seconds) 1 hour
     maxInstanceLifeHours: 96 # (hours)

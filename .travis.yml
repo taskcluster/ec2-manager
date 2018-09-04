@@ -1,21 +1,16 @@
 language: node_js
 dist: trusty
 sudo: false
-env:
-  global:
-    - TASKCLUSTER_ROOT_URL="http://localhost:5555"
 node_js:
   - '10'
 services:
   - postgresql
 addons:
-  postgresql: "10"
+  postgresql: "9.6"
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - postgresql-10
-      - postgresql-client-10
       - g++-4.8
 before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.9.4
@@ -25,4 +20,3 @@ before_script:
 env:
   global:
     - DATABASE_URL="postgres://postgres@localhost:5432/testing"
-    - PGPORT=5432
