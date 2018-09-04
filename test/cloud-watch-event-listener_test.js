@@ -39,7 +39,7 @@ describe('Cloud Watch Event Listener', () => {
   let listener;
   let tagger;
 
-  before(async() => {
+  before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
 
@@ -59,13 +59,13 @@ describe('Cloud Watch Event Listener', () => {
     listener = new CloudWatchEventListener({state, sqs, ec2, region, monitor, tagger});
   });
 
-  after(async() => {
+  after(async () => {
     await state._runScript('drop-db.sql');
   });
 
   // I could add these helper functions to the actual state.js class but I'd
   // rather not have that be so easy to call by mistake in real code
-  beforeEach(async() => {
+  beforeEach(async () => {
     await state._runScript('clear-db.sql');
     state = await main('state', {profile: 'test', process: 'test'});
     sandbox.stub(tagger, 'runaws');
@@ -89,7 +89,7 @@ describe('Cloud Watch Event Listener', () => {
     }
   });
 
-  it('should handle pending message', async() => {
+  it('should handle pending message', async () => {
     let mock = sandbox.stub(listener, 'runaws');
     mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 
@@ -115,7 +115,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });
   
-  it('should handle running transition with the instance already in db in pending state', async() => {
+  it('should handle running transition with the instance already in db in pending state', async () => {
     let pendingTimestamp = new Date();
     let runningTimestamp = new Date(pendingTimestamp);
     runningTimestamp.setMinutes(runningTimestamp.getMinutes() + 1);
@@ -158,7 +158,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });  
 
-  it('should handle out of order delivery', async() => {
+  it('should handle out of order delivery', async () => {
     let mock = sandbox.stub(listener, 'runaws');
     mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 
@@ -201,7 +201,7 @@ describe('Cloud Watch Event Listener', () => {
     assume(instances).lengthOf(1);
   });
 
-  it('should handle terminated event', async() => {
+  it('should handle terminated event', async () => {
     let mock = sandbox.stub(listener, 'runaws');
     mock.onFirstCall().throws(new Error('shouldnt talk to ec2 api'));
 

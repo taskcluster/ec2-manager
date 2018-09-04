@@ -70,6 +70,20 @@ yarn
 yarn test
 ```
 
+You'll need to have postgres running on your local system.  Once you have
+Postgres installed on your system, the following script can be run to get a
+working unit test environment
+
+```bash
+createuser testing
+createdb testing
+cat > user-config.yml << EOF
+test:
+  postgres:
+    databaseUrl: "postgres://testing:testing@localhost:5432/testing"
+EOF
+```
+
 ## Deployment notes
 When deploying, keep in mind the following:
 

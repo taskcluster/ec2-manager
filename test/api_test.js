@@ -2,7 +2,7 @@ const testing = require('taskcluster-lib-testing');
 const taskcluster = require('taskcluster-client');
 const assume = require('assume');
 const main = require('../lib/main');
-const {api} = require('../lib/api');
+const {builder} = require('../lib/api');
 const sinon = require('sinon');
 const uuid = require('uuid');
 
@@ -20,7 +20,9 @@ describe('Api', () => {
   let runaws;
   let regions;
 
-  before(async() => {
+  let dbWorks = false;
+
+  before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     await state._runScript('drop-db.sql');
@@ -30,12 +32,15 @@ describe('Api', () => {
 
     testing.fakeauth.start({
       hasauth: ['*'],
+    }, {
+      rootUrl: 'http://localhost:5555/',
     });
 
-    let apiRef = api.reference({baseUrl: 'http://localhost:5555/v1'});
+    let apiRef = builder.reference({baseUrl: 'http://localhost:5555/v1'});
     let EC2Manager = taskcluster.createClient(apiRef);
 
     client = new EC2Manager({
+      rootUrl: 'http://localhost:5555',
       credentials: {
         clientId: 'hasauth',
         accessToken: 'abcde',
@@ -43,14 +48,14 @@ describe('Api', () => {
     });
   });
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     state = await main('state', {profile: 'test', process: 'test'});
     await state._runScript('clear-db.sql');
     runaws = sandbox.stub();
     server = await main('server', {profile: 'test', process: 'test', runaws});
   });
 
-  after(async() => {
+  after(async () => {
     testing.fakeauth.stop();
     await state._runScript('drop-db.sql');
   });
@@ -70,16 +75,18 @@ describe('Api', () => {
         }
       }
     }
-    server.terminate();
+    if (server) {
+      server.terminate();
+    }
     sandbox.restore();
   });
 
-  it('api comes up', async() => {
+  it('api comes up', async () => {
     let result = await client.ping();
     assume(result).has.property('alive', true);
   });
 
-  it('should list worker types', async() => {
+  it('should list worker types', async () => {
     let status = 'pending-evaluation';
     await state.insertInstance({
       id: 'i-1',
@@ -107,7 +114,7 @@ describe('Api', () => {
     assume(result).deeply.equals(['w-1', 'w-2']);
   });
 
-  it('should show instance counts', async() => {
+  it('should show instance counts', async () => {
     let status = 'pending-evaluation';
     await state.insertInstance({
       id: 'i-1',
@@ -146,7 +153,7 @@ describe('Api', () => {
     });
   });
 
-  describe('requesting resources', () => {
+  describe('requesting resources (mock)', () => {
     // TODO: Rewrite this set of tests for runInstance
     let ClientToken;
     let Region;
@@ -183,7 +190,7 @@ describe('Api', () => {
       });
     });
 
-    it('should be able to request an on-demand instance', async() => {
+    it('should be able to request an on-demand instance (mock)', async () => {
       await client.runInstance(workerType, {
         ClientToken,
         Region,
@@ -227,7 +234,7 @@ describe('Api', () => {
       assume(instances).has.lengthOf(1);
     });
     
-    it('should be able to request a spot request at default price', async() => {
+    it('should be able to request a spot request at default price (mock)', async () => {
       await client.runInstance(workerType, {
         ClientToken,
         Region,
@@ -277,7 +284,7 @@ describe('Api', () => {
       assume(instances).has.lengthOf(1);
     });
 
-    it('should be able to request a spot request at a specific price', async() => {
+    it('should be able to request a spot request at a specific price (mock)', async () => {
       await client.runInstance(workerType, {
         ClientToken,
         Region,
@@ -331,7 +338,7 @@ describe('Api', () => {
   });
 
   describe('managing resources', () => {
-    beforeEach(async() => {
+    beforeEach(async () => {
       let status = 'pending-fulfillment';
       await state.insertInstance({
         id: 'i-1',
@@ -368,7 +375,7 @@ describe('Api', () => {
       });
     });
 
-    it('should be able to kill all of a worker type', async() => {
+    it('should be able to kill all of a worker type (mock)', async () => {
       let result = await client.terminateWorkerType(workerType); 
 
       // Lengthof doesn't seem to work here.  oh well
@@ -389,7 +396,7 @@ describe('Api', () => {
       }
     });
 
-    it('should be able to kill a single instance', async() => {
+    it('should be able to kill a single instance (mock)', async () => {
       runaws.returns({
         TerminatingInstances: [{
           PreviousState: {Name: 'pending'},
@@ -405,7 +412,7 @@ describe('Api', () => {
   });
 
   describe('health and error reporting', () => {
-    it('should give a valid report when theres no state', async() => {
+    it('should give a valid report when theres no state', async () => {
       let result = await client.getHealth();
     });
 
@@ -452,12 +459,12 @@ describe('Api', () => {
       
     }
 
-    it('should report global health with empty state', async() => {
+    it('should report global health with empty state', async () => {
       await insertThings({}, {}, {});
       let result = await client.getHealth();
     });
 
-    it('should report recent errors', async() => {
+    it('should report recent errors', async () => {
       let termOW = {
         code: 'Server.InternalError',
         reason: 'reason',
@@ -481,7 +488,7 @@ describe('Api', () => {
 
     });
     
-    it('should report recent errors of a specific worker type', async() => {
+    it('should report recent errors of a specific worker type', async () => {
       let termOW = {
         code: 'Server.InternalError',
         reason: 'reason',
@@ -505,7 +512,7 @@ describe('Api', () => {
 
     });
    
-    it('should give a valid report with state for a specific worker type', async() => {
+    it('should give a valid report with state for a specific worker type', async () => {
       let ow = {workerType: 'has-stuff'};
       await insertThings(ow, ow, ow); 
       let result = await client.workerTypeHealth('has-stuff');
@@ -517,7 +524,7 @@ describe('Api', () => {
       assume(result.running).has.lengthOf(1);
     }); 
 
-    it('should give a valid report without confusing worker types', async() => {
+    it('should give a valid report without confusing worker types', async () => {
       let ow = {workerType: 'has-stuff'};
       await insertThings(ow, ow, ow); 
       let result = await client.workerTypeHealth('has-no-stuff');
@@ -532,7 +539,7 @@ describe('Api', () => {
   });
 
   describe('managing key pairs', () => {
-    it('should create and delete keypairs idempotently', async() => {
+    it('should create and delete keypairs idempotently (mock)', async () => {
 
       // Let's create a key pair
       runaws.returns(Promise.resolve({
@@ -572,13 +579,13 @@ describe('Api', () => {
   // These are functions which are supposed to be used for debugging and
   // troubleshooting primarily.  Maybe some ui stuff?
   describe('internal api', () => {
-    it('should list regions', async() => {
+    it('should list regions', async () => {
       let result = await client.regions();
       result.regions.sort();
       assume(result.regions).deeply.equals(regions.sort());
     });
 
-    it('should list AMI usage', async() => {
+    it('should list AMI usage', async () => {
       await state.reportAmiUsage({
         region: region,
         id: imageId,

@@ -1,5 +1,6 @@
 defaults:
   app:
+    rootUrl: !env TASKCLUSTER_ROOT_URL
     id: 'ec2-manager'
     houseKeepingPollDelay: 3600 # (seconds) 1 hour
     maxInstanceLifeHours: 96 # (hours)
@@ -35,17 +36,14 @@ defaults:
     databaseUrl: !env DATABASE_URL
   server:
     port: 5555
-    publicUrl: localhost:5555
-    baseUrl: 'http://localhost:5555/v1'
     env: development
     forceSSL: false
     trustProxy: false
   monitoring:
     project: !env MONITORING_PROJECT
     enable: !env:bool MONITORING_ENABLE
+    mock: false
   taskcluster:
-    authBaseUrl: https://auth.taskcluster.net/v1
-    queueBaseUrl: https://queue.taskcluster.net/v1
     credentials:
       clientId: !env TASKCLUSTER_CLIENT_ID
       accessToken: !env TASKCLUSTER_ACCESS_TOKEN
@@ -54,14 +52,14 @@ development:
     id: 'ec2-manager-development'
     regions:
       - us-west-2
+  monitoring:
+    enable: false
 production:
   server:
     port: !env:number PORT
     env: production
     forceSSL: true
     trustProxy: true
-    publicUrl: 'https://ec2-manager.taskcluster.net'
-    baseUrl: 'https://ec2-manager.taskcluster.net/v1'
   app:
     id: 'ec2-manager-production'
     publishMetadata: true
@@ -73,7 +71,6 @@ staging:
     env: production
     forceSSL: true
     trustProxy: true
-    baseUrl: 'https://ec2-manager-staging.taskcluster.net/v1'
   app:
     id: 'ec2-manager-staging'
     publishMetadata: false

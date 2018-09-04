@@ -27,7 +27,7 @@ describe('House Keeper', () => {
   let houseKeeperMock;
   let managerId;
 
-  before(async() => {
+  before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     ec2 = await main('ec2', {profile: 'test', process: 'test'});
@@ -38,7 +38,7 @@ describe('House Keeper', () => {
     managerId = cfg.app.id;
   });
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     state = await main('state', {profile: 'test', process: 'test'});
     monitor = await main('monitor', {profile: 'test', process: 'test'});
     await state._runScript('clear-db.sql');
@@ -84,7 +84,7 @@ describe('House Keeper', () => {
     houseKeeperMock = sandbox.mock(houseKeeper);
   });
 
-  after(async() => {
+  after(async () => {
     await state._runScript('drop-db.sql');
   });
 
@@ -106,7 +106,7 @@ describe('House Keeper', () => {
     sandbox.restore();
   });
 
-  it('should remove instances not in api state', async() => {
+  it('should remove instances not in api state', async () => {
     let status = 'pending-fulfillment';
     await state.insertInstance({
       id: 'i-1',
@@ -144,7 +144,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should add instances not in local state', async() => {
+  it('should add instances not in local state (mock)', async () => {
     assume(await state.listInstances()).has.lengthOf(0);
 
     describeInstancesStub.returns({
@@ -182,7 +182,7 @@ describe('House Keeper', () => {
     });
   });
 
-  it('should zombie kill', async() => {
+  it('should zombie kill (mock)', async () => {
     assume(await state.listInstances()).has.lengthOf(0);
 
     // We want to have one zombie in internal state and one not in internal state

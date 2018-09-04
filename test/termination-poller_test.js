@@ -36,7 +36,7 @@ describe('TerminationPoller', () => {
   let cfg;
   let describeInstancesStub;
 
-  before(async() => {
+  before(async () => {
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
 
@@ -48,7 +48,7 @@ describe('TerminationPoller', () => {
     regions = cfg.app.regions;
   });
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     monitor = await main('monitor', {profile: 'test', process: 'test'});
     await state._runScript('clear-db.sql');
 
@@ -68,7 +68,7 @@ describe('TerminationPoller', () => {
 
   });
 
-  after(async() => {
+  after(async () => {
     await state._runScript('drop-db.sql');
   });
 
@@ -76,7 +76,7 @@ describe('TerminationPoller', () => {
     sandbox.restore();
   });
 
-  it('should be able to check for instances which have terminated', async() => {
+  it('should be able to check for instances which have terminated', async () => {
     let terminations = [];
 
     for (let i = 1; i <= 2; i++) {
