@@ -732,6 +732,7 @@ describe('State', () => {
       ];
 
       let i = 1;
+      let termTime = new Date();
       for (let code of codesToTest) {
         let thisTerm = Object.assign({}, defaultTerm, {id: 'i-' + i});
         await db.insertTermination(thisTerm);
@@ -740,8 +741,8 @@ describe('State', () => {
           id: 'i-' + i,
           code: code,
           reason: code + ': reason',
-          terminated: new Date(),
-          lastEvent: new Date(),
+          terminated: termTime,
+          lastEvent: termTime,
         });
         i++;
       }
