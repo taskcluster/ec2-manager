@@ -12,7 +12,7 @@
   "scripts": {
     "heroku-prebuild": "echo $SOURCE_VERSION > .git-version",
     "start": "LOG_LEVEL=*:info node lib/main.js start",
-    "test": "LOG_LEVEL=*:warn yarn run _test",
+    "test": "LOG_LEVEL=${LOG_LEVEL:-\"*:fatal\"} DEBUG=${DEBUG:-\"\"} yarn run _test",
     "_test": "NODE_ENV=test nyc --reporter=html mocha --exit",
     "fixlint": "DEBUG= eslint --fix lib/*.js test/*.js",
     "purgequeues": "node lib/main.js purgequeues"
