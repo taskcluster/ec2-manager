@@ -94,6 +94,15 @@ CREATE TABLE IF NOT EXISTS awsrequests (
   PRIMARY KEY(region, "requestId")
 );
 
+CREATE INDEX ON awsrequests (
+  region,
+  az,
+  "instanceType",
+  "workerType",
+  code,
+  called
+) WHERE error=true AND method = 'runInstances';
+
 -- Cloudwatch Events Log
 -- We want to keep a log of when every cloud watch event was generated
 CREATE TABLE IF NOT EXISTS cloudwatchlog (
