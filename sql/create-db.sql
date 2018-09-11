@@ -94,6 +94,8 @@ CREATE TABLE IF NOT EXISTS awsrequests (
   PRIMARY KEY(region, "requestId")
 );
 
+-- This index is needed for requesting recent errors on the very large
+-- awsrequests table for the /recent-errors/ and related endpoints
 CREATE INDEX ON awsrequests (
   region,
   az,
@@ -102,6 +104,18 @@ CREATE INDEX ON awsrequests (
   code,
   called
 ) WHERE error=true AND method = 'runInstances';
+
+-- This index is needed for requesting the recent requests health information
+-- on the very large awsrequests table for the /health/ and related endpoints
+CREATE INDEX ON awsrequests (
+  region,
+  az,
+  "instanceType",
+  "workerType",
+  code,
+  error,
+  called
+) WHERE method = 'runInstances';
 
 -- Cloudwatch Events Log
 -- We want to keep a log of when every cloud watch event was generated
