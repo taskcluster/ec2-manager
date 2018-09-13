@@ -1,0 +1,13 @@
+{
+  "environments": {
+    "test": {
+      "env": {
+        "TASKCLUSTER_ROOT_URL": "http://localhost:5555"
+      },
+      "addons":[
+         "heroku-postgresql:in-dyno"
+      ]
+    }
+  }
+}
+
