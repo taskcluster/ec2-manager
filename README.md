@@ -1,5 +1,4 @@
 # EC2 Manager
-[![Build Status](https://travis-ci.org/taskcluster/ec2-manager.svg?branch=master)](https://travis-ci.org/taskcluster/ec2-manager)
 Track, manage and alter the state of an EC2 account with a focus on spot
 requests.  The application understands EC2 regions, instances and pools of
 instances.  It does not understand Taskcluster Provisioning specifics like
