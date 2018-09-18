@@ -6,6 +6,51 @@ type: object
 properties:
   instances:
     type: array
+  items:
+    type: object
+    properties:
+      id:
+        description: EC2 instance id
+        type: string
+      workerType:
+        description: Worker Type for this instance
+        type: string
+      region:
+        description: EC2 region id
+        type: string
+      instanceType:
+        description: EC2 instanceType
+        type: string
+      state:
+        description: EC2 instance state, e.g. running or pending
+        type: string
+      touched:
+        description: Date/time when state was last updated
+        type: string
+      az:
+        description: EC2 availability zone id
+        type: string
+      imageId:
+        description: EC2 AMI
+        type: string
+      launched:
+        description: Date/time when EC2 started this instance
+        type: string
+      lastEvent:
+        description: Date/time when EC2 last sent information about state changes
+        type: string
+    additionalProperties: false
+    requiredProperties:
+      - id
+      - workerType
+      - region
+      - instanceType
+      - state
+      - touched
+      - az
+      - imageId
+      - launched
+      - lastEvent
 additionalProperties: false
 requiredProperties:
   - instances
