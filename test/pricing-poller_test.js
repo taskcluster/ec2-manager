@@ -97,6 +97,7 @@ describe('Pricing', () => {
     });
 
     describeSPHStub.onFirstCall().returns({
+      NextToken: 'abc123',
       SpotPriceHistory: [{
         Timestamp: '2017-07-05T13:11:21.000Z', 
         AvailabilityZone: zones[0], 
@@ -130,7 +131,42 @@ describe('Pricing', () => {
       }],
     });
 
-    //describeSPHStub.onSecondCall().throws();
+    describeSPHStub.onSecondCall().callsFake((ec2, method, params) => {
+      assume(params.NextToken).is.equal('abc123');
+      return {
+        SpotPriceHistory: [{
+          Timestamp: '2017-08-05T13:11:21.000Z',
+          AvailabilityZone: 'd',
+          InstanceType: 'm3.medium',
+          ProductDescription: 'Linux/UNIX',
+          SpotPrice: '1.1',
+        }, {
+          Timestamp: '2017-08-05T13:14:21.000Z',
+          AvailabilityZone: 'd',
+          InstanceType: 'm3.medium',
+          ProductDescription: 'Linux/UNIX',
+          SpotPrice: '1.2',
+        }, {
+          Timestamp: '2017-08-05T13:14:21.000Z',
+          AvailabilityZone: 'd',
+          InstanceType: 'm3.xlarge',
+          ProductDescription: 'Linux/UNIX',
+          SpotPrice: '1.7',
+        }, {
+          Timestamp: '2017-08-05T13:14:21.000Z',
+          AvailabilityZone: 'd',
+          InstanceType: 'm3.xlarge',
+          ProductDescription: 'Linux/UNIX',
+          SpotPrice: '1.1',
+        }, {
+          Timestamp: '2017-08-05T13:14:21.000Z',
+          AvailabilityZone: zones[2],
+          InstanceType: 'm3.medium',
+          ProductDescription: 'Linux/UNIX',
+          SpotPrice: '1.2',
+        }],
+      };
+    });
 
     describeAZStub.onFirstCall().returns({
       AvailabilityZones: [{
@@ -156,11 +192,14 @@ describe('Pricing', () => {
     await poller.poll();
 
     let expected = [
-      {instanceType: 'm3.medium', price: 0.1, region, type: 'spot', zone: zones[1]}, 
-      {instanceType: 'm3.medium', price: 0.2, region, type: 'spot', zone: zones[0]}, 
-      {instanceType: 'm3.xlarge', price: 0.7, region, type: 'spot', zone: zones[0]}, 
+      {instanceType: 'm3.medium', price: 0.1, region, type: 'spot', zone: zones[1]},
+      {instanceType: 'm3.medium', price: 0.2, region, type: 'spot', zone: zones[0]},
+      {instanceType: 'm3.xlarge', price: 0.7, region, type: 'spot', zone: zones[0]},
+      {instanceType: 'm3.medium', price: 1.2, region, type: 'spot', zone: zones[2]},
     ];
 
+    assume(describeSPHStub.callCount).is.equal(2);
+    assume(describeAZStub.callCount).is.equal(1);
     assume(poller.prices).deeply.equals(expected);
   });
 
