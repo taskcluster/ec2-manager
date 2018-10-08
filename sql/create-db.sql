@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS instances (
                                     -- to ensure that we have correct ordering of cloud watch
                                     -- events
   touched TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "hasClaimedCredentials" BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id, region)
 );
 -- Automatically keep instances touched parameter up to date
