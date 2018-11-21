@@ -23,6 +23,8 @@ describe('Api', () => {
   let dbWorks = false;
 
   before(async () => {
+    process.env.TASKCLUSTER_ROOT_URL = 'http://localhost:5555/';
+
     // We want a clean DB state to verify things happen as we intend
     state = await main('state', {profile: 'test', process: 'test'});
     await state._runScript('drop-db.sql');
@@ -33,14 +35,14 @@ describe('Api', () => {
     testing.fakeauth.start({
       hasauth: ['*'],
     }, {
-      rootUrl: 'http://localhost:5555/',
+      rootUrl: process.env.TASKCLUSTER_ROOT_URL,
     });
 
     let apiRef = builder.reference({baseUrl: 'http://localhost:5555/v1'});
     let EC2Manager = taskcluster.createClient(apiRef);
 
     client = new EC2Manager({
-      rootUrl: 'http://localhost:5555',
+      rootUrl: process.env.TASKCLUSTER_ROOT_URL,
       credentials: {
         clientId: 'hasauth',
         accessToken: 'abcde',
