@@ -14,7 +14,7 @@ defaults:
       - eu-west-2
     queueName: 'ec2-events'
     ruleName: 'ec2-instance-state-transitions'
-    publishMetadata: false
+    publishMetadata: !env:bool PUBLISH_METADATA
     pricingPollDelay: 900 # (seconds) 15 minutes
     pricingTimePeriod: 30 # (seconds)
   ec2:
@@ -62,7 +62,6 @@ production:
     trustProxy: true
   app:
     id: 'ec2-manager-production'
-    publishMetadata: true
   postgres:
     maxClients: 90
 staging:
