@@ -700,6 +700,90 @@ describe('State', () => {
     assume(actual[0]).has.property('reason', 'Reason');
   });
 
+  describe('showing recent errors', () => {
+    it('show expected terminations and request errors', async () => {
+      let termination = new Date();
+      let request1 = new Date();
+      let request2 = new Date();
+
+      termination.setMinutes(termination.getMinutes() - 30);
+      request1.setMinutes(request1.getMinutes() - 20);
+      request2.setMinutes(request2.getMinutes() - 10);
+
+      await db.insertTermination({
+        region: 'us-east-1',
+        az: 'us-east-1a',
+        workerType: 'worker-1',
+        imageId: 'ami-123456789',
+        instanceType: 'm3.medium',
+        id: 'i-0',
+        code: 'Server.SpotInstanceTermination',
+        reason: 'Server.SpotInstanceTermination: test',
+        lastEvent: termination,
+        launched: termination,
+        terminated: termination,
+      });     
+
+      await db.logAWSRequest({
+        region: 'us-east-1',
+        requestId: 'request1', 
+        duration: 1000, // Remember this is us not ms
+        method: 'runInstances',
+        service: 'dunky',
+        error: true,
+        code: 'RequestLimitExceeded',
+        message: 'RequestLimitExceeded: test',
+        called: request1,
+      });
+
+      // We don't want to show any of these errors through the API, since
+      // they're encyrpted authorization errors.  
+      await db.logAWSRequest({
+        region: 'us-east-1',
+        requestId: 'request2', 
+        duration: 1000, // Remember this is us not ms
+        method: 'runInstances',
+        service: 'dunky',
+        error: true,
+        code: 'UnauthorizedOperation',
+        message: 'UnauthorizedOperation: test2',
+        called: request2,
+      });
+
+      assume(await db.getRecentErrors()).deeply.equals([
+        { 
+          type: 'termination',
+          region: 'us-east-1',
+          az: 'us-east-1a',
+          instanceType: 'm3.medium',
+          workerType: 'worker-1',
+          code: 'Server.SpotInstanceTermination',
+          time: termination,
+          message: 'Server.SpotInstanceTermination: test',
+        }, {
+          type: 'instance-request',
+          region: 'us-east-1',
+          az: null,
+          instanceType: null,
+          workerType: null,
+          code: 'RequestLimitExceeded',
+          time: request1,
+          message: 'RequestLimitExceeded: test',
+        }, {
+          type: 'instance-request',
+          region: 'us-east-1',
+          az: null,
+          instanceType: null,
+          workerType: null,
+          code: 'UnauthorizedOperation',
+          time: request2,
+          message: '----- HIDDEN -----',
+        },
+      ]);
+
+    });
+  });
+
   describe('determining health of ec2 account', () => {
 
     it('should work with empty state', async () => {
