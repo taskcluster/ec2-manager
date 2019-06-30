@@ -6,7 +6,7 @@ Capacity or Utility factors.
 
 ## Architecture
 
-EC2-Manager is comprised of X major subsystems:
+EC2-Manager is comprised of 5 major subsystems:
 
 1. State Database
 1. CloudWatch Event listener
@@ -57,7 +57,7 @@ local state and any instance in EC2 API state but not local will be added to
 local state.
 
 ### API
-The API provided by EC2 Manager can be used manage EC2 instances.  Of paricular
+The API provided by EC2 Manager can be used manage EC2 instances.  Of particular
 note is that the endpoint for submitting spot requests requires a fully formed
 and valid `LaunchSpecification`.
 
